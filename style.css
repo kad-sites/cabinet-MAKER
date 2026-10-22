@@ -435,6 +435,79 @@ input[type=number] {
     box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
+/* Modern Stepper Container for Shelves & Dividers */
+.cad-stepper-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.cad-stepper-input {
+    width: 100%;
+    text-align: center;
+    padding-right: 1.35rem !important;
+    padding-left: 0.3rem !important;
+    font-weight: 600;
+}
+
+.cad-stepper-arrows {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    width: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0 4px 4px 0;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.35);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cad-stepper-arrow {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cad-stepper-arrow:first-child {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cad-stepper-arrow:hover {
+    background: rgba(56, 189, 248, 0.28);
+    color: #38bdf8;
+}
+
+.cad-stepper-arrow:active {
+    background: rgba(56, 189, 248, 0.55);
+    color: #ffffff;
+}
+
+.cad-stepper-arrow svg {
+    display: block;
+    pointer-events: none;
+    transition: transform 0.1s ease;
+}
+
+.cad-stepper-arrow:hover svg {
+    transform: scale(1.15);
+}
+
 .cad-select-input {
     width: 100%;
     text-align: center;

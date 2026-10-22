@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -136,11 +136,31 @@
                                 <div class="cad-card-grid-3">
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHELVES</label>
-                                        <input type="text" inputmode="numeric" id="cad-shelves-count" class="cad-num-input" value="2" autocomplete="off">
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-shelves-count" class="cad-num-input cad-stepper-input" value="2" autocomplete="off">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-shelves-count" title="Add Shelf">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-shelves-count" title="Decrease Shelf">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                        <input type="text" inputmode="numeric" id="cad-dividers-count" class="cad-num-input" value="0" autocomplete="off">
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-dividers-count" class="cad-num-input cad-stepper-input" value="0" autocomplete="off">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-dividers-count" title="Add Divider">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-dividers-count" title="Decrease Divider">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHUTTERS (DOORS)</label>
@@ -183,11 +203,31 @@
                                 <div class="cad-card-grid-3">
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHELVES</label>
-                                        <input type="text" inputmode="numeric" id="cad-wall-shelves-count" class="cad-num-input" value="2" autocomplete="off">
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-wall-shelves-count" class="cad-num-input cad-stepper-input" value="2" autocomplete="off">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-wall-shelves-count" title="Add Shelf">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-wall-shelves-count" title="Decrease Shelf">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                        <input type="text" inputmode="numeric" id="cad-wall-dividers-count" class="cad-num-input" value="0" autocomplete="off">
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-wall-dividers-count" class="cad-num-input cad-stepper-input" value="0" autocomplete="off">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-wall-dividers-count" title="Add Divider">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-wall-dividers-count" title="Decrease Divider">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHUTTERS (DOORS)</label>
@@ -319,6 +359,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=25"></script>
+    <script src="3d.js?v=26"></script>
 </body>
 </html>

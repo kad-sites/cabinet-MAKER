@@ -1802,6 +1802,45 @@ function setupCADListeners() {
     
     const wallShutterSelect = document.getElementById('cad-wall-shutter-select');
     if (wallShutterSelect) wallShutterSelect.addEventListener('change', () => syncShuttersFromSelect('wall'));
+
+    // Modern Stepper Arrow Controls for Shelves & Vertical Dividers
+    document.querySelectorAll('.cad-stepper-arrow').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const targetId = btn.dataset.target;
+            const input = document.getElementById(targetId);
+            if (!input) return;
+            const isUp = btn.classList.contains('cad-stepper-up');
+            let val = parseInt(input.value);
+            if (isNaN(val)) val = 0;
+            val = isUp ? val + 1 : Math.max(0, val - 1);
+            input.value = val;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+
+    // ArrowUp / ArrowDown keyboard stepper on partition inputs
+    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    let val = parseInt(input.value);
+                    if (isNaN(val)) val = 0;
+                    input.value = val + 1;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let val = parseInt(input.value);
+                    if (isNaN(val)) val = 0;
+                    input.value = Math.max(0, val - 1);
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+    });
     
     // Preset Buttons
     document.querySelectorAll('.preset-pill').forEach(btn => {
