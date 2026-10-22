@@ -1370,6 +1370,7 @@ function syncDividersFromCount(module) {
     
     if (count <= 0) {
         if (module === 'base') updateExistingDrawers();
+        syncShuttersFromSelect(module);
         return;
     }
     
@@ -1401,6 +1402,7 @@ function syncDividersFromCount(module) {
     if (module === 'base') {
         updateExistingDrawers();
     }
+    syncShuttersFromSelect(module);
 }
 
 function updateShutterSubtexts() {
@@ -1430,6 +1432,30 @@ function syncShuttersFromSelect(module) {
     const selectId = (module === 'wall') ? 'cad-wall-shutter-select' : 'cad-shutter-select';
     const shutterSelect = document.getElementById(selectId);
     if (!shutterSelect) return;
+
+    // Handle "Custom..." door count entry
+    if (shutterSelect.value === 'custom') {
+        const promptMsg = `Enter number of doors for ${module === 'wall' ? 'WALL' : 'BASE'} cabinet (e.g. 7, 8, 12, 16, 20):`;
+        const defaultVal = shutterSelect.dataset.prevValue && shutterSelect.dataset.prevValue !== 'custom' ? shutterSelect.dataset.prevValue : '8';
+        const userInput = prompt(promptMsg, defaultVal);
+        const parsed = parseInt(userInput);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 50) {
+            let opt = Array.from(shutterSelect.options).find(o => o.value === String(parsed));
+            if (!opt) {
+                opt = document.createElement('option');
+                opt.value = String(parsed);
+                opt.textContent = parsed === 0 ? 'None (Open)' : (parsed === 1 ? '1 Door' : `${parsed} Doors`);
+                const customOpt = shutterSelect.querySelector('option[value="custom"]');
+                if (customOpt) shutterSelect.insertBefore(opt, customOpt);
+                else shutterSelect.appendChild(opt);
+            }
+            shutterSelect.value = String(parsed);
+        } else {
+            shutterSelect.value = shutterSelect.dataset.prevValue || '4';
+            return;
+        }
+    }
+    shutterSelect.dataset.prevValue = shutterSelect.value;
     const count = parseInt(shutterSelect.value) || 0;
     
     // Update subtext indicator immediately
@@ -1507,8 +1533,10 @@ function syncShuttersFromSelect(module) {
         
         cabinetGroup.add(shutter);
         
-        // Auto hinge partition between door pairs
-        if (i % 2 === 1 && i < count - 1) {
+        // Auto hinge partition between door pairs (only when manual vertical dividers are 0)
+        const divInputId = (module === 'wall') ? 'cad-wall-dividers-count' : 'cad-dividers-count';
+        const manualDivCount = parseInt(document.getElementById(divInputId)?.value) || 0;
+        if (manualDivCount === 0 && i % 2 === 1 && i < count - 1) {
             const gapCenterX = startX + (shutterW / 2) + (gap / 2);
             const t = currentThickness;
             const innerH = h - (2 * t);

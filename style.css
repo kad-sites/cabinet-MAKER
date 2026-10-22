@@ -454,6 +454,12 @@ input[type=number] {
     border-color: #38bdf8;
 }
 
+.cad-select-input option {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 4px 8px;
+}
+
 .cad-col-subtext {
     font-size: 0.62rem;
     color: #94a3b8;
