@@ -50,9 +50,9 @@ header {
 
 h1 {
     font-size: 1.28rem;
-    font-weight: 600;
+    font-weight: 500;
     margin: 0;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -60,12 +60,12 @@ h1 {
 
 h1 span {
     color: var(--primary);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .header-badge {
     font-size: 0.76rem;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.5px;
     color: #38bdf8;
     background: rgba(56, 189, 248, 0.12);
@@ -146,7 +146,7 @@ main {
 
 .cad-label {
     font-size: 0.64rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.5px;
     color: #94a3b8;
     text-transform: uppercase;
@@ -252,7 +252,7 @@ main {
 
 .badge-tag {
     font-size: 0.6rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.5px;
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
@@ -337,7 +337,7 @@ main {
 
 .cad-card-title {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 500;
     color: #f1f5f9;
 }
 
