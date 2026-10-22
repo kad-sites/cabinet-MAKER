@@ -181,6 +181,12 @@ function updateDimensionsOverlay() {
     const overlaysContainer = document.getElementById('3d-overlays');
     if (!overlaysContainer) return;
     
+    // When double-clicked into drag mode (TransformControls attached), hide dimensions so drag arrows are clean
+    if (transformControl && transformControl.object) {
+        overlaysContainer.innerHTML = '';
+        return;
+    }
+
     if (!selectedObject || (!selectedObject.userData.type && !selectedObject.userData.isDrawerGroup)) {
         overlaysContainer.innerHTML = '';
         return;
@@ -1852,8 +1858,27 @@ function setupCADListeners() {
     const deleteBtn = document.getElementById('btn-delete-selected');
     if (deleteBtn) deleteBtn.addEventListener('click', deleteSelectedPart);
 
-    // Keyboard Delete / Backspace key to delete selected part in 3D canvas
+    // Global Keyboard Listeners (Escape to deselect/cancel, Delete/Backspace to delete part)
     window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
+            const isEditable = document.activeElement && (
+                activeTag === 'INPUT' || 
+                activeTag === 'TEXTAREA' || 
+                activeTag === 'SELECT' || 
+                document.activeElement.isContentEditable
+            );
+            if (isEditable) {
+                document.activeElement.blur();
+                return;
+            }
+            if (selectedObject) {
+                e.preventDefault();
+                deselectObject();
+            }
+            return;
+        }
+
         if (e.key === 'Delete' || e.key === 'Del' || e.key === 'Backspace') {
             const activeTag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
             const isEditable = document.activeElement && (
