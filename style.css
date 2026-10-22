@@ -331,19 +331,20 @@ input:focus, select:focus {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 0.45rem;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 0.25rem;
 }
 
 .cad-header-row {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.65rem;
     align-items: flex-end;
     background: rgba(30, 41, 59, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    padding: 0.45rem 0.85rem;
 }
 
 .cad-input-block {
@@ -356,22 +357,22 @@ input:focus, select:focus {
 }
 
 .cad-label {
-    font-size: 0.7rem;
+    font-size: 0.64rem;
     font-weight: 700;
     letter-spacing: 0.5px;
     color: #94a3b8;
     text-transform: uppercase;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
 }
 
 .cad-input-text {
     background: rgba(15, 23, 42, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #f8fafc;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
     font-family: inherit;
     width: 100%;
     outline: none;
@@ -386,20 +387,20 @@ input:focus, select:focus {
 .qty-control {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
 }
 
 .cad-input-number {
     background: rgba(15, 23, 42, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #f8fafc;
-    padding: 0.5rem;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 700;
+    padding: 0.35rem 0.2rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
     font-family: inherit;
     text-align: center;
-    width: 55px;
+    width: 50px;
     outline: none;
 }
 
@@ -407,9 +408,9 @@ input:focus, select:focus {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #94a3b8;
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -423,32 +424,35 @@ input:focus, select:focus {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* Presets */
+/* Presets - Grid-based Segmented Control (Zero Horizontal Scrolling) */
 .cad-preset-section {
     background: rgba(30, 41, 59, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    padding: 0.45rem 0.85rem;
 }
 
 .cad-preset-pills {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.35rem;
+    width: 100%;
+    overflow: hidden;
 }
 
 .preset-pill {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #94a3b8;
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    padding: 0.32rem 0.2rem;
+    border-radius: 6px;
     cursor: pointer;
+    text-align: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: all 0.2s;
     font-family: inherit;
 }
@@ -463,51 +467,51 @@ input:focus, select:focus {
     color: #38bdf8;
     border-color: #38bdf8;
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 /* Cards */
 .cad-card {
     background: rgba(30, 41, 59, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    padding: 0.45rem 0.85rem;
 }
 
 .cad-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.35rem;
 }
 
 .cad-card-title {
-    font-size: 0.92rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #f1f5f9;
 }
 
 .cad-dim-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.72rem;
+    font-weight: 500;
     color: #94a3b8;
     font-family: monospace;
     background: rgba(0, 0, 0, 0.35);
-    padding: 0.2rem 0.5rem;
-    border-radius: 6px;
+    padding: 0.15rem 0.45rem;
+    border-radius: 5px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .cad-card-grid-4 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+    gap: 0.45rem;
 }
 
 .cad-card-grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .cad-grid-col {
@@ -516,16 +520,16 @@ input:focus, select:focus {
     align-items: center;
     text-align: center;
     background: rgba(15, 23, 42, 0.6);
-    padding: 0.5rem 0.35rem;
-    border-radius: 8px;
+    padding: 0.32rem 0.25rem;
+    border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .cad-col-label {
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 700;
     color: #94a3b8;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.2rem;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     white-space: nowrap;
@@ -534,13 +538,13 @@ input:focus, select:focus {
 .cad-num-input {
     width: 100%;
     text-align: center;
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 0.98rem;
+    font-weight: 500;
     color: #f8fafc;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 0.35rem 0.2rem;
+    border-radius: 5px;
+    padding: 0.22rem 0.15rem;
     font-family: inherit;
     outline: none;
     transition: all 0.2s;
@@ -554,13 +558,13 @@ input:focus, select:focus {
 .cad-select-input {
     width: 100%;
     text-align: center;
-    font-size: 0.88rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    font-weight: 500;
     color: #f8fafc;
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 0.45rem 0.2rem;
+    border-radius: 5px;
+    padding: 0.28rem 0.2rem;
     font-family: inherit;
     cursor: pointer;
     outline: none;
@@ -571,9 +575,9 @@ input:focus, select:focus {
 }
 
 .cad-col-subtext {
-    font-size: 0.66rem;
+    font-size: 0.62rem;
     color: #94a3b8;
-    margin-top: 0.35rem;
+    margin-top: 0.2rem;
     white-space: nowrap;
 }
 
