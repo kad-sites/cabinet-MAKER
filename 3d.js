@@ -308,8 +308,7 @@ function updateDimensionsOverlay() {
         const objY = selectedObject.position.y;
         let h = 0;
         if (selectedObject.userData.isDrawerGroup) {
-            const hitBox = selectedObject.children[selectedObject.children.length - 1];
-            h = hitBox.geometry ? hitBox.geometry.parameters.height : 8;
+            h = selectedObject.userData.drawerH || 8;
         } else {
             h = selectedObject.geometry ? selectedObject.geometry.parameters.height : currentThickness;
         }
@@ -341,6 +340,84 @@ function updateDimensionsOverlay() {
 
         if (distTop >= 0 && topPos.z < 1) overlaysContainer.appendChild(createLabel(topX, topY, distTop));
         if (distBottom >= 0 && botPos.z < 1) overlaysContainer.appendChild(createLabel(botX, botY, distBottom));
+
+        // Drawer HUD and Width Dimension Callout
+        if (selectedObject.userData.isDrawerGroup) {
+            const dw = selectedObject.userData.drawerW || selectedObject.userData.w || 0;
+            const dh = selectedObject.userData.drawerH || selectedObject.userData.h || 8;
+            const dd = selectedObject.userData.drawerD || selectedObject.userData.d || (currentD - 2);
+            const label = selectedObject.userData.label || "[Base] Drawer Assembly";
+            const bayInfo = (selectedObject.userData.bayIndex !== undefined) ? `Bay ${selectedObject.userData.bayIndex + 1}` : '';
+
+            const box = new THREE.Box3().setFromObject(selectedObject);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+
+            const topEdge = new THREE.Vector3(center.x, box.max.y, box.max.z);
+            const leftEdge = new THREE.Vector3(box.min.x, center.y, box.max.z);
+            const rightEdge = new THREE.Vector3(box.max.x, center.y, box.max.z);
+
+            topEdge.project(camera);
+            leftEdge.project(camera);
+            rightEdge.project(camera);
+
+            if (topEdge.z < 1) {
+                const cX = (topEdge.x * .5 + .5) * width;
+                const cY = (topEdge.y * -.5 + .5) * height;
+
+                const hud = document.createElement('div');
+                hud.style.position = 'absolute';
+                hud.style.left = `${cX}px`;
+                hud.style.top = `${cY - 12}px`;
+                hud.style.transform = 'translate(-50%, -100%)';
+                hud.style.background = 'rgba(15, 23, 42, 0.94)';
+                hud.style.border = '1.5px solid #facc15';
+                hud.style.borderRadius = '8px';
+                hud.style.padding = '6px 10px';
+                hud.style.boxShadow = '0 8px 20px rgba(0,0,0,0.6), 0 0 12px rgba(250, 204, 21, 0.3)';
+                hud.style.pointerEvents = 'none';
+                hud.style.zIndex = '15';
+                hud.style.whiteSpace = 'nowrap';
+                hud.innerHTML = `
+                    <div style="font-size: 11px; font-weight: 700; color: #facc15; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        ${label} ${bayInfo ? `<span style="color: #38bdf8; font-weight: 500;">(${bayInfo})</span>` : ''}
+                    </div>
+                    <div style="font-size: 12px; font-weight: 600; color: #f8fafc; font-family: monospace;">
+                        ${dw.toFixed(2)}" W × ${dh.toFixed(2)}" H × ${dd.toFixed(2)}" D
+                    </div>
+                `;
+                overlaysContainer.appendChild(hud);
+            }
+
+            if (leftEdge.z < 1 && rightEdge.z < 1) {
+                const lX = (leftEdge.x * .5 + .5) * width;
+                const rX = (rightEdge.x * .5 + .5) * width;
+                const cY = (center.clone().project(camera).y * -.5 + .5) * height;
+
+                const spanW = Math.max(Math.abs(rX - lX), 40);
+                const minX = Math.min(lX, rX);
+                const dimLine = document.createElement('div');
+                dimLine.style.position = 'absolute';
+                dimLine.style.left = `${minX}px`;
+                dimLine.style.top = `${cY}px`;
+                dimLine.style.width = `${spanW}px`;
+                dimLine.style.height = '20px';
+                dimLine.style.transform = 'translateY(-50%)';
+                dimLine.style.pointerEvents = 'none';
+                dimLine.style.display = 'flex';
+                dimLine.style.alignItems = 'center';
+                dimLine.style.justifyContent = 'center';
+                dimLine.innerHTML = `
+                    <div style="position: absolute; left: 0; right: 0; height: 2px; background: #facc15; box-shadow: 0 0 6px rgba(250, 204, 21, 0.6);"></div>
+                    <div style="position: absolute; left: 0; width: 2px; height: 10px; background: #facc15; transform: translateY(-4px);"></div>
+                    <div style="position: absolute; right: 0; width: 2px; height: 10px; background: #facc15; transform: translateY(-4px);"></div>
+                    <span style="position: relative; background: #0f172a; color: #facc15; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #facc15; font-family: monospace;">
+                        ◄ ${dw.toFixed(2)}" ►
+                    </span>
+                `;
+                overlaysContainer.appendChild(dimLine);
+            }
+        }
     }
 }
 
@@ -409,9 +486,14 @@ function selectObject(hitBoxMesh) {
     setEmissive(selectedObject, 0x333333);
     
     const type = hitBoxMesh.userData.type;
-    if (type === 'shelf' || type === 'drawer') {
+    if (type === 'shelf') {
         transformControl.attach(selectedObject);
         transformControl.showX = false;
+        transformControl.showY = true;
+        transformControl.showZ = false;
+    } else if (type === 'drawer') {
+        transformControl.attach(selectedObject);
+        transformControl.showX = true;
         transformControl.showY = true;
         transformControl.showZ = false;
     } else if (type === 'divider') {
@@ -456,9 +538,9 @@ function populateInspector(obj) {
     let laminate = obj.userData.customLaminate || "double";
     let edge = obj.userData.customEdge || "front";
     
-    let partW = obj.userData.shutterW || obj.userData.w || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.width : 0);
-    let partH = obj.userData.shutterH || obj.userData.h || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.height : 0);
-    let partD = obj.userData.shutterD || obj.userData.d || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.depth : 0.75);
+    let partW = obj.userData.shutterW || obj.userData.drawerW || obj.userData.w || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.width : 0);
+    let partH = obj.userData.shutterH || obj.userData.drawerH || obj.userData.h || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.height : 0);
+    let partD = obj.userData.shutterD || obj.userData.drawerD || obj.userData.d || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.depth : 0.75);
 
     if (obj.userData.type === 'shutter') {
         thickness = obj.userData.shutterD || 0.75;
@@ -466,6 +548,8 @@ function populateInspector(obj) {
         thickness = obj.userData.customThickness || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.height : currentThickness);
     } else if (obj.userData.type === 'divider') {
         thickness = obj.userData.customThickness || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.width : currentThickness);
+    } else if (obj.userData.isDrawerGroup) {
+        thickness = currentThickness;
     }
     
     if (obj.userData.isDrawerGroup) {
@@ -1195,7 +1279,10 @@ function syncShelvesFromCount(module) {
         internalParts = internalParts.filter(p => p !== part);
     });
     
-    if (count <= 0) return;
+    if (count <= 0) {
+        if (module === 'base') updateExistingDrawers();
+        return;
+    }
     
     const t = currentThickness;
     const isWall = (module === 'wall');
@@ -1221,6 +1308,10 @@ function syncShelvesFromCount(module) {
         shelf.userData.module = module;
         cabinetGroup.add(shelf);
     }
+
+    if (module === 'base') {
+        updateExistingDrawers();
+    }
 }
 
 function syncDividersFromCount(module) {
@@ -1241,15 +1332,16 @@ function syncDividersFromCount(module) {
         internalParts = internalParts.filter(p => p !== part);
     });
     
-    if (count <= 0) return;
+    if (count <= 0) {
+        if (module === 'base') updateExistingDrawers();
+        return;
+    }
     
     const t = currentThickness;
     const isWall = (module === 'wall');
-    const w = isWall ? currentWallW : currentW;
     const h = isWall ? currentWallH : currentH;
     const d = isWall ? currentWallD : currentD;
     
-    const innerW = w - (2 * t);
     const innerH = h - (2 * t);
     const divDepth = d - 1.0;
     const divColor = 0xdeb887;
@@ -1258,16 +1350,20 @@ function syncDividersFromCount(module) {
     const centerY = isWall ? getWallCenterY() : getBaseCenterY();
     const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     
-    const spacing = innerW / (count + 1);
-    const startX = -innerW / 2;
+    const layout = calculateBayLayout(module);
     
     for (let i = 1; i <= count; i++) {
+        const divX = layout.startX + (i * layout.pocketW) + ((i - 0.5) * t);
         const divider = createPanel(t, innerH, divDepth, divColor, true, 'divider');
-        divider.position.set(startX + (i * spacing), centerY, centerZ);
+        divider.position.set(divX, centerY, centerZ);
         divider.userData.label = `${prefix} Vertical Divider ${i}`;
         divider.userData.isAutoDivider = true;
         divider.userData.module = module;
         cabinetGroup.add(divider);
+    }
+
+    if (module === 'base') {
+        updateExistingDrawers();
     }
 }
 
@@ -1640,31 +1736,57 @@ function addDivider(module) {
     selectObject(divider);
 }
 
-function addDrawer(sizeType) {
-    if (currentKitchenMode === 'wall') {
-        alert("Drawers are placed inside Base cabinets. Please switch to Base or Base + Wall mode.");
-        return;
-    }
+function calculateBayLayout(module = 'base') {
+    const isWall = (module === 'wall');
     const t = currentThickness;
-    const gap = 0.5; // standard 1/2" slide clearance per side
-    const totalGap = gap * 2;
-    const innerW = currentW - (2 * t);
+    const w = isWall ? currentWallW : currentW;
+    const innerW = w - (2 * t);
+    const inputId = isWall ? 'cad-wall-dividers-count' : 'cad-dividers-count';
+    const divInput = document.getElementById(inputId);
+    const divCount = divInput ? (parseInt(divInput.value) || 0) : 0;
+    const numBays = divCount + 1;
     
-    let drawerW = innerW - totalGap;
-    let posX = 0;
-    if (sizeType === 'half') {
-        const usableHalfSpace = (innerW / 2) - (t / 2);
-        drawerW = usableHalfSpace - totalGap;
-        posX = -(innerW / 4) - (t / 4);
+    // Equal clear pocket width between dividers
+    const pocketW = (innerW - (divCount * t)) / numBays;
+    const startX = -innerW / 2;
+    
+    const bayCenters = [];
+    for (let k = 0; k < numBays; k++) {
+        bayCenters.push(startX + (k * (pocketW + t)) + (pocketW / 2));
     }
     
-    const drawerH = 8.0; // standard 8" drawer height
-    const drawerD = currentD - 2.0;
-    const colorHex = 0xdeb887;
+    let middleBayIndices = [];
+    if (numBays <= 1) {
+        middleBayIndices = [0];
+    } else if (numBays % 2 === 1) {
+        // Odd number of bays (e.g. 3 bays => center bay index 1)
+        middleBayIndices = [Math.floor(numBays / 2)];
+    } else {
+        // Even number of bays (e.g. 4 bays => middle bays indices 1 and 2; 2 bays => indices 0 and 1)
+        const mid = numBays / 2;
+        middleBayIndices = [mid - 1, mid];
+    }
     
+    return {
+        isWall,
+        t,
+        w,
+        innerW,
+        divCount,
+        numBays,
+        pocketW,
+        startX,
+        bayCenters,
+        middleBayIndices
+    };
+}
+
+function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labelPrefix, bayIndex, tierIndex) {
+    const t = currentThickness;
     const group = new THREE.Group();
-    const dInnerW = drawerW - (2 * t);
-    const dInnerD = drawerD - (2 * t);
+    const dInnerW = Math.max(0.5, drawerW - (2 * t));
+    const dInnerD = Math.max(0.5, drawerD - (2 * t));
+    const colorHex = 0xdeb887;
 
     const material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
@@ -1678,8 +1800,6 @@ function addDrawer(sizeType) {
         group.add(mesh);
     };
 
-    const labelPrefix = `[Base] Drw ${partCounter++}`;
-
     makeSubPanel(t, drawerH, drawerD, -drawerW/2 + t/2, 0, 0, `${labelPrefix} Side L`);
     makeSubPanel(t, drawerH, drawerD, drawerW/2 - t/2, 0, 0, `${labelPrefix} Side R`);
     makeSubPanel(dInnerW, drawerH, t, 0, 0, drawerD/2 - t/2, `${labelPrefix} Front Inner`);
@@ -1692,15 +1812,287 @@ function addDrawer(sizeType) {
     const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
     const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
     group.add(hitBox);
-    
-    hitBox.userData = { type: 'drawer', label: `${labelPrefix} Assembly`, parentGroup: group, module: 'base' };
+
+    hitBox.userData = { 
+        type: 'drawer', 
+        label: `${labelPrefix} Assembly`, 
+        parentGroup: group, 
+        module: 'base',
+        bayIndex: bayIndex,
+        tierIndex: tierIndex,
+        w: drawerW,
+        h: drawerH,
+        d: drawerD,
+        drawerW: drawerW,
+        drawerH: drawerH,
+        drawerD: drawerD
+    };
     internalParts.push(hitBox);
 
-    group.userData = { isDrawerGroup: true, module: 'base' };
-    group.position.set(posX, getBaseCenterY(), 0);
+    group.userData = { 
+        isDrawerGroup: true, 
+        module: 'base',
+        labelPrefix: labelPrefix,
+        label: `${labelPrefix} Assembly`,
+        bayIndex: bayIndex,
+        tierIndex: tierIndex,
+        w: drawerW,
+        h: drawerH,
+        d: drawerD,
+        drawerW: drawerW,
+        drawerH: drawerH,
+        drawerD: drawerD
+    };
+    group.position.set(posX, posY, posZ);
+
+    return { group, hitBox };
+}
+
+function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, bayIndex, tierIndex) {
+    if (!group) return;
     
-    cabinetGroup.add(group);
-    selectObject(hitBox);
+    // Dispose old subparts
+    while (group.children.length > 0) {
+        const child = group.children[0];
+        group.remove(child);
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+        }
+        internalParts = internalParts.filter(p => p !== child && p.userData.parentGroup !== group);
+    }
+
+    const t = currentThickness;
+    const dInnerW = Math.max(0.5, drawerW - (2 * t));
+    const dInnerD = Math.max(0.5, drawerD - (2 * t));
+    const colorHex = 0xdeb887;
+
+    const material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+
+    const makeSubPanel = (w, h, d, px, py, pz, label) => {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const mesh = new THREE.Mesh(geo, material);
+        mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+        mesh.position.set(px, py, pz);
+        mesh.userData = { isSubPart: true, w: w, h: h, d: d, label: label, module: 'base' };
+        group.add(mesh);
+    };
+
+    const labelPrefix = group.userData.labelPrefix || `[Base] Drw`;
+
+    makeSubPanel(t, drawerH, drawerD, -drawerW/2 + t/2, 0, 0, `${labelPrefix} Side L`);
+    makeSubPanel(t, drawerH, drawerD, drawerW/2 - t/2, 0, 0, `${labelPrefix} Side R`);
+    makeSubPanel(dInnerW, drawerH, t, 0, 0, drawerD/2 - t/2, `${labelPrefix} Front Inner`);
+    makeSubPanel(dInnerW, drawerH, t, 0, 0, -drawerD/2 + t/2, `${labelPrefix} Back`);
+    makeSubPanel(drawerW, t, drawerD, 0, -drawerH/2 + t/2, 0, `${labelPrefix} Bottom`);
+    makeSubPanel(drawerW + 0.5, drawerH + 1, t, 0, 0, drawerD/2 + t/2, `${labelPrefix} Fascia`);
+
+    const hitBoxGeo = new THREE.BoxGeometry(drawerW + 0.5, drawerH + 1, drawerD + t);
+    const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+    const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+    group.add(hitBox);
+
+    hitBox.userData = { 
+        type: 'drawer', 
+        label: `${labelPrefix} Assembly`, 
+        parentGroup: group, 
+        module: 'base',
+        bayIndex: bayIndex,
+        tierIndex: tierIndex,
+        w: drawerW,
+        h: drawerH,
+        d: drawerD,
+        drawerW: drawerW,
+        drawerH: drawerH,
+        drawerD: drawerD
+    };
+    internalParts.push(hitBox);
+
+    group.userData.bayIndex = bayIndex;
+    group.userData.tierIndex = tierIndex;
+    group.userData.w = drawerW;
+    group.userData.h = drawerH;
+    group.userData.d = drawerD;
+    group.userData.drawerW = drawerW;
+    group.userData.drawerH = drawerH;
+    group.userData.drawerD = drawerD;
+    group.userData.label = `${labelPrefix} Assembly`;
+
+    group.position.set(posX, posY, posZ);
+}
+
+function removeDrawerGroup(group) {
+    if (!group) return;
+    if (selectedObject === group) deselectObject();
+    while (group.children.length > 0) {
+        const child = group.children[0];
+        group.remove(child);
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+        }
+        internalParts = internalParts.filter(p => p !== child && p.userData.parentGroup !== group);
+    }
+    cabinetGroup.remove(group);
+}
+
+function updateExistingDrawers() {
+    const existingDrawers = cabinetGroup.children.filter(c => c.userData && c.userData.isDrawerGroup && c.userData.module === 'base');
+    if (existingDrawers.length === 0) return;
+
+    const layout = calculateBayLayout('base');
+    const t = currentThickness;
+    const totalGap = 1.0;
+    const drawerW = Math.max(4.0, layout.pocketW - totalGap);
+    const drawerD = currentD - 2.0;
+
+    const shelvesInput = document.getElementById('cad-shelves-count');
+    const shelvesCount = shelvesInput ? (parseInt(shelvesInput.value) || 0) : 0;
+    const innerH = currentH - (2 * t);
+    const numRows = shelvesCount + 1;
+    const rowH = (innerH - (shelvesCount * t)) / numRows;
+    const drawerH = Math.min(8.0, Math.max(4.0, rowH - 1.0));
+    const getRowCenterY = (r) => getBaseBottomY() + t + (r * (rowH + t)) + (rowH / 2);
+
+    // Group drawers by tier
+    const tiers = new Map();
+    existingDrawers.forEach(d => {
+        let tier = (d.userData.tierIndex !== undefined) ? d.userData.tierIndex : Math.floor(numRows / 2);
+        if (tier >= numRows) tier = numRows - 1;
+        if (tier < 0) tier = 0;
+        d.userData.tierIndex = tier;
+        if (!tiers.has(tier)) tiers.set(tier, []);
+        tiers.get(tier).push(d);
+    });
+
+    if (layout.divCount === 0) {
+        // "If there is no partition, then there will be a long drawer."
+        const fullDrawerW = Math.max(4.0, layout.innerW - totalGap);
+        tiers.forEach((tierDrawers, tier) => {
+            const primaryDrawer = tierDrawers[0];
+            const posY = getRowCenterY(tier);
+            rebuildDrawerGroup(primaryDrawer, fullDrawerW, drawerH, drawerD, 0, posY, 0, 0, tier);
+
+            for (let i = 1; i < tierDrawers.length; i++) {
+                removeDrawerGroup(tierDrawers[i]);
+            }
+        });
+    } else {
+        // "Since there is a four slot, it should cover two drawers according to the partition size.
+        // If there is one partition, then according to that, the drawer will be designed and will get updated automatically."
+        const targetBays = layout.middleBayIndices;
+
+        tiers.forEach((tierDrawers, tier) => {
+            const posY = getRowCenterY(tier);
+
+            if (tierDrawers.length === 1 && targetBays.length === 2) {
+                // Was 1 drawer (e.g. from 0 partitions or 2 partitions), now expanding to cover the 2 middle slots!
+                const firstDrawer = tierDrawers[0];
+                const bay0 = targetBays[0];
+                rebuildDrawerGroup(firstDrawer, drawerW, drawerH, drawerD, layout.bayCenters[bay0], posY, 0, bay0, tier);
+
+                const bay1 = targetBays[1];
+                const labelPrefix = `[Base] Drw ${partCounter++}`;
+                const { group } = createDrawerMeshGroup(drawerW, drawerH, drawerD, layout.bayCenters[bay1], posY, 0, labelPrefix, bay1, tier);
+                cabinetGroup.add(group);
+            } else if (tierDrawers.length > targetBays.length && targetBays.length === 1) {
+                // Was 2 drawers, now collapsing to 1 center slot!
+                const primaryDrawer = tierDrawers[0];
+                const centerBay = targetBays[0];
+                rebuildDrawerGroup(primaryDrawer, drawerW, drawerH, drawerD, layout.bayCenters[centerBay], posY, 0, centerBay, tier);
+                for (let i = 1; i < tierDrawers.length; i++) {
+                    removeDrawerGroup(tierDrawers[i]);
+                }
+            } else {
+                // Update each drawer in this tier to fit its bay
+                tierDrawers.forEach((drawer, idx) => {
+                    let assignedBay = drawer.userData.bayIndex;
+                    if (assignedBay === undefined || assignedBay >= layout.numBays) {
+                        assignedBay = targetBays[idx % targetBays.length];
+                    }
+                    if (tierDrawers.length === targetBays.length && idx < targetBays.length) {
+                        assignedBay = targetBays[idx];
+                    }
+                    const posX = layout.bayCenters[assignedBay] !== undefined ? layout.bayCenters[assignedBay] : 0;
+                    rebuildDrawerGroup(drawer, drawerW, drawerH, drawerD, posX, posY, 0, assignedBay, tier);
+                });
+            }
+        });
+    }
+
+    if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
+        populateInspector(selectedObject);
+    }
+}
+
+function addDrawer(sizeType) {
+    if (currentKitchenMode === 'wall') {
+        alert("Drawers are placed inside Base cabinets. Please switch to Base or Base + Wall mode.");
+        return;
+    }
+    const layout = calculateBayLayout('base');
+    const t = currentThickness;
+    const totalGap = 1.0; // 0.5" slide clearance per side
+    const drawerW = Math.max(4.0, layout.pocketW - totalGap);
+    const drawerD = currentD - 2.0;
+
+    // Shelves and tier math
+    const shelvesInput = document.getElementById('cad-shelves-count');
+    const shelvesCount = shelvesInput ? (parseInt(shelvesInput.value) || 0) : 0;
+    const innerH = currentH - (2 * t);
+    const numRows = shelvesCount + 1;
+    const rowH = (innerH - (shelvesCount * t)) / numRows;
+    const drawerH = Math.min(8.0, Math.max(4.0, rowH - 1.0));
+    const getRowCenterY = (r) => getBaseBottomY() + t + (r * (rowH + t)) + (rowH / 2);
+    const defaultRow = Math.floor(numRows / 2);
+
+    const existingDrawers = cabinetGroup.children.filter(c => c.userData && c.userData.isDrawerGroup && c.userData.module === 'base');
+    const targetBays = layout.middleBayIndices;
+
+    // Find first available vertical tier for middle bays
+    let targetTier = defaultRow;
+    const isTierFull = (tier) => targetBays.every(b => existingDrawers.some(d => d.userData.bayIndex === b && d.userData.tierIndex === tier));
+
+    if (isTierFull(defaultRow)) {
+        for (let r = numRows - 1; r >= 0; r--) {
+            if (!isTierFull(r)) {
+                targetTier = r;
+                break;
+            }
+        }
+    }
+
+    const createdHitBoxes = [];
+    targetBays.forEach(bayIdx => {
+        const alreadyExists = existingDrawers.some(d => d.userData.bayIndex === bayIdx && d.userData.tierIndex === targetTier);
+        if (!alreadyExists || existingDrawers.length === 0) {
+            const posX = layout.bayCenters[bayIdx] !== undefined ? layout.bayCenters[bayIdx] : 0;
+            const posY = getRowCenterY(targetTier);
+            const labelPrefix = `[Base] Drw ${partCounter++}`;
+            const { group, hitBox } = createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, 0, labelPrefix, bayIdx, targetTier);
+            cabinetGroup.add(group);
+            createdHitBoxes.push(hitBox);
+        }
+    });
+
+    // If all target slots were occupied in all tiers, add to targetBays anyway
+    if (createdHitBoxes.length === 0) {
+        targetBays.forEach(bayIdx => {
+            const posX = layout.bayCenters[bayIdx] !== undefined ? layout.bayCenters[bayIdx] : 0;
+            const posY = getRowCenterY(targetTier);
+            const labelPrefix = `[Base] Drw ${partCounter++}`;
+            const { group, hitBox } = createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, 0, labelPrefix, bayIdx, targetTier);
+            cabinetGroup.add(group);
+            createdHitBoxes.push(hitBox);
+        });
+    }
+
+    if (createdHitBoxes.length > 0) {
+        selectObject(createdHitBoxes[0]);
+    }
 }
 
 function toggleShutters() {
