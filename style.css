@@ -19,16 +19,19 @@ body {
     font-family: 'Outfit', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15) 0%, transparent 50%);
+        radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.12) 0%, transparent 50%);
 }
 
 .app-container {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 0.4rem 1.25rem;
+    width: 100vw;
+    height: 100vh;
+    padding: 0.4rem 1.25rem 0.6rem 1.25rem;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
@@ -36,17 +39,18 @@ header {
     justify-content: space-between;
     align-items: center;
     padding: 0.35rem 1.25rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.45rem;
     background: rgba(30, 41, 59, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-color);
     border-radius: 10px;
+    flex-shrink: 0;
 }
 
 h1 {
     font-size: 1.28rem;
-    font-weight: 600; /* 20% less bold than 800 */
+    font-weight: 600;
     margin: 0;
     letter-spacing: -0.3px;
     display: flex;
@@ -59,269 +63,52 @@ h1 span {
     font-weight: 600;
 }
 
-.tabs {
+.header-badge {
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+main {
+    flex: 1;
+    min-height: 0;
     display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0;
-}
-
-.tab-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-muted);
-    font-size: 0.88rem;
-    font-family: inherit;
-    font-weight: 500; /* 5% less bold than 600 */
-    padding: 0.3rem 0.95rem; /* slimmer vertically */
-    border-radius: 7px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-    color: var(--text-main);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.tab-btn.active {
-    color: #ffffff;
-    background: var(--primary);
-    border-color: var(--primary);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .tab-content {
-    display: none;
-    animation: fadeIn 0.4s ease;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.glass {
-    background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-}
-
-.subtitle {
-    color: var(--text-muted);
-    margin-bottom: 2rem;
-}
-
-h3 {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
-    margin-top: 2rem;
-}
-
-.form-row {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1.5rem;
-    min-width: 200px;
-}
-
-.form-row .form-group {
-    margin-bottom: 0;
-}
-
-label {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-}
-
-input, select {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    padding: 0.8rem 1rem;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 0.8rem 2rem;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.3s ease, transform 0.1s ease;
-    flex: 1;
-    margin-top: 1rem;
     width: 100%;
-}
-
-.btn-secondary {
-    background: transparent;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    padding: 0.8rem 2rem;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.3s ease;
-    flex: 1;
-    margin-top: 1rem;
-}
-
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.btn-primary:hover {
-    background: var(--primary-hover);
-}
-
-.btn-primary:active {
-    transform: scale(0.98);
-}
-
-.material-list ul, #generated-parts {
-    list-style: none;
-}
-
-.material-list li, #generated-parts li {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+    height: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid transparent;
-    transition: border-color 0.3s;
 }
 
-.material-list li:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.delete-btn {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 0.4rem 0.8rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: inherit;
-    font-weight: 600;
-}
-.delete-btn:hover {
-    background: #dc2626;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    padding: 1.5rem;
-    border-radius: 12px;
-    text-align: center;
-}
-
-.stat-card h3 {
-    margin-top: 0;
-    font-size: 1.1rem;
-    color: var(--text-muted);
-}
-
-.stat-card p {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--accent);
-}
-
-.cut-layouts-container {
+.cad-workspace-row {
     display: flex;
+    width: 100%;
+    height: 100%;
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-    align-items: center;
-    margin-top: 2rem;
+    gap: 1rem;
 }
 
-.sheet-wrapper {
-    text-align: center;
+/* Scrollbar customization */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
-
-.sheet-title {
-    margin-bottom: 0.5rem;
-    color: var(--text-muted);
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
 }
-
-.sheet-container {
-    background: #e2e8f0; /* Light wood color */
-    position: relative;
-    border: 2px solid #94a3b8;
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
-    overflow: hidden;
-    margin: 0 auto;
 }
-
-.sheet-panel {
-    position: absolute;
-    background: rgba(59, 130, 246, 0.8);
-    border: 1px solid #1e3a8a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-align: center;
-    overflow: hidden;
-    padding: 2px;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
 }
 
 /* CAD Builder Modern Sidebar & Controls */
@@ -683,28 +470,4 @@ input:focus, select:focus {
 .cad-btn-danger:hover {
     background: rgba(239, 68, 68, 0.3);
     color: #fff;
-}
-
-.cad-export-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #fff;
-    border: none;
-    font-size: 0.95rem;
-    font-weight: 700;
-    padding: 0.7rem 1rem;
-    border-radius: 10px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    transition: all 0.2s;
-    font-family: inherit;
-}
-
-.cad-export-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }

@@ -3,264 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabinet Optimizer Pro</title>
-    <link rel="stylesheet" href="style.css?v=6">
+    <title>Cabinet Optimizer Pro - 3D Builder</title>
+    <link rel="stylesheet" href="style.css?v=7">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
         <header>
             <h1>Cabinet Optimizer <span>Pro</span></h1>
-            <nav class="tabs">
-                <button class="tab-btn active" data-target="materials-tab">Materials</button>
-                <button class="tab-btn" data-target="visualizer-tab">3D Builder</button>
-                <button class="tab-btn" data-target="designer-tab">Cut Material</button>
-                <button class="tab-btn" data-target="optimization-tab">Nesting & Cost</button>
-            </nav>
+            <div class="header-badge">3D Builder</div>
         </header>
 
         <main>
-            <!-- Materials Tab -->
-            <section id="materials-tab" class="tab-content active">
-                <div class="card glass">
-                    <h2>Material Details</h2>
-                    <p class="subtitle">Define available plywood sheets and pricing.</p>
-                    <form id="material-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Brand Name</label>
-                                <input type="text" id="mat-brand" placeholder="e.g. CenturyPly" list="brand-types">
-                                <datalist id="brand-types">
-                                    <option value="Kitply"></option>
-                                    <option value="Ply Story"></option>
-                                    <option value="G L Plywood (Globe Panel)"></option>
-                                    <option value="Assam Wood and Allied Products"></option>
-                                    <option value="KPI Plywood"></option>
-                                    <option value="Ristal Laminates"></option>
-                                    <option value="Purbanchal Wood Products"></option>
-                                    <option value="CenturyPly"></option>
-                                    <option value="Greenply"></option>
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label>Material Name</label>
-                                <input type="text" id="mat-name" placeholder="e.g. 12mm BWP Marine Ply" list="ply-types" required>
-                                <datalist id="ply-types">
-                                    <option value="BWP (Boiling Water Proof) / Marine Ply"></option>
-                                    <option value="BWR (Boiling Water Resistant) Ply"></option>
-                                    <option value="MR (Moisture Resistant) / Commercial Ply"></option>
-                                    <option value="MDF (Medium Density Fiberboard)"></option>
-                                    <option value="HDF (High Density Fiberboard)"></option>
-                                    <option value="Particle Board"></option>
-                                    <option value="Blockboard"></option>
-                                    <option value="Flexi Ply"></option>
-                                    <option value="Fire Retardant Ply"></option>
-                                    <option value="High Pressure Laminate (HPL) / Mica"></option>
-                                    <option value="Inner Liner Laminate (0.7mm - 0.8mm)"></option>
-                                    <option value="Acrylic Laminate"></option>
-                                </datalist>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Width</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="number" id="mat-width" value="8" step="any" required style="flex: 1;">
-                                    <select id="width-unit" style="width: 80px;">
-                                        <option value="ft">ft</option>
-                                        <option value="in">in</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Height</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="number" id="mat-height" value="4" step="any" required style="flex: 1;">
-                                    <select id="height-unit" style="width: 80px;">
-                                        <option value="ft">ft</option>
-                                        <option value="in">in</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Thickness</label>
-                                <div id="thickness-container" style="display: flex; gap: 0.5rem;">
-                                    <input type="number" id="mat-thickness" value="12" step="any" required style="flex: 1;">
-                                    <select id="thickness-unit" style="width: 80px;">
-                                        <option value="mm">mm</option>
-                                        <option value="in">in</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Price per Sqft</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="number" id="mat-price" value="50" required style="flex: 1;">
-                                    <select id="global-currency" style="width: 80px;">
-                                        <option value="₹">₹</option>
-                                        <option value="$">$</option>
-                                        <option value="€">€</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 1rem; width: 100%;">
-                            <button type="submit" id="submit-mat-btn" class="btn-primary">Add Material</button>
-                            <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display: none;" onclick="cancelEdit()">Cancel</button>
-                        </div>
-                    </form>
-
-                    <div class="material-list">
-                        <h3>Saved Materials</h3>
-                        <ul id="saved-materials-list">
-                            <!-- Populated by JS -->
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Cut Material Tab -->
-            <section id="designer-tab" class="tab-content flex-1 max-w-6xl mx-auto w-full">
-                <div class="card glass" style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
-                    <div style="flex: 1.5; min-width: 350px;">
-                        <h2>Cut Material</h2>
-                        <p class="subtitle">Enter cabinet dimensions to generate parts.</p>
-                        <div id="designer-error" class="hidden" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.3);">
-                            <strong>Optimization Failed:</strong> One or more cabinet parts are larger than your material sheets. Please check the material dimensions in the Materials tab (did you accidentally set it to inches instead of feet?).
-                        </div>
-                        <form id="cabinet-form">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                                <div class="form-group" style="min-width: 0; margin-bottom: 0;">
-                                    <label>Height</label>
-                                    <div style="display: flex; gap: 0.25rem;">
-                                        <input type="number" id="cab-height" value="7" step="any" required style="flex: 1; min-width: 0; padding: 0.6rem;">
-                                        <select id="cab-height-unit" style="width: 55px; padding: 0.6rem 0.2rem;">
-                                            <option value="ft" selected>ft</option>
-                                            <option value="in">in</option>
-                                            <option value="mm">mm</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group" style="min-width: 0; margin-bottom: 0;">
-                                    <label>Width</label>
-                                    <div style="display: flex; gap: 0.25rem;">
-                                        <input type="number" id="cab-width" value="3" step="any" required style="flex: 1; min-width: 0; padding: 0.6rem;">
-                                        <select id="cab-width-unit" style="width: 55px; padding: 0.6rem 0.2rem;">
-                                            <option value="ft" selected>ft</option>
-                                            <option value="in">in</option>
-                                            <option value="mm">mm</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group" style="min-width: 0; margin-bottom: 0;">
-                                    <label>Depth</label>
-                                    <div style="display: flex; gap: 0.25rem;">
-                                        <input type="number" id="cab-depth" value="22" step="any" required style="flex: 1; min-width: 0; padding: 0.6rem;">
-                                        <select id="cab-depth-unit" style="width: 55px; padding: 0.6rem 0.2rem;">
-                                            <option value="in" selected>in</option>
-                                            <option value="ft">ft</option>
-                                            <option value="mm">mm</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                                <div class="form-group" style="min-width: 0; margin-bottom: 0;">
-                                    <label>Number of Shelves</label>
-                                    <input type="number" id="cab-shelves" value="0" min="0" step="1" required style="width: 100%; padding: 0.6rem;">
-                                </div>
-                                <div class="form-group" style="min-width: 0; margin-bottom: 0;">
-                                    <label>Number of Drawers</label>
-                                    <input type="number" id="cab-drawers" value="0" min="0" step="1" required style="width: 100%; padding: 0.6rem;">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Select Plywood / Core</label>
-                                <select id="cab-material" required>
-                                    <!-- Populated by JS -->
-                                </select>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 2rem;">
-                                <label>Select Inner Liner (Mica)</label>
-                                <select id="cab-liner">
-                                    <option value="none">Without Liner (Bare)</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn-primary">Generate Cut List & Optimize</button>
-                        </form>
-                    </div>
-
-                    <div id="parts-list" class="hidden" style="flex: 1; min-width: 300px; margin-top: 0; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                        <h3 style="margin-top: 0;">Generated Parts</h3>
-                        <ul id="generated-parts"></ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Nesting & Cost Tab -->
-            <section id="optimization-tab" class="tab-content flex-1 max-w-6xl mx-auto w-full">
-                <div class="card glass">
-                    <h2>Nesting & Cost Results</h2>
-                    <div id="opt-empty-state" style="text-align: center; padding: 3rem; border: 1px dashed var(--border-color); border-radius: 8px; margin-bottom: 2rem;">
-                        <p style="font-size: 1.2rem; color: var(--text-muted);">No optimization has been run yet.</p>
-                        <p style="color: var(--text-muted); margin-top: 0.5rem;">Go to the <strong>Cut Material</strong> tab (or the 3D Builder) and click <strong>"Generate Cut List & Optimize"</strong>.</p>
-                    </div>
-                    <div id="opt-tab-error" class="hidden" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.3);">
-                    </div>
-                    
-                    <h2 id="plywood-header" class="hidden" style="margin-bottom: 1rem;">Core Plywood Results</h2>
-                    <div id="optimization-results" class="results-grid hidden">
-                        <div class="stat-card">
-                            <h3>Material Used</h3>
-                            <p id="res-mat-used" style="font-size: 1.2rem; font-weight: 600; color: var(--accent);">-</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Sheets</h3>
-                            <p id="res-sheets">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Cost</h3>
-                            <p id="res-cost">₹0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Wastage</h3>
-                            <p id="res-waste">0%</p>
-                        </div>
-                    </div>
-
-                    <h2 id="mica-header" class="hidden" style="margin-top: 2rem; margin-bottom: 1rem; color: #3b82f6;">Inner Liner (Mica) Results</h2>
-                    <div id="mica-optimization-results" class="results-grid hidden">
-                        <div class="stat-card" style="border-top: 4px solid #3b82f6;">
-                            <h3>Liner Used</h3>
-                            <p id="res-mica-used" style="font-size: 1.2rem; font-weight: 600; color: #3b82f6;">-</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Sheets</h3>
-                            <p id="res-mica-sheets">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Cost</h3>
-                            <p id="res-mica-cost">₹0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Wastage</h3>
-                            <p id="res-mica-waste">0%</p>
-                        </div>
-                    </div>
-                    
-                    <div class="visualizer">
-                        <h3>Cut Layout</h3>
-                        <div class="cut-layouts-container hidden" id="cut-layouts">
-                        <!-- Canvases/Divs will be injected here -->
-                    </div>
-                    </div>
-                </div>
-            </section>
-            <!-- 3D Visualizer Tab -->
-            <section id="visualizer-tab" class="tab-content">
-                <div style="display: flex; height: calc(100vh - 75px); flex-direction: row; gap: 1rem;">
+            <!-- 3D Visualizer Workspace -->
+            <section id="visualizer-tab" class="tab-content active">
+                <div class="cad-workspace-row">
                     
                     <!-- CAD Toolbox Sidebar -->
                     <div class="cad-sidebar-panel">
@@ -440,12 +197,6 @@
                                 <span>Delete Part</span>
                             </button>
                         </div>
-
-                        <!-- Export to Optimizer -->
-                        <button type="button" id="btn-cad-export" class="cad-export-btn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                            <span>Send to Optimizer & Cut List</span>
-                        </button>
                     </div>
 
                     <!-- 3D Canvas Area -->
@@ -497,8 +248,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="bin-packer.js?v=7"></script>
-    <script src="3d.js?v=4"></script>
-    <script src="app.js?v=9"></script>
+    <script src="3d.js?v=7"></script>
 </body>
 </html>

@@ -52,7 +52,6 @@ function getWallCenterY() {
 
 function getWallCenterZ() {
     if (currentKitchenMode === 'both') {
-        // Wall cabinet mounted against back wall (back of base unit is at -currentD / 2)
         return (-currentD / 2) + (currentWallD / 2);
     }
     return 0;
@@ -494,10 +493,6 @@ function createPanel(w, h, d, colorHex, isInternal, type) {
     return mesh;
 }
 
-function createRoundedShell(w, h, d, t, r, colorHex, flags) {
-    return createPanel(w, h, d, colorHex, false, 'shell');
-}
-
 const CABINET_PRESETS = {
     'kitchen-set': {
         name: 'Modular Kitchen Set',
@@ -876,11 +871,9 @@ function buildShell() {
     decorObjects = [];
 
     if (currentKitchenMode === 'both') {
-        // Base Unit
         buildBoxShell('base', currentW, currentH, currentD, getBaseCenterY(), 0, '[Base]');
         buildPlinth(currentW, currentD, currentPlinth, '[Base]');
         buildDecor();
-        // Wall Unit (elevated at eye level flush against back wall)
         buildBoxShell('wall', currentWallW, currentWallH, currentWallD, getWallCenterY(), getWallCenterZ(), '[Wall]');
     } else if (currentKitchenMode === 'base') {
         buildBoxShell('base', currentW, currentH, currentD, getBaseCenterY(), 0, '[Base]');
@@ -1223,9 +1216,6 @@ function setupCADListeners() {
     
     const deleteBtn = document.getElementById('btn-delete-selected');
     if (deleteBtn) deleteBtn.addEventListener('click', deleteSelectedPart);
-    
-    const exportBtn = document.getElementById('btn-cad-export');
-    if (exportBtn) exportBtn.addEventListener('click', exportToOptimizer);
 }
 
 function addShelf(module) {
@@ -1343,148 +1333,15 @@ function toggleShutters() {
     });
 }
 
-function exportToOptimizer() {
-    const exportedParts = [];
-    
-    // 1. Export Shell Panels (Base and/or Wall)
-    shellObjects.forEach(obj => {
-        let laminate = obj.userData.customLaminate || "double";
-        const dims = [obj.userData.w, obj.userData.h, obj.userData.d].sort((a,b) => b-a);
-        exportedParts.push({
-            label: obj.userData.label,
-            w: dims[1], 
-            h: dims[0],
-            laminate: laminate
-        });
-    });
-
-    // 1b. Export Plinth / Kickboard (if present)
-    plinthObjects.forEach(obj => {
-        const dims = [obj.userData.w, obj.userData.h, obj.userData.d].sort((a,b) => b-a);
-        exportedParts.push({
-            label: obj.userData.label || "Plinth Kickboard",
-            w: dims[1],
-            h: dims[0],
-            laminate: "none"
-        });
-    });
-    
-    // 2. Export Internal Parts & Drawer Groups
-    cabinetGroup.children.forEach(obj => {
-        if (obj.userData.isDrawerGroup) {
-            const hitBox = obj.children[obj.children.length - 1];
-            let laminate = (hitBox && hitBox.userData.customLaminate) || "double";
-            
-            obj.children.forEach(child => {
-                if (child.userData.isSubPart) {
-                    const dims = [child.userData.w, child.userData.h, child.userData.d].sort((a,b) => b-a);
-                    exportedParts.push({
-                        label: child.userData.label,
-                        w: dims[1],
-                        h: dims[0],
-                        laminate: laminate
-                    });
-                }
-            });
-        }
-    });
-
-    // Single-mesh internal parts (shelves, dividers, shutters, hinge partitions)
-    internalParts.forEach(hitBox => {
-        if (hitBox.userData.parentGroup) return;
-        
-        let laminate = hitBox.userData.customLaminate || (hitBox.userData.type === 'shutter' ? 'single' : 'double');
-        const dims = [hitBox.userData.w, hitBox.userData.h, hitBox.userData.d].sort((a,b) => b-a);
-        exportedParts.push({
-            label: hitBox.userData.label,
-            w: dims[1],
-            h: dims[0],
-            laminate: laminate
-        });
-    });
-
-    // Multiply by Quantity & add Cabinet Name
-    const qtyInput = document.getElementById('cab-preset-qty');
-    const cabQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-    const nameInput = document.getElementById('cab-preset-name');
-    const cabName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : "Cabinet";
-
-    const allMultipliedParts = [];
-    for (let q = 1; q <= cabQty; q++) {
-        const prefix = cabQty > 1 ? `${cabName} #${q}` : cabName;
-        exportedParts.forEach(p => {
-            allMultipliedParts.push({
-                ...p,
-                label: `${prefix} - ${p.label}`
-            });
-        });
-    }
-
-    window.cabinetParts = allMultipliedParts;
-    
-    // UI updates
-    const ul = document.getElementById('generated-parts');
-    if (ul) {
-        ul.innerHTML = '';
-        allMultipliedParts.forEach(p => {
-            const li = document.createElement('li');
-            li.textContent = `${p.label}: ${p.w.toFixed(1)}" × ${p.h.toFixed(1)}"`;
-            ul.appendChild(li);
-        });
-        document.getElementById('parts-list').classList.remove('hidden');
-    }
-
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    
-    document.getElementById('optimization-tab').classList.add('active');
-    document.querySelector(`[data-target="optimization-tab"]`).classList.add('active');
-
-    const matSelect = document.getElementById('cab-material');
-    if (!matSelect || !matSelect.value) {
-        alert("Please select a Plywood / Core material in the Cut Material tab first, then try exporting again!");
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('designer-tab').classList.add('active');
-        document.querySelector(`[data-target="designer-tab"]`).classList.add('active');
-        return;
-    }
-    
-    const selectedMat = window.materials.find(m => m.id === parseInt(matSelect.value));
-    
-    const linerSelect = document.getElementById('cab-liner');
-    const linerVal = linerSelect ? linerSelect.value : 'none';
-    const selectedLinerMat = linerVal !== 'none' ? window.materials.find(m => m.id === parseInt(linerVal)) : null;
-
-    const micaParts = [];
-    if (selectedLinerMat) {
-        allMultipliedParts.forEach(p => {
-            if (p.laminate === "none") return;
-            
-            if (p.laminate === "single") {
-                micaParts.push({ label: `${p.label} (Single Side)`, w: p.w, h: p.h });
-            } else if (p.laminate === "double") {
-                micaParts.push({ label: `${p.label} (Side 1)`, w: p.w, h: p.h });
-                micaParts.push({ label: `${p.label} (Side 2)`, w: p.w, h: p.h });
-            }
-        });
-    }
-
-    if (window.runGlobalOptimization && selectedMat) {
-        window.runGlobalOptimization(allMultipliedParts, micaParts, selectedMat, selectedLinerMat);
-    } else {
-        alert("Optimization engine not ready. Please make sure materials are loaded.");
-    }
+function start3DApp() {
+    if (!is3DInitialized) init3D();
+    resize3D();
+    setTimeout(resize3D, 80);
+    setTimeout(resize3D, 300);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.tab-btn');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            if (tab.dataset.target === 'visualizer-tab') {
-                if (!is3DInitialized) init3D();
-                resize3D();
-            }
-        });
-    });
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start3DApp);
+} else {
+    start3DApp();
+}
