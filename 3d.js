@@ -689,17 +689,100 @@ function setupInspector() {
             deselectObject();
         });
     }
+
+    const propDeleteBtn = document.getElementById('btn-prop-delete');
+    if (propDeleteBtn) {
+        propDeleteBtn.addEventListener('click', () => {
+            deleteSelectedPart();
+        });
+    }
 }
 
 function deleteSelectedPart() {
-    if (selectedObject) {
-        if (selectedObject.userData && selectedObject.userData.isDrawerGroup) {
-            removeDrawerGroup(selectedObject);
+    if (!selectedObject) return;
+
+    const objToDelete = selectedObject;
+    const isDrawer = objToDelete.userData && (objToDelete.userData.isDrawerGroup || objToDelete.userData.type === 'drawer');
+    const isShutter = objToDelete.userData && objToDelete.userData.type === 'shutter';
+    const isAutoShelf = objToDelete.userData && objToDelete.userData.isAutoShelf;
+    const isAutoDivider = objToDelete.userData && objToDelete.userData.isAutoDivider;
+    const partModule = (objToDelete.userData && objToDelete.userData.module) || 'base';
+
+    // 1. Cleanly deselect first: detaches transform controls, clears emissive, hides inspector, hides HUDs
+    deselectObject();
+
+    // 2. Handle deletion according to part type
+    if (isDrawer) {
+        const group = objToDelete.userData.parentGroup || objToDelete;
+        removeDrawerGroup(group);
+    } else {
+        // Recursive disposal of Three.js geometry and materials
+        const disposeObject = (obj) => {
+            if (obj.geometry) {
+                obj.geometry.dispose();
+            }
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m && m.dispose && m.dispose());
+                } else if (obj.material.dispose) {
+                    obj.material.dispose();
+                }
+            }
+            if (obj.children && obj.children.length > 0) {
+                [...obj.children].forEach(child => disposeObject(child));
+            }
+        };
+
+        // Remove from parent
+        if (objToDelete.parent) {
+            objToDelete.parent.remove(objToDelete);
         } else {
-            cabinetGroup.remove(selectedObject);
-            internalParts = internalParts.filter(p => p !== selectedObject && p.userData.parentGroup !== selectedObject);
-            deselectObject();
+            cabinetGroup.remove(objToDelete);
         }
+
+        // Remove from internal tracking
+        internalParts = internalParts.filter(p => p !== objToDelete && p.userData.parentGroup !== objToDelete);
+        shellObjects = shellObjects.filter(p => p !== objToDelete);
+
+        // Auto count synchronization
+        if (isAutoShelf) {
+            const shelfInputId = (partModule === 'wall') ? 'cad-wall-shelves-count' : 'cad-shelves-count';
+            const shelfInput = document.getElementById(shelfInputId);
+            if (shelfInput) {
+                const currentVal = parseInt(shelfInput.value) || 0;
+                if (currentVal > 0) shelfInput.value = currentVal - 1;
+            }
+        } else if (isAutoDivider) {
+            const divInputId = (partModule === 'wall') ? 'cad-wall-dividers-count' : 'cad-dividers-count';
+            const divInput = document.getElementById(divInputId);
+            if (divInput) {
+                const currentVal = parseInt(divInput.value) || 0;
+                if (currentVal > 0) divInput.value = currentVal - 1;
+            }
+            if (partModule === 'base') {
+                updateExistingDrawers();
+            }
+        } else if (isShutter) {
+            const remainingShutters = cabinetGroup.children.filter(c => c.userData && c.userData.type === 'shutter' && c.userData.module === partModule);
+            const selectId = (partModule === 'wall') ? 'cad-wall-shutter-select' : 'cad-shutter-select';
+            const subId = (partModule === 'wall') ? 'cad-wall-shutter-sub' : 'cad-shutter-sub';
+            const select = document.getElementById(selectId);
+            const subEl = document.getElementById(subId);
+            if (remainingShutters.length === 0) {
+                if (select) select.value = '0';
+                if (subEl) subEl.textContent = 'None (Open)';
+            } else if (subEl) {
+                subEl.textContent = `${remainingShutters.length} Door(s) Remaining (${remainingShutters[0].userData.w.toFixed(1)}" W)`;
+            }
+        }
+
+        disposeObject(objToDelete);
+    }
+
+    // 3. Clear overlays and re-render scene immediately
+    updateDimensionsOverlay();
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
     }
 }
 
@@ -1768,6 +1851,25 @@ function setupCADListeners() {
     
     const deleteBtn = document.getElementById('btn-delete-selected');
     if (deleteBtn) deleteBtn.addEventListener('click', deleteSelectedPart);
+
+    // Keyboard Delete / Backspace key to delete selected part in 3D canvas
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Delete' || e.key === 'Del' || e.key === 'Backspace') {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
+            const isEditable = document.activeElement && (
+                activeTag === 'INPUT' || 
+                activeTag === 'TEXTAREA' || 
+                activeTag === 'SELECT' || 
+                document.activeElement.isContentEditable
+            );
+            if (isEditable) return;
+
+            if (selectedObject) {
+                e.preventDefault();
+                deleteSelectedPart();
+            }
+        }
+    });
 }
 
 function addShelf(module) {

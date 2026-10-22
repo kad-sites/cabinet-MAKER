@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -250,6 +250,7 @@
                         <div class="cad-canvas-notes">
                             Single Click: View Dimensions<br>
                             Double Click: Drag Arrows (X/Y)<br>
+                            Del Key: Delete Selected Part<br>
                             Right Click: Pan Camera<br>
                             Scroll: Zoom
                         </div>
@@ -305,6 +306,12 @@
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- Delete Selected Part Button -->
+                            <button type="button" id="btn-prop-delete" class="prop-delete-btn" title="Delete this part from cabinet">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                <span>Delete Part (Del Key)</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -315,6 +322,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=22"></script>
+    <script src="3d.js?v=23"></script>
 </body>
 </html>
