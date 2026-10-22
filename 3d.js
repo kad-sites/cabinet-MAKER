@@ -187,7 +187,7 @@ function updateDimensionsOverlay() {
     }
     
     const type = selectedObject.userData.type || (selectedObject.userData.isDrawerGroup ? 'drawer' : null);
-    if (type !== 'shelf' && type !== 'drawer' && type !== 'divider' && type !== 'shutter') {
+    if (type !== 'shelf' && type !== 'divider' && type !== 'shutter') {
         overlaysContainer.innerHTML = '';
         return;
     }
@@ -340,14 +340,9 @@ function updateDimensionsOverlay() {
         if (distLeft >= 0 && leftPos.z < 1) overlaysContainer.appendChild(createLabel(leftX, leftY, distLeft));
         if (distRight >= 0 && rightPos.z < 1) overlaysContainer.appendChild(createLabel(rightX, rightY, distRight));
         
-    } else {
+    } else if (type === 'shelf') {
         const objY = selectedObject.position.y;
-        let h = 0;
-        if (selectedObject.userData.isDrawerGroup) {
-            h = selectedObject.userData.drawerH || 8;
-        } else {
-            h = selectedObject.geometry ? selectedObject.geometry.parameters.height : currentThickness;
-        }
+        const h = selectedObject.geometry ? selectedObject.geometry.parameters.height : currentThickness;
         
         const topSurface = objY + (h / 2);
         const bottomSurface = objY - (h / 2);
@@ -376,84 +371,6 @@ function updateDimensionsOverlay() {
 
         if (distTop >= 0 && topPos.z < 1) overlaysContainer.appendChild(createLabel(topX, topY, distTop));
         if (distBottom >= 0 && botPos.z < 1) overlaysContainer.appendChild(createLabel(botX, botY, distBottom));
-
-        // Drawer HUD and Width Dimension Callout
-        if (selectedObject.userData.isDrawerGroup) {
-            const dw = selectedObject.userData.drawerW || selectedObject.userData.w || 0;
-            const dh = selectedObject.userData.drawerH || selectedObject.userData.h || 8;
-            const dd = selectedObject.userData.drawerD || selectedObject.userData.d || (currentD - 2);
-            const label = selectedObject.userData.label || "[Base] Drawer Assembly";
-            const bayInfo = (selectedObject.userData.bayIndex !== undefined) ? `Bay ${selectedObject.userData.bayIndex + 1}` : '';
-
-            const box = new THREE.Box3().setFromObject(selectedObject);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-
-            const topEdge = new THREE.Vector3(center.x, box.max.y, box.max.z);
-            const leftEdge = new THREE.Vector3(box.min.x, center.y, box.max.z);
-            const rightEdge = new THREE.Vector3(box.max.x, center.y, box.max.z);
-
-            topEdge.project(camera);
-            leftEdge.project(camera);
-            rightEdge.project(camera);
-
-            if (topEdge.z < 1) {
-                const cX = (topEdge.x * .5 + .5) * width;
-                const cY = (topEdge.y * -.5 + .5) * height;
-
-                const hud = document.createElement('div');
-                hud.style.position = 'absolute';
-                hud.style.left = `${cX}px`;
-                hud.style.top = `${cY - 12}px`;
-                hud.style.transform = 'translate(-50%, -100%)';
-                hud.style.background = 'rgba(15, 23, 42, 0.94)';
-                hud.style.border = '1.5px solid #facc15';
-                hud.style.borderRadius = '8px';
-                hud.style.padding = '6px 10px';
-                hud.style.boxShadow = '0 8px 20px rgba(0,0,0,0.6), 0 0 12px rgba(250, 204, 21, 0.3)';
-                hud.style.pointerEvents = 'none';
-                hud.style.zIndex = '15';
-                hud.style.whiteSpace = 'nowrap';
-                hud.innerHTML = `
-                    <div style="font-size: 11px; font-weight: 700; color: #facc15; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        ${label} ${bayInfo ? `<span style="color: #38bdf8; font-weight: 500;">(${bayInfo})</span>` : ''}
-                    </div>
-                    <div style="font-size: 12px; font-weight: 600; color: #f8fafc; font-family: monospace;">
-                        ${dw.toFixed(2)}" W × ${dh.toFixed(2)}" H × ${dd.toFixed(2)}" D
-                    </div>
-                `;
-                overlaysContainer.appendChild(hud);
-            }
-
-            if (leftEdge.z < 1 && rightEdge.z < 1) {
-                const lX = (leftEdge.x * .5 + .5) * width;
-                const rX = (rightEdge.x * .5 + .5) * width;
-                const cY = (center.clone().project(camera).y * -.5 + .5) * height;
-
-                const spanW = Math.max(Math.abs(rX - lX), 40);
-                const minX = Math.min(lX, rX);
-                const dimLine = document.createElement('div');
-                dimLine.style.position = 'absolute';
-                dimLine.style.left = `${minX}px`;
-                dimLine.style.top = `${cY}px`;
-                dimLine.style.width = `${spanW}px`;
-                dimLine.style.height = '20px';
-                dimLine.style.transform = 'translateY(-50%)';
-                dimLine.style.pointerEvents = 'none';
-                dimLine.style.display = 'flex';
-                dimLine.style.alignItems = 'center';
-                dimLine.style.justifyContent = 'center';
-                dimLine.innerHTML = `
-                    <div style="position: absolute; left: 0; right: 0; height: 2px; background: #facc15; box-shadow: 0 0 6px rgba(250, 204, 21, 0.6);"></div>
-                    <div style="position: absolute; left: 0; width: 2px; height: 10px; background: #facc15; transform: translateY(-4px);"></div>
-                    <div style="position: absolute; right: 0; width: 2px; height: 10px; background: #facc15; transform: translateY(-4px);"></div>
-                    <span style="position: relative; background: #0f172a; color: #facc15; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #facc15; font-family: monospace;">
-                        ◄ ${dw.toFixed(2)}" ►
-                    </span>
-                `;
-                overlaysContainer.appendChild(dimLine);
-            }
-        }
     }
 }
 
@@ -647,6 +564,10 @@ function populateInspector(obj) {
     const lamEl = document.getElementById('prop-laminate');
     const edgeEl = document.getElementById('prop-edge');
     
+    const heightRow = document.getElementById('prop-height-row');
+    const thickRow = document.getElementById('prop-thick-row');
+    const matControls = document.getElementById('prop-material-controls');
+    
     let name = obj.userData.label || "Cabinet Part";
     let thickness = currentThickness;
     let laminate = obj.userData.customLaminate || "double";
@@ -668,8 +589,14 @@ function populateInspector(obj) {
     
     if (obj.userData.isDrawerGroup) {
         name = obj.userData.label || "Drawer Assembly";
+        if (heightRow) heightRow.style.display = 'none';
+        if (thickRow) thickRow.style.display = 'none';
+        if (matControls) matControls.style.display = 'none';
         if (thickEl) thickEl.disabled = true;
     } else {
+        if (heightRow) heightRow.style.display = 'flex';
+        if (thickRow) thickRow.style.display = 'flex';
+        if (matControls) matControls.style.display = 'block';
         if (thickEl) thickEl.disabled = (obj.userData.type === 'shutter');
     }
     
