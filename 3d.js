@@ -683,7 +683,7 @@ function parseDim(str, defaultUnit = 'in') {
                 unit: 'ft',
                 in: num * 12,
                 ft: num,
-                display: num + ' ft'
+                display: String(num)
             };
         }
     }
@@ -698,7 +698,7 @@ function parseDim(str, defaultUnit = 'in') {
                 unit: 'in',
                 in: num,
                 ft: num / 12,
-                display: num + ' in'
+                display: String(num)
             };
         }
     }
@@ -714,7 +714,7 @@ function parseDim(str, defaultUnit = 'in') {
                     unit: 'ft',
                     in: num * 12,
                     ft: num,
-                    display: num + ' ft'
+                    display: String(num)
                 };
             } else {
                 return {
@@ -722,7 +722,7 @@ function parseDim(str, defaultUnit = 'in') {
                     unit: 'in',
                     in: num,
                     ft: num / 12,
-                    display: num + ' in'
+                    display: String(num)
                 };
             }
         }
@@ -732,15 +732,15 @@ function parseDim(str, defaultUnit = 'in') {
     const num = parseFloat(str);
     if (!isNaN(num) && num >= 0) {
         if (str.includes('ft') || str.includes("'")) {
-            return { num, unit: 'ft', in: num * 12, ft: num, display: num + ' ft' };
+            return { num, unit: 'ft', in: num * 12, ft: num, display: String(num) };
         }
         if (str.includes('in') || str.includes('"')) {
-            return { num, unit: 'in', in: num, ft: num / 12, display: num + ' in' };
+            return { num, unit: 'in', in: num, ft: num / 12, display: String(num) };
         }
         if (defaultUnit === 'ft') {
-            return { num, unit: 'ft', in: num * 12, ft: num, display: num + ' ft' };
+            return { num, unit: 'ft', in: num * 12, ft: num, display: String(num) };
         } else {
-            return { num, unit: 'in', in: num, ft: num / 12, display: num + ' in' };
+            return { num, unit: 'in', in: num, ft: num / 12, display: String(num) };
         }
     }
 
@@ -754,10 +754,20 @@ function updateDimensionsFromInputs() {
     const dInput = document.getElementById('cad-d-ft');
     const plinthInput = document.getElementById('cad-plinth-in');
 
-    const hParsed = parseDim(hInput ? hInput.value : '', 'in') || { in: 32, ft: 2.67, unit: 'in' };
-    const wParsed = parseDim(wInput ? wInput.value : '', 'ft') || { in: 132, ft: 11, unit: 'ft' };
-    const dParsed = parseDim(dInput ? dInput.value : '', 'ft') || { in: 24, ft: 2, unit: 'ft' };
-    const plinthParsed = parseDim(plinthInput ? plinthInput.value : '', 'in') || { in: 3, ft: 0.25, unit: 'in' };
+    const hUnit = (hInput && hInput.dataset.activeUnit) || 'in';
+    const wUnit = (wInput && wInput.dataset.activeUnit) || 'ft';
+    const dUnit = (dInput && dInput.dataset.activeUnit) || 'ft';
+    const plinthUnit = (plinthInput && plinthInput.dataset.activeUnit) || 'in';
+
+    const hParsed = parseDim(hInput ? hInput.value : '', hUnit) || { in: 32, ft: 2.67, unit: 'in', num: 32 };
+    const wParsed = parseDim(wInput ? wInput.value : '', wUnit) || { in: 132, ft: 11, unit: 'ft', num: 11 };
+    const dParsed = parseDim(dInput ? dInput.value : '', dUnit) || { in: 24, ft: 2, unit: 'ft', num: 2 };
+    const plinthParsed = parseDim(plinthInput ? plinthInput.value : '', plinthUnit) || { in: 3, ft: 0.25, unit: 'in', num: 3 };
+
+    if (hInput && hParsed.unit) hInput.dataset.activeUnit = hParsed.unit;
+    if (wInput && wParsed.unit) wInput.dataset.activeUnit = wParsed.unit;
+    if (dInput && dParsed.unit) dInput.dataset.activeUnit = dParsed.unit;
+    if (plinthInput && plinthParsed.unit) plinthInput.dataset.activeUnit = plinthParsed.unit;
 
     currentH = hParsed.in;
     currentW = wParsed.in;
@@ -795,10 +805,20 @@ function updateDimensionsFromInputs() {
     const wallDInput = document.getElementById('cad-wall-d-ft');
     const dadoGapInput = document.getElementById('cad-dado-gap-in');
 
-    const wallHParsed = parseDim(wallHInput ? wallHInput.value : '', 'in') || { in: 30, ft: 2.5, unit: 'in' };
-    const wallWParsed = parseDim(wallWInput ? wallWInput.value : '', 'ft') || { in: 132, ft: 11, unit: 'ft' };
-    const wallDParsed = parseDim(wallDInput ? wallDInput.value : '', 'ft') || { in: 12, ft: 1, unit: 'ft' };
-    const dadoGapParsed = parseDim(dadoGapInput ? dadoGapInput.value : '', 'in') || { in: 22, ft: 1.83, unit: 'in' };
+    const wallHUnit = (wallHInput && wallHInput.dataset.activeUnit) || 'in';
+    const wallWUnit = (wallWInput && wallWInput.dataset.activeUnit) || 'ft';
+    const wallDUnit = (wallDInput && wallDInput.dataset.activeUnit) || 'ft';
+    const dadoGapUnit = (dadoGapInput && dadoGapInput.dataset.activeUnit) || 'in';
+
+    const wallHParsed = parseDim(wallHInput ? wallHInput.value : '', wallHUnit) || { in: 30, ft: 2.5, unit: 'in', num: 30 };
+    const wallWParsed = parseDim(wallWInput ? wallWInput.value : '', wallWUnit) || { in: 132, ft: 11, unit: 'ft', num: 11 };
+    const wallDParsed = parseDim(wallDInput ? wallDInput.value : '', wallDUnit) || { in: 12, ft: 1, unit: 'ft', num: 1 };
+    const dadoGapParsed = parseDim(dadoGapInput ? dadoGapInput.value : '', dadoGapUnit) || { in: 22, ft: 1.83, unit: 'in', num: 22 };
+
+    if (wallHInput && wallHParsed.unit) wallHInput.dataset.activeUnit = wallHParsed.unit;
+    if (wallWInput && wallWParsed.unit) wallWInput.dataset.activeUnit = wallWParsed.unit;
+    if (wallDInput && wallDParsed.unit) wallDInput.dataset.activeUnit = wallDParsed.unit;
+    if (dadoGapInput && dadoGapParsed.unit) dadoGapInput.dataset.activeUnit = dadoGapParsed.unit;
 
     currentWallH = wallHParsed.in;
     currentWallW = wallWParsed.in;
@@ -1244,18 +1264,42 @@ function applyPreset(presetKey) {
     const wallShutterSelect = document.getElementById('cad-wall-shutter-select');
     
     if (nameInput) nameInput.value = preset.name;
-    if (hInput) hInput.value = preset.hIn + ' in';
-    if (wInput) wInput.value = preset.wFt + ' ft';
-    if (dInput) dInput.value = preset.dFt + ' ft';
-    if (plinthInput) plinthInput.value = preset.plinthIn + ' in';
+    if (hInput) {
+        hInput.value = preset.hIn;
+        hInput.dataset.activeUnit = 'in';
+    }
+    if (wInput) {
+        wInput.value = preset.wFt;
+        wInput.dataset.activeUnit = 'ft';
+    }
+    if (dInput) {
+        dInput.value = preset.dFt;
+        dInput.dataset.activeUnit = 'ft';
+    }
+    if (plinthInput) {
+        plinthInput.value = preset.plinthIn;
+        plinthInput.dataset.activeUnit = 'in';
+    }
     if (shelvesInput) shelvesInput.value = preset.shelves;
     if (dividersInput) dividersInput.value = preset.dividers;
     if (shutterSelect) shutterSelect.value = preset.shutters;
 
-    if (wallHInput && preset.wallHIn !== undefined) wallHInput.value = preset.wallHIn + ' in';
-    if (wallWInput && preset.wallWFt !== undefined) wallWInput.value = preset.wallWFt + ' ft';
-    if (wallDInput && preset.wallDFt !== undefined) wallDInput.value = preset.wallDFt + ' ft';
-    if (dadoGapInput && preset.dadoGapIn !== undefined) dadoGapInput.value = preset.dadoGapIn + ' in';
+    if (wallHInput && preset.wallHIn !== undefined) {
+        wallHInput.value = preset.wallHIn;
+        wallHInput.dataset.activeUnit = 'in';
+    }
+    if (wallWInput && preset.wallWFt !== undefined) {
+        wallWInput.value = preset.wallWFt;
+        wallWInput.dataset.activeUnit = 'ft';
+    }
+    if (wallDInput && preset.wallDFt !== undefined) {
+        wallDInput.value = preset.wallDFt;
+        wallDInput.dataset.activeUnit = 'ft';
+    }
+    if (dadoGapInput && preset.dadoGapIn !== undefined) {
+        dadoGapInput.value = preset.dadoGapIn;
+        dadoGapInput.dataset.activeUnit = 'in';
+    }
     if (wallShelvesInput && preset.wallShelves !== undefined) wallShelvesInput.value = preset.wallShelves;
     if (wallDividersInput && preset.wallDividers !== undefined) wallDividersInput.value = preset.wallDividers;
     if (wallShutterSelect && preset.wallShutters !== undefined) wallShutterSelect.value = preset.wallShutters;
@@ -1286,15 +1330,36 @@ function setupCADListeners() {
         });
 
         el.addEventListener('input', () => {
+            const raw = el.value.trim().toLowerCase();
+            const hasExplicitUnit = /(?:in|inch|inches|"|''|ft|feet|foot|')$/i.test(raw);
+            const activeUnit = el.dataset.activeUnit || defaultUnit;
+            const parsed = parseDim(el.value, activeUnit);
+            
+            if (parsed) {
+                if (parsed.unit) {
+                    el.dataset.activeUnit = parsed.unit;
+                }
+                if (hasExplicitUnit) {
+                    // Stripping the unit from the input field so it becomes invisible,
+                    // leaving pure number in the input box, while activeUnit & bracket are updated!
+                    el.value = parsed.num;
+                }
+            }
             updateDimensionsFromInputs();
+            buildShell();
+            syncPartitionsAndDoors();
         });
 
         const commitValue = () => {
-            const parsed = parseDim(el.value, defaultUnit);
-            if (parsed && parsed.display) {
-                el.value = parsed.display;
+            const activeUnit = el.dataset.activeUnit || defaultUnit;
+            const parsed = parseDim(el.value, activeUnit);
+            if (parsed && !isNaN(parsed.num)) {
+                el.dataset.activeUnit = parsed.unit;
+                el.value = parsed.num;
             }
             updateDimensionsFromInputs();
+            buildShell();
+            syncPartitionsAndDoors();
         };
 
         el.addEventListener('blur', commitValue);
