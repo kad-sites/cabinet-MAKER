@@ -13,6 +13,13 @@ let currentW = 132, currentH = 32, currentD = 24, currentPlinth = 3;
 // Wall Cabinet Dimensions (inches)
 let currentWallW = 132, currentWallH = 30, currentWallD = 12, currentDadoGap = 22;
 
+// Kitchen Layout State ('straight', 'l-shape', 'u-shape')
+let currentKitchenLayout = 'straight';
+let currentLReturnFt = 7;
+let currentLReturnSide = 'right'; // 'right' or 'left'
+let currentULeftFt = 7;
+let currentURightFt = 7;
+
 let shellObjects = [];
 let plinthObjects = [];
 let decorObjects = []; // Countertop & Backsplash
@@ -1162,6 +1169,48 @@ function updateDimensionsFromInputs() {
     if (wallDSub) wallDSub.textContent = `~ ${wallDParsed.in.toFixed(0)}" (${wallDFtDisplay} ft)`;
     if (dadoGapSub) dadoGapSub.textContent = `~ ${dadoGapParsed.in.toFixed(0)}" (Dado)`;
     if (wallSummary) wallSummary.textContent = `${wallHParsed.in.toFixed(0)}" H × ${wallWParsed.in.toFixed(0)}" W × ${wallDParsed.in.toFixed(0)}" D`;
+
+    // 3. Read Multi-run Return Inputs (for L & U Kitchens)
+    const lReturnInput = document.getElementById('cad-l-return-ft');
+    if (lReturnInput) {
+        const lUnit = lReturnInput.dataset.activeUnit || 'ft';
+        const lParsed = parseDim(lReturnInput.value, lUnit) || { in: 84, ft: 7, unit: 'ft', num: 7 };
+        if (lParsed.unit) lReturnInput.dataset.activeUnit = lParsed.unit;
+        currentLReturnFt = lParsed.ft;
+        const lSub = document.getElementById('cad-l-return-sub');
+        if (lSub) lSub.textContent = `~ ${lParsed.in.toFixed(0)}" (${lParsed.ft.toFixed(0)} ft)`;
+    }
+
+    const uLeftInput = document.getElementById('cad-u-left-ft');
+    if (uLeftInput) {
+        const uLUnit = uLeftInput.dataset.activeUnit || 'ft';
+        const uLParsed = parseDim(uLeftInput.value, uLUnit) || { in: 84, ft: 7, unit: 'ft', num: 7 };
+        if (uLParsed.unit) uLeftInput.dataset.activeUnit = uLParsed.unit;
+        currentULeftFt = uLParsed.ft;
+        const uLSub = document.getElementById('cad-u-left-sub');
+        if (uLSub) uLSub.textContent = `~ ${uLParsed.in.toFixed(0)}" (${uLParsed.ft.toFixed(0)} ft)`;
+    }
+
+    const uRightInput = document.getElementById('cad-u-right-ft');
+    if (uRightInput) {
+        const uRUnit = uRightInput.dataset.activeUnit || 'ft';
+        const uRParsed = parseDim(uRightInput.value, uRUnit) || { in: 84, ft: 7, unit: 'ft', num: 7 };
+        if (uRParsed.unit) uRightInput.dataset.activeUnit = uRParsed.unit;
+        currentURightFt = uRParsed.ft;
+        const uRSub = document.getElementById('cad-u-right-sub');
+        if (uRSub) uRSub.textContent = `~ ${uRParsed.in.toFixed(0)}" (${uRParsed.ft.toFixed(0)} ft)`;
+    }
+
+    // Dynamic Run Width Label updates
+    if (currentKitchenLayout === 'l-shape') {
+        if (lblW) lblW.textContent = `MAIN RUN (${wParsed.unit.toUpperCase()})`;
+        if (lblWallW) lblWallW.textContent = `MAIN RUN (${wallWParsed.unit.toUpperCase()})`;
+        if (summary) summary.textContent = `${hParsed.in.toFixed(0)}" H × ${wParsed.in.toFixed(0)}" Main × ${(currentLReturnFt * 12).toFixed(0)}" Ret`;
+    } else if (currentKitchenLayout === 'u-shape') {
+        if (lblW) lblW.textContent = `CENTER RUN (${wParsed.unit.toUpperCase()})`;
+        if (lblWallW) lblWallW.textContent = `CENTER RUN (${wallWParsed.unit.toUpperCase()})`;
+        if (summary) summary.textContent = `${hParsed.in.toFixed(0)}" H × [${(currentULeftFt * 12).toFixed(0)}" | ${wParsed.in.toFixed(0)}" | ${(currentURightFt * 12).toFixed(0)}"]`;
+    }
     
     buildShell();
     syncPartitionsAndDoors();
@@ -1289,27 +1338,335 @@ function buildDecor() {
     }
 }
 
+function setKitchenLayout(layout) {
+    currentKitchenLayout = layout;
+    
+    // Update active pill
+    document.querySelectorAll('.layout-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.layout === layout);
+    });
+
+    const badge = document.getElementById('cad-layout-badge');
+    const lControls = document.getElementById('cad-l-controls');
+    const uControls = document.getElementById('cad-u-controls');
+    const lblBaseW = document.getElementById('lbl-cad-w-ft');
+    const lblWallW = document.getElementById('lbl-cad-wall-w-ft');
+
+    if (layout === 'l-shape') {
+        if (badge) badge.textContent = 'L-Kitchen';
+        if (lControls) lControls.style.display = 'block';
+        if (uControls) uControls.style.display = 'none';
+        if (lblBaseW) lblBaseW.textContent = 'MAIN RUN (FT)';
+        if (lblWallW) lblWallW.textContent = 'MAIN RUN (FT)';
+    } else if (layout === 'u-shape') {
+        if (badge) badge.textContent = 'U-Kitchen';
+        if (lControls) lControls.style.display = 'none';
+        if (uControls) uControls.style.display = 'block';
+        if (lblBaseW) lblBaseW.textContent = 'CENTER RUN (FT)';
+        if (lblWallW) lblWallW.textContent = 'CENTER RUN (FT)';
+    } else {
+        if (badge) badge.textContent = 'Straight';
+        if (lControls) lControls.style.display = 'none';
+        if (uControls) uControls.style.display = 'none';
+        if (lblBaseW) lblBaseW.textContent = 'WIDTH (FT)';
+        if (lblWallW) lblWallW.textContent = 'WIDTH (FT)';
+    }
+
+    updateDimensionsFromInputs();
+}
+
+function buildReturnWing(wingSide, wingLengthFt) {
+    const isRight = (wingSide === 'right');
+    const sign = isRight ? 1 : -1;
+    const wingLen = wingLengthFt * 12; // in inches
+    const t = currentThickness;
+    const shellColor = 0xc89d68;
+    const plinthColor = 0x27272a;
+    const kickRecess = 2; // 2" recessed toe kick
+    const plinthY = currentPlinth / 2;
+
+    const wMain = currentW;
+    const dBase = currentD; // standard 24"
+    const clearLenBase = Math.max(12, wingLen - dBase);
+
+    const zStart = dBase / 2;
+    const zEnd = -dBase / 2 + wingLen;
+    const zCenter = (zStart + zEnd) / 2;
+    const xBaseCenter = sign * (wMain / 2 - dBase / 2);
+
+    // 1. BASE CABINET SHELL FOR RETURN WING
+    if (currentKitchenMode === 'base' || currentKitchenMode === 'both') {
+        const centerY = getBaseCenterY();
+        const prefix = `[Base Return ${isRight ? 'R' : 'L'}]`;
+
+        // Outer Back Panel along outer wall (facing perpendicular)
+        const backP = createPanel(t, currentH, clearLenBase, shellColor, false, 'side');
+        backP.position.set(sign * (wMain / 2 - t / 2), centerY, zCenter);
+        backP.userData.label = `${prefix} Outer Side Panel`;
+        backP.userData.module = 'base';
+        backP.userData.w = t; backP.userData.h = currentH; backP.userData.d = clearLenBase;
+        cabinetGroup.add(backP);
+        shellObjects.push(backP);
+
+        // Top Panel
+        const topP = createPanel(dBase - t, t, clearLenBase, shellColor, false, 'top');
+        topP.position.set(sign * (wMain / 2 - dBase / 2 - t / 4), centerY + currentH / 2 - t / 2, zCenter);
+        topP.userData.label = `${prefix} Top`;
+        topP.userData.module = 'base';
+        topP.userData.w = dBase - t; topP.userData.h = t; topP.userData.d = clearLenBase;
+        cabinetGroup.add(topP);
+        shellObjects.push(topP);
+
+        // Bottom Panel
+        const botP = createPanel(dBase - t, t, clearLenBase, shellColor, false, 'bottom');
+        botP.position.set(sign * (wMain / 2 - dBase / 2 - t / 4), centerY - currentH / 2 + t / 2, zCenter);
+        botP.userData.label = `${prefix} Bottom`;
+        botP.userData.module = 'base';
+        botP.userData.w = dBase - t; botP.userData.h = t; botP.userData.d = clearLenBase;
+        cabinetGroup.add(botP);
+        shellObjects.push(botP);
+
+        // End Capping Panel (at the open tip of the wing)
+        const endP = createPanel(dBase, currentH, t, shellColor, false, 'side');
+        endP.position.set(xBaseCenter, centerY, zEnd - t / 2);
+        endP.userData.label = `${prefix} End Cap`;
+        endP.userData.module = 'base';
+        endP.userData.w = dBase; endP.userData.h = currentH; endP.userData.d = t;
+        cabinetGroup.add(endP);
+        shellObjects.push(endP);
+
+        // Corner Junction Divider (between main run and return run)
+        const cornerDiv = createPanel(dBase, currentH - 2 * t, t, shellColor, false, 'divider');
+        cornerDiv.position.set(xBaseCenter, centerY, zStart + t / 2);
+        cornerDiv.userData.label = `${prefix} Corner Divider`;
+        cornerDiv.userData.module = 'base';
+        cornerDiv.userData.w = dBase; cornerDiv.userData.h = currentH - 2 * t; cornerDiv.userData.d = t;
+        cabinetGroup.add(cornerDiv);
+        shellObjects.push(cornerDiv);
+
+        // Plinth Kickboard for Return Wing
+        if (currentPlinth > 0) {
+            const innerPlinthX = sign * (wMain / 2 - dBase + kickRecess + t / 2);
+            const plinthLen = clearLenBase - kickRecess;
+            const kickReturn = createPanel(t, currentPlinth, plinthLen, plinthColor, false, 'plinth');
+            kickReturn.position.set(innerPlinthX, plinthY, zStart + plinthLen / 2);
+            kickReturn.userData.label = `${prefix} Plinth Kickboard`;
+            kickReturn.userData.module = 'base';
+            cabinetGroup.add(kickReturn);
+            plinthObjects.push(kickReturn);
+
+            const endPlinth = createPanel(dBase - kickRecess, currentPlinth, t, plinthColor, false, 'plinth');
+            endPlinth.position.set(sign * (wMain / 2 - dBase / 2 + kickRecess / 2), plinthY, zEnd - kickRecess - t / 2);
+            endPlinth.userData.label = `${prefix} Plinth End`;
+            endPlinth.userData.module = 'base';
+            cabinetGroup.add(endPlinth);
+            plinthObjects.push(endPlinth);
+        }
+
+        // Return Countertop Slab
+        if (currentKitchenMode === 'both') {
+            const ctThick = 1.25;
+            const ctY = getBaseTopY() + ctThick / 2;
+            const ctLen = clearLenBase + 0.5; // 0.5" overhang at the tip
+            const ctWidth = dBase + 1.0;
+            const ctGeo = new THREE.BoxGeometry(ctWidth, ctThick, ctLen);
+            const ctMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
+            const ctMesh = new THREE.Mesh(ctGeo, ctMat);
+            ctMesh.position.set(sign * (wMain / 2 - dBase / 2), ctY, zStart + ctLen / 2);
+            const ctEdge = new THREE.LineSegments(new THREE.EdgesGeometry(ctGeo), new THREE.LineBasicMaterial({ color: 0x475569 }));
+            ctMesh.add(ctEdge);
+            ctMesh.userData = { isDecor: true, label: `Granite/Quartz Countertop (${isRight ? 'Right' : 'Left'} Return)` };
+            cabinetGroup.add(ctMesh);
+            decorObjects.push(ctMesh);
+        }
+    }
+
+    // 2. DADO BACKSPLASH WALL FOR RETURN RUN
+    if (currentKitchenMode === 'both' && currentDadoGap > 0) {
+        const bsH = currentDadoGap;
+        const bsD = 0.5;
+        const bsY = getCountertopTopY() + bsH / 2;
+        const bsGeo = new THREE.BoxGeometry(bsD, bsH, wingLen);
+        const bsMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 20 });
+        const bsMesh = new THREE.Mesh(bsGeo, bsMat);
+        bsMesh.position.set(sign * (wMain / 2 - bsD / 2), bsY, -dBase / 2 + wingLen / 2);
+        const bsEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bsGeo), new THREE.LineBasicMaterial({ color: 0x64748b }));
+        bsMesh.add(bsEdge);
+        bsMesh.userData = { isDecor: true, label: `Dado Backsplash Wall (${isRight ? 'Right' : 'Left'} Return)` };
+        cabinetGroup.add(bsMesh);
+        decorObjects.push(bsMesh);
+    }
+
+    // 3. WALL CABINET FOR RETURN RUN
+    if (currentKitchenMode === 'wall' || currentKitchenMode === 'both') {
+        const dWall = currentWallD; // 12"
+        const clearLenWall = Math.max(12, wingLen - dWall);
+        const zWallStart = -dBase / 2 + dWall;
+        const zWallEnd = -dBase / 2 + wingLen;
+        const zWallCenter = (zWallStart + zWallEnd) / 2;
+        const xWallCenter = sign * (currentWallW / 2 - dWall / 2);
+        const wallCenterY = getWallCenterY();
+        const prefix = `[Wall Return ${isRight ? 'R' : 'L'}]`;
+
+        // Outer Back Panel along outer wall
+        const backW = createPanel(t, currentWallH, clearLenWall, shellColor, false, 'side');
+        backW.position.set(sign * (currentWallW / 2 - t / 2), wallCenterY, zWallCenter);
+        backW.userData.label = `${prefix} Outer Side Panel`;
+        backW.userData.module = 'wall';
+        backW.userData.w = t; backW.userData.h = currentWallH; backW.userData.d = clearLenWall;
+        cabinetGroup.add(backW);
+        shellObjects.push(backW);
+
+        // Top Panel
+        const topW = createPanel(dWall - t, t, clearLenWall, shellColor, false, 'top');
+        topW.position.set(sign * (currentWallW / 2 - dWall / 2 - t / 4), wallCenterY + currentWallH / 2 - t / 2, zWallCenter);
+        topW.userData.label = `${prefix} Top`;
+        topW.userData.module = 'wall';
+        topW.userData.w = dWall - t; topW.userData.h = t; topW.userData.d = clearLenWall;
+        cabinetGroup.add(topW);
+        shellObjects.push(topW);
+
+        // Bottom Panel
+        const botW = createPanel(dWall - t, t, clearLenWall, shellColor, false, 'bottom');
+        botW.position.set(sign * (currentWallW / 2 - dWall / 2 - t / 4), wallCenterY - currentWallH / 2 + t / 2, zWallCenter);
+        botW.userData.label = `${prefix} Bottom`;
+        botW.userData.module = 'wall';
+        botW.userData.w = dWall - t; botW.userData.h = t; botW.userData.d = clearLenWall;
+        cabinetGroup.add(botW);
+        shellObjects.push(botW);
+
+        // End Capping Panel
+        const endW = createPanel(dWall, currentWallH, t, shellColor, false, 'side');
+        endW.position.set(xWallCenter, wallCenterY, zWallEnd - t / 2);
+        endW.userData.label = `${prefix} End Cap`;
+        endW.userData.module = 'wall';
+        endW.userData.w = dWall; endW.userData.h = currentWallH; endW.userData.d = t;
+        cabinetGroup.add(endW);
+        shellObjects.push(endW);
+    }
+}
+
+function syncReturnWingPartitions(wingSide, wingLengthFt, module) {
+    const isRight = (wingSide === 'right');
+    const sign = isRight ? 1 : -1;
+    const isWall = (module === 'wall');
+    const wingLen = wingLengthFt * 12;
+    const t = currentThickness;
+    const dBase = currentD;
+    const dWall = currentWallD;
+    const depth = isWall ? dWall : dBase;
+    const clearLen = isWall ? Math.max(12, wingLen - dWall) : Math.max(12, wingLen - dBase);
+    const zStart = isWall ? (-dBase / 2 + dWall) : (dBase / 2);
+    const zEnd = -dBase / 2 + wingLen;
+    const zCenter = (zStart + zEnd) / 2;
+    const prefix = `[${isWall ? 'Wall' : 'Base'} Return ${isRight ? 'R' : 'L'}]`;
+
+    // 1. Shelves
+    const shelfInputId = isWall ? 'cad-wall-shelves-count' : 'cad-shelves-count';
+    const shelfCount = parseInt(document.getElementById(shelfInputId)?.value) || 0;
+    if (shelfCount > 0) {
+        const innerH = (isWall ? currentWallH : currentH) - (2 * t);
+        const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
+        const spacing = innerH / (shelfCount + 1);
+        const shelfW = depth - 2 * t - 0.5;
+        const shelfLen = clearLen - 2 * t;
+        const shelfX = sign * ((isWall ? currentWallW : currentW) / 2 - depth / 2);
+
+        for (let s = 1; s <= shelfCount; s++) {
+            const shelf = createPanel(shelfW, t, shelfLen, 0xdeb887, true, 'shelf');
+            shelf.position.set(shelfX, innerBottomY + (s * spacing), zCenter);
+            shelf.userData.label = `${prefix} Shelf ${s}`;
+            shelf.userData.isAutoShelf = true;
+            shelf.userData.module = module;
+            cabinetGroup.add(shelf);
+        }
+    }
+
+    // 2. Shutters (Doors)
+    let doorCount = 2;
+    if (clearLen <= 32) doorCount = 1;
+    else if (clearLen > 68) doorCount = 3;
+
+    const gap = 0.125;
+    const totalGaps = gap * (doorCount + 1);
+    const doorLen = (clearLen - totalGaps) / doorCount;
+    const doorH = (isWall ? currentWallH : currentH) - (gap * 2);
+    const doorThickness = 0.75;
+    const doorCenterY = isWall ? getWallCenterY() : getBaseCenterY();
+    const faceX = sign * ((isWall ? currentWallW : currentW) / 2 - depth) + (sign * -doorThickness / 2);
+
+    let curZ = zStart + gap + doorLen / 2;
+    for (let d = 0; d < doorCount; d++) {
+        const door = createPanel(doorThickness, doorH, doorLen, 0xdeb887, true, 'shutter');
+        door.userData.label = `${prefix} Shutter ${d + 1}`;
+        door.userData.module = module;
+        door.userData.type = 'shutter';
+        door.userData.shutterIndex = d + 1;
+        door.userData.w = doorLen;
+        door.userData.h = doorH;
+        door.userData.d = doorThickness;
+        door.userData.shutterW = doorLen;
+        door.userData.shutterH = doorH;
+        door.userData.shutterD = doorThickness;
+        door.userData.customEdge = 'all';
+        door.userData.customLaminate = 'single';
+        applyLaminateMaterials(door, 'shutter', 'single', 'all');
+
+        const isHingedFar = (d % 2 === 1);
+        const pivotOffsetZ = isHingedFar ? doorLen / 2 : -doorLen / 2;
+        door.geometry.translate(0, 0, -pivotOffsetZ);
+        door.children.forEach(c => {
+            if (c.geometry) c.geometry.translate(0, 0, -pivotOffsetZ);
+        });
+
+        door.position.set(faceX, doorCenterY, curZ + pivotOffsetZ);
+
+        door.userData.closedRotationY = 0;
+        if (isRight) {
+            door.userData.openRotationY = isHingedFar ? -Math.PI / 2 : Math.PI / 2;
+        } else {
+            door.userData.openRotationY = isHingedFar ? Math.PI / 2 : -Math.PI / 2;
+        }
+
+        if (shuttersOpen) {
+            door.rotation.y = door.userData.openRotationY;
+            door.layers.set(1);
+        }
+
+        cabinetGroup.add(door);
+        curZ += doorLen + gap;
+    }
+}
+
 function updateCameraFraming() {
     let centerY = 0;
     let maxDim = 100;
 
-    if (currentKitchenMode === 'both') {
-        const totalH = getWallTopY();
-        centerY = totalH / 2;
-        const maxW = Math.max(currentW, currentWallW);
-        maxDim = Math.max(maxW, totalH, currentD);
-    } else if (currentKitchenMode === 'base') {
-        const totalH = getBaseTopY();
-        centerY = totalH / 2;
-        maxDim = Math.max(currentW, totalH, currentD);
+    const totalH = (currentKitchenMode === 'both') ? getWallTopY() : ((currentKitchenMode === 'base') ? getBaseTopY() : currentWallH);
+    centerY = totalH / 2;
+
+    const maxW = (currentKitchenMode === 'wall') ? currentWallW : Math.max(currentW, currentWallW);
+    let maxD = currentD;
+
+    if (currentKitchenLayout === 'l-shape') {
+        maxD = currentD + (currentLReturnFt * 12);
+        maxDim = Math.max(maxW, maxD, totalH);
+        const sign = (currentLReturnSide === 'right') ? 1 : -1;
+        const targetZ = (-currentD / 2 + (currentLReturnFt * 12)) * 0.35;
+        camera.position.set(-sign * (maxDim * 0.65), centerY + (maxDim * 0.55), maxDim * 1.35);
+        orbit.target.set(0, centerY, targetZ);
+    } else if (currentKitchenLayout === 'u-shape') {
+        maxD = currentD + Math.max(currentULeftFt, currentURightFt) * 12;
+        maxDim = Math.max(maxW, maxD, totalH);
+        const targetZ = (-currentD / 2 + Math.max(currentULeftFt, currentURightFt) * 12) * 0.35;
+        camera.position.set(0, centerY + (maxDim * 0.65), maxDim * 1.45);
+        orbit.target.set(0, centerY, targetZ);
     } else {
-        const totalH = currentWallH;
-        centerY = totalH / 2;
-        maxDim = Math.max(currentWallW, totalH, currentWallD);
+        maxDim = Math.max(maxW, totalH, currentD);
+        camera.position.set(0, centerY + (maxDim * 0.35), maxDim * 1.55);
+        orbit.target.set(0, centerY, 0);
     }
 
-    camera.position.set(0, centerY + (maxDim * 0.35), maxDim * 1.55);
-    orbit.target.set(0, centerY, 0);
     orbit.update();
 }
 
@@ -1334,6 +1691,14 @@ function buildShell() {
         buildPlinth(currentW, currentD, currentPlinth, '[Base]');
     } else if (currentKitchenMode === 'wall') {
         buildBoxShell('wall', currentWallW, currentWallH, currentWallD, getWallCenterY(), 0, '[Wall]');
+    }
+
+    // Modular Multi-Run Layout Generation (L-Kitchen & U-Kitchen)
+    if (currentKitchenLayout === 'l-shape') {
+        buildReturnWing(currentLReturnSide, currentLReturnFt);
+    } else if (currentKitchenLayout === 'u-shape') {
+        buildReturnWing('left', currentULeftFt);
+        buildReturnWing('right', currentURightFt);
     }
 
     updateCameraFraming();
@@ -1368,6 +1733,25 @@ function syncPartitionsAndDoors() {
         syncShelvesFromCount('wall');
         syncDividersFromCount('wall');
         syncShuttersFromSelect('wall');
+    }
+
+    // Sync Return Wings for L-Kitchen & U-Kitchen
+    if (currentKitchenLayout === 'l-shape') {
+        if (currentKitchenMode === 'base' || currentKitchenMode === 'both') {
+            syncReturnWingPartitions(currentLReturnSide, currentLReturnFt, 'base');
+        }
+        if (currentKitchenMode === 'wall' || currentKitchenMode === 'both') {
+            syncReturnWingPartitions(currentLReturnSide, currentLReturnFt, 'wall');
+        }
+    } else if (currentKitchenLayout === 'u-shape') {
+        if (currentKitchenMode === 'base' || currentKitchenMode === 'both') {
+            syncReturnWingPartitions('left', currentULeftFt, 'base');
+            syncReturnWingPartitions('right', currentURightFt, 'base');
+        }
+        if (currentKitchenMode === 'wall' || currentKitchenMode === 'both') {
+            syncReturnWingPartitions('left', currentULeftFt, 'wall');
+            syncReturnWingPartitions('right', currentURightFt, 'wall');
+        }
     }
 }
 
@@ -1694,6 +2078,21 @@ function applyPreset(presetKey) {
     if (wallDividersInput && preset.wallDividers !== undefined) wallDividersInput.value = preset.wallDividers;
     if (wallShutterSelect && preset.wallShutters !== undefined) wallShutterSelect.value = preset.wallShutters;
     
+    const layoutSec = document.getElementById('cad-kitchen-layout-section');
+    if (presetKey.startsWith('kitchen-')) {
+        if (layoutSec) layoutSec.style.display = 'block';
+    } else {
+        if (layoutSec) layoutSec.style.display = 'none';
+        currentKitchenLayout = 'straight';
+        document.querySelectorAll('.layout-pill').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.layout === 'straight');
+        });
+        const lControls = document.getElementById('cad-l-controls');
+        const uControls = document.getElementById('cad-u-controls');
+        if (lControls) lControls.style.display = 'none';
+        if (uControls) uControls.style.display = 'none';
+    }
+
     setKitchenMode(preset.mode || 'both');
 }
 
@@ -1708,6 +2107,22 @@ function setupCADListeners() {
                 else if (mode === 'base') p.classList.toggle('active', p.dataset.preset === 'kitchen-base');
                 else if (mode === 'wall') p.classList.toggle('active', p.dataset.preset === 'kitchen-wall');
             });
+        });
+    });
+
+    // Kitchen Layout Shape Selector Pills (Straight / L-Kitchen / U-Kitchen)
+    document.querySelectorAll('.layout-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setKitchenLayout(btn.dataset.layout);
+        });
+    });
+
+    // Corner Return Side Toggle (Left / Right)
+    document.querySelectorAll('.corner-side-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.corner-side-btn').forEach(b => b.classList.toggle('active', b === btn));
+            currentLReturnSide = btn.dataset.side;
+            updateDimensionsFromInputs();
         });
     });
 
@@ -1772,8 +2187,12 @@ function setupCADListeners() {
     attachDimFieldHandlers('cad-wall-d-ft', 'ft');
     attachDimFieldHandlers('cad-dado-gap-in', 'in');
 
+    attachDimFieldHandlers('cad-l-return-ft', 'ft');
+    attachDimFieldHandlers('cad-u-left-ft', 'ft');
+    attachDimFieldHandlers('cad-u-right-ft', 'ft');
+
     // Auto-select text on focus and Enter-blur for integer count inputs
-    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count', 'cab-preset-qty'].forEach(id => {
+    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count', 'cab-preset-qty', 'cad-l-return-ft', 'cad-u-left-ft', 'cad-u-right-ft'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('focus', () => el.select());
@@ -1820,8 +2239,8 @@ function setupCADListeners() {
         });
     });
 
-    // ArrowUp / ArrowDown keyboard stepper on partition inputs
-    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count'].forEach(id => {
+    // ArrowUp / ArrowDown keyboard stepper on partition & return inputs
+    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count', 'cad-l-return-ft', 'cad-u-left-ft', 'cad-u-right-ft'].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
             input.addEventListener('keydown', (e) => {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=26">
+    <link rel="stylesheet" href="style.css?v=27">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -60,6 +60,93 @@
                                 <button type="button" class="preset-pill" data-preset="wardrobe">Wardrobe</button>
                                 <button type="button" class="preset-pill" data-preset="tv-console">TV Console</button>
                                 <button type="button" class="preset-pill" data-preset="shoe-rack">Shoe Rack</button>
+                            </div>
+                        </div>
+
+                        <!-- Kitchen Layout Shape Selector (Visible when Kitchen Set or Kitchen preset is selected) -->
+                        <div class="cad-kitchen-layout-section" id="cad-kitchen-layout-section">
+                            <div class="cad-layout-header">
+                                <label class="cad-label">KITCHEN LAYOUT SHAPE</label>
+                                <span class="badge-tag base-tag" id="cad-layout-badge">Straight</span>
+                            </div>
+                            <div class="cad-layout-pills">
+                                <button type="button" class="layout-pill active" data-layout="straight">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line></svg>
+                                    <span>Straight</span>
+                                </button>
+                                <button type="button" class="layout-pill" data-layout="l-shape">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 5 5 19 19 19"></polyline></svg>
+                                    <span>L-Kitchen</span>
+                                </button>
+                                <button type="button" class="layout-pill" data-layout="u-shape">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 5 5 19 19 19 19 5"></polyline></svg>
+                                    <span>U-Kitchen</span>
+                                </button>
+                            </div>
+
+                            <!-- L-Kitchen Return Controls -->
+                            <div class="cad-layout-subcontrols" id="cad-l-controls" style="display: none;">
+                                <div class="cad-card-grid-2" style="margin-top: 0.45rem;">
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label" id="lbl-cad-l-return-ft">RETURN RUN (FT)</label>
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" id="cad-l-return-ft" class="cad-num-input cad-stepper-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-l-return-ft" title="Add Length">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-l-return-ft" title="Decrease Length">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <span id="cad-l-return-sub" class="cad-col-subtext">~ 84" (7 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">CORNER RETURN</label>
+                                        <div class="cad-toggle-pills" id="cad-l-corner-toggle">
+                                            <button type="button" class="corner-side-btn" data-side="left" title="Corner on Left Side">↰ Left</button>
+                                            <button type="button" class="corner-side-btn active" data-side="right" title="Corner on Right Side">Right ↱</button>
+                                        </div>
+                                        <span class="cad-col-subtext">Attachment Side</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- U-Kitchen Return Controls -->
+                            <div class="cad-layout-subcontrols" id="cad-u-controls" style="display: none;">
+                                <div class="cad-card-grid-2" style="margin-top: 0.45rem;">
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label" id="lbl-cad-u-left-ft">LEFT RUN (FT)</label>
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" id="cad-u-left-ft" class="cad-num-input cad-stepper-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-u-left-ft" title="Add Length">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-u-left-ft" title="Decrease Length">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <span id="cad-u-left-sub" class="cad-col-subtext">~ 84" (7 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label" id="lbl-cad-u-right-ft">RIGHT RUN (FT)</label>
+                                        <div class="cad-stepper-wrap">
+                                            <input type="text" id="cad-u-right-ft" class="cad-num-input cad-stepper-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                            <div class="cad-stepper-arrows">
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-u-right-ft" title="Add Length">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-u-right-ft" title="Decrease Length">
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <span id="cad-u-right-sub" class="cad-col-subtext">~ 84" (7 ft)</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -359,6 +446,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=26"></script>
+    <script src="3d.js?v=27"></script>
 </body>
 </html>
