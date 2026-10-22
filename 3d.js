@@ -377,7 +377,7 @@ function populateInspector(obj) {
     }
     
     nameEl.textContent = name;
-    thickEl.value = thickness;
+    thickEl.value = (typeof thickness === 'number' ? thickness : parseFloat(thickness) || 0.75) + ' in';
     lamEl.value = laminate;
     if (edgeEl) edgeEl.value = edge;
 }
@@ -386,32 +386,45 @@ function setupInspector() {
     const thickEl = document.getElementById('prop-thickness');
     const lamEl = document.getElementById('prop-laminate');
     
-    thickEl.addEventListener('input', (e) => {
-        if (!selectedObject || selectedObject.userData.isDrawerGroup) return;
-        
-        const newT = parseFloat(e.target.value);
-        if (isNaN(newT) || newT <= 0) return;
-        
-        selectedObject.userData.customThickness = newT;
-        
-        const type = selectedObject.userData.type;
-        let w = selectedObject.geometry.parameters.width;
-        let h = selectedObject.geometry.parameters.height;
-        let d = selectedObject.geometry.parameters.depth;
-        
-        if (type === 'shelf') h = newT;
-        if (type === 'divider') w = newT;
-        
-        const geo = new THREE.BoxGeometry(w, h, d);
-        selectedObject.geometry.dispose();
-        selectedObject.geometry = geo;
-        
-        const edges = selectedObject.children.find(c => c.type === 'LineSegments');
-        if (edges) {
-            edges.geometry.dispose();
-            edges.geometry = new THREE.EdgesGeometry(geo);
-        }
-    });
+    if (thickEl) {
+        thickEl.addEventListener('focus', () => thickEl.select());
+        thickEl.addEventListener('input', (e) => {
+            if (!selectedObject || selectedObject.userData.isDrawerGroup) return;
+            
+            const parsed = parseDim(e.target.value, 'in');
+            const newT = parsed ? parsed.in : parseFloat(e.target.value);
+            if (isNaN(newT) || newT <= 0) return;
+            
+            selectedObject.userData.customThickness = newT;
+            
+            const type = selectedObject.userData.type;
+            let w = selectedObject.geometry.parameters.width;
+            let h = selectedObject.geometry.parameters.height;
+            let d = selectedObject.geometry.parameters.depth;
+            
+            if (type === 'shelf') h = newT;
+            if (type === 'divider') w = newT;
+            
+            const geo = new THREE.BoxGeometry(w, h, d);
+            selectedObject.geometry.dispose();
+            selectedObject.geometry = geo;
+            
+            const edges = selectedObject.children.find(c => c.type === 'LineSegments');
+            if (edges) {
+                edges.geometry.dispose();
+                edges.geometry = new THREE.EdgesGeometry(geo);
+            }
+        });
+        thickEl.addEventListener('blur', () => {
+            const parsed = parseDim(thickEl.value, 'in');
+            if (parsed && parsed.display) {
+                thickEl.value = parsed.display;
+            }
+        });
+        thickEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') thickEl.blur();
+        });
+    }
     
     lamEl.addEventListener('change', (e) => {
         if (!selectedObject || selectedObject.userData.isDrawerGroup) return;
@@ -655,36 +668,126 @@ function setKitchenMode(mode) {
     updateDimensionsFromInputs();
 }
 
+function parseDim(str, defaultUnit = 'in') {
+    if (str === null || str === undefined) return null;
+    str = String(str).trim().toLowerCase();
+    if (!str) return null;
+
+    // Explicit feet: "2ft", "2 ft", "2.5 ft", "2'", "2 feet", "2 foot"
+    const ftMatch = str.match(/^([0-9]*\.?[0-9]+)\s*(ft|feet|foot|')\s*$/);
+    if (ftMatch) {
+        const num = parseFloat(ftMatch[1]);
+        if (!isNaN(num) && num >= 0) {
+            return {
+                num: num,
+                unit: 'ft',
+                in: num * 12,
+                ft: num,
+                display: num + ' ft'
+            };
+        }
+    }
+
+    // Explicit inches: "2in", "2 in", "2.5 in", "2\"", "2 inch", "2 inches"
+    const inMatch = str.match(/^([0-9]*\.?[0-9]+)\s*(in|inch|inches|"|'')\s*$/);
+    if (inMatch) {
+        const num = parseFloat(inMatch[1]);
+        if (!isNaN(num) && num >= 0) {
+            return {
+                num: num,
+                unit: 'in',
+                in: num,
+                ft: num / 12,
+                display: num + ' in'
+            };
+        }
+    }
+
+    // Plain number without unit
+    const plainMatch = str.match(/^([0-9]*\.?[0-9]+)\s*$/);
+    if (plainMatch) {
+        const num = parseFloat(plainMatch[1]);
+        if (!isNaN(num) && num >= 0) {
+            if (defaultUnit === 'ft') {
+                return {
+                    num: num,
+                    unit: 'ft',
+                    in: num * 12,
+                    ft: num,
+                    display: num + ' ft'
+                };
+            } else {
+                return {
+                    num: num,
+                    unit: 'in',
+                    in: num,
+                    ft: num / 12,
+                    display: num + ' in'
+                };
+            }
+        }
+    }
+
+    // Loose fallback for any typed text containing numbers
+    const num = parseFloat(str);
+    if (!isNaN(num) && num >= 0) {
+        if (str.includes('ft') || str.includes("'")) {
+            return { num, unit: 'ft', in: num * 12, ft: num, display: num + ' ft' };
+        }
+        if (str.includes('in') || str.includes('"')) {
+            return { num, unit: 'in', in: num, ft: num / 12, display: num + ' in' };
+        }
+        if (defaultUnit === 'ft') {
+            return { num, unit: 'ft', in: num * 12, ft: num, display: num + ' ft' };
+        } else {
+            return { num, unit: 'in', in: num, ft: num / 12, display: num + ' in' };
+        }
+    }
+
+    return null;
+}
+
 function updateDimensionsFromInputs() {
     // 1. Read Base Unit Inputs
     const hInput = document.getElementById('cad-h-in');
     const wInput = document.getElementById('cad-w-ft');
     const dInput = document.getElementById('cad-d-ft');
     const plinthInput = document.getElementById('cad-plinth-in');
-    
-    const hIn = hInput ? (parseFloat(hInput.value) || 32) : 32;
-    const wFt = wInput ? (parseFloat(wInput.value) || 11) : 11;
-    const dFt = dInput ? (parseFloat(dInput.value) || 2) : 2;
-    const plinthIn = plinthInput ? (parseFloat(plinthInput.value) || 0) : 0;
-    
-    currentH = hIn;
-    currentW = wFt * 12;
-    currentD = dFt * 12;
-    currentPlinth = plinthIn;
+
+    const hParsed = parseDim(hInput ? hInput.value : '', 'in') || { in: 32, ft: 2.67, unit: 'in' };
+    const wParsed = parseDim(wInput ? wInput.value : '', 'ft') || { in: 132, ft: 11, unit: 'ft' };
+    const dParsed = parseDim(dInput ? dInput.value : '', 'ft') || { in: 24, ft: 2, unit: 'ft' };
+    const plinthParsed = parseDim(plinthInput ? plinthInput.value : '', 'in') || { in: 3, ft: 0.25, unit: 'in' };
+
+    currentH = hParsed.in;
+    currentW = wParsed.in;
+    currentD = dParsed.in;
+    currentPlinth = plinthParsed.in;
     currentThickness = 0.75;
-    
+
+    // Dynamically update column labels to reflect active unit (IN vs FT)
+    const lblH = document.getElementById('lbl-cad-h-in');
+    const lblW = document.getElementById('lbl-cad-w-ft');
+    const lblD = document.getElementById('lbl-cad-d-ft');
+    const lblPlinth = document.getElementById('lbl-cad-plinth-in');
+    if (lblH) lblH.textContent = `HEIGHT (${hParsed.unit.toUpperCase()})`;
+    if (lblW) lblW.textContent = `WIDTH (${wParsed.unit.toUpperCase()})`;
+    if (lblD) lblD.textContent = `DEPTH (${dParsed.unit.toUpperCase()})`;
+    if (lblPlinth) lblPlinth.textContent = `PLINTH (${plinthParsed.unit.toUpperCase()})`;
+
     // Update Base Subtext Labels
     const hSub = document.getElementById('cad-h-sub');
     const wSub = document.getElementById('cad-w-sub');
     const dSub = document.getElementById('cad-d-sub');
     const plinthSub = document.getElementById('cad-plinth-sub');
     const summary = document.getElementById('cad-dim-summary');
-    
-    if (hSub) hSub.textContent = `~ ${hIn.toFixed(0)}" (${(hIn / 12).toFixed(2)} ft)`;
-    if (wSub) wSub.textContent = `~ ${(wFt * 12).toFixed(0)}" (${wFt} ft)`;
-    if (dSub) dSub.textContent = `~ ${(dFt * 12).toFixed(0)}" (${dFt} ft)`;
-    if (plinthSub) plinthSub.textContent = `~ ${plinthIn.toFixed(0)}"`;
-    if (summary) summary.textContent = `${hIn.toFixed(0)}" H × ${(wFt * 12).toFixed(0)}" W × ${(dFt * 12).toFixed(0)}" D`;
+
+    if (hSub) hSub.textContent = `~ ${hParsed.in.toFixed(0)}" (${hParsed.ft.toFixed(2)} ft)`;
+    if (wSub) wSub.textContent = `~ ${wParsed.in.toFixed(0)}" (${wParsed.ft.toFixed(0)} ft)`;
+    const dFtDisplay = dParsed.ft >= 1 ? dParsed.ft.toFixed(0) : dParsed.ft.toFixed(2);
+    if (dSub) dSub.textContent = `~ ${dParsed.in.toFixed(0)}" (${dFtDisplay} ft)`;
+    if (plinthSub) plinthSub.textContent = `~ ${plinthParsed.in.toFixed(0)}"`;
+    if (summary) summary.textContent = `${hParsed.in.toFixed(0)}" H × ${wParsed.in.toFixed(0)}" W × ${dParsed.in.toFixed(0)}" D`;
 
     // 2. Read Wall Unit Inputs
     const wallHInput = document.getElementById('cad-wall-h-in');
@@ -692,15 +795,25 @@ function updateDimensionsFromInputs() {
     const wallDInput = document.getElementById('cad-wall-d-ft');
     const dadoGapInput = document.getElementById('cad-dado-gap-in');
 
-    const wallHIn = wallHInput ? (parseFloat(wallHInput.value) || 30) : 30;
-    const wallWFt = wallWInput ? (parseFloat(wallWInput.value) || 11) : 11;
-    const wallDFt = wallDInput ? (parseFloat(wallDInput.value) || 1) : 1;
-    const dadoGapIn = dadoGapInput ? (parseFloat(dadoGapInput.value) || 22) : 22;
+    const wallHParsed = parseDim(wallHInput ? wallHInput.value : '', 'in') || { in: 30, ft: 2.5, unit: 'in' };
+    const wallWParsed = parseDim(wallWInput ? wallWInput.value : '', 'ft') || { in: 132, ft: 11, unit: 'ft' };
+    const wallDParsed = parseDim(wallDInput ? wallDInput.value : '', 'ft') || { in: 12, ft: 1, unit: 'ft' };
+    const dadoGapParsed = parseDim(dadoGapInput ? dadoGapInput.value : '', 'in') || { in: 22, ft: 1.83, unit: 'in' };
 
-    currentWallH = wallHIn;
-    currentWallW = wallWFt * 12;
-    currentWallD = wallDFt * 12;
-    currentDadoGap = dadoGapIn;
+    currentWallH = wallHParsed.in;
+    currentWallW = wallWParsed.in;
+    currentWallD = wallDParsed.in;
+    currentDadoGap = dadoGapParsed.in;
+
+    // Dynamically update Wall column labels
+    const lblWallH = document.getElementById('lbl-cad-wall-h-in');
+    const lblWallW = document.getElementById('lbl-cad-wall-w-ft');
+    const lblWallD = document.getElementById('lbl-cad-wall-d-ft');
+    const lblDadoGap = document.getElementById('lbl-cad-dado-gap-in');
+    if (lblWallH) lblWallH.textContent = `HEIGHT (${wallHParsed.unit.toUpperCase()})`;
+    if (lblWallW) lblWallW.textContent = `WIDTH (${wallWParsed.unit.toUpperCase()})`;
+    if (lblWallD) lblWallD.textContent = `DEPTH (${wallDParsed.unit.toUpperCase()})`;
+    if (lblDadoGap) lblDadoGap.textContent = `WALL GAP (${dadoGapParsed.unit.toUpperCase()})`;
 
     // Update Wall Subtext Labels
     const wallHSub = document.getElementById('cad-wall-h-sub');
@@ -709,11 +822,12 @@ function updateDimensionsFromInputs() {
     const dadoGapSub = document.getElementById('cad-dado-gap-sub');
     const wallSummary = document.getElementById('cad-wall-dim-summary');
 
-    if (wallHSub) wallHSub.textContent = `~ ${wallHIn.toFixed(0)}" (${(wallHIn / 12).toFixed(2)} ft)`;
-    if (wallWSub) wallWSub.textContent = `~ ${(wallWFt * 12).toFixed(0)}" (${wallWFt} ft)`;
-    if (wallDSub) wallDSub.textContent = `~ ${(wallDFt * 12).toFixed(0)}" (${wallDFt} ft)`;
-    if (dadoGapSub) dadoGapSub.textContent = `~ ${dadoGapIn.toFixed(0)}" (Dado)`;
-    if (wallSummary) wallSummary.textContent = `${wallHIn.toFixed(0)}" H × ${(wallWFt * 12).toFixed(0)}" W × ${(wallDFt * 12).toFixed(0)}" D`;
+    if (wallHSub) wallHSub.textContent = `~ ${wallHParsed.in.toFixed(0)}" (${wallHParsed.ft.toFixed(2)} ft)`;
+    if (wallWSub) wallWSub.textContent = `~ ${wallWParsed.in.toFixed(0)}" (${wallWParsed.ft.toFixed(0)} ft)`;
+    const wallDFtDisplay = wallDParsed.ft >= 1 ? wallDParsed.ft.toFixed(0) : wallDParsed.ft.toFixed(2);
+    if (wallDSub) wallDSub.textContent = `~ ${wallDParsed.in.toFixed(0)}" (${wallDFtDisplay} ft)`;
+    if (dadoGapSub) dadoGapSub.textContent = `~ ${dadoGapParsed.in.toFixed(0)}" (Dado)`;
+    if (wallSummary) wallSummary.textContent = `${wallHParsed.in.toFixed(0)}" H × ${wallWParsed.in.toFixed(0)}" W × ${wallDParsed.in.toFixed(0)}" D`;
     
     buildShell();
     syncPartitionsAndDoors();
@@ -1130,18 +1244,18 @@ function applyPreset(presetKey) {
     const wallShutterSelect = document.getElementById('cad-wall-shutter-select');
     
     if (nameInput) nameInput.value = preset.name;
-    if (hInput) hInput.value = preset.hIn;
-    if (wInput) wInput.value = preset.wFt;
-    if (dInput) dInput.value = preset.dFt;
-    if (plinthInput) plinthInput.value = preset.plinthIn;
+    if (hInput) hInput.value = preset.hIn + ' in';
+    if (wInput) wInput.value = preset.wFt + ' ft';
+    if (dInput) dInput.value = preset.dFt + ' ft';
+    if (plinthInput) plinthInput.value = preset.plinthIn + ' in';
     if (shelvesInput) shelvesInput.value = preset.shelves;
     if (dividersInput) dividersInput.value = preset.dividers;
     if (shutterSelect) shutterSelect.value = preset.shutters;
 
-    if (wallHInput && preset.wallHIn !== undefined) wallHInput.value = preset.wallHIn;
-    if (wallWInput && preset.wallWFt !== undefined) wallWInput.value = preset.wallWFt;
-    if (wallDInput && preset.wallDFt !== undefined) wallDInput.value = preset.wallDFt;
-    if (dadoGapInput && preset.dadoGapIn !== undefined) dadoGapInput.value = preset.dadoGapIn;
+    if (wallHInput && preset.wallHIn !== undefined) wallHInput.value = preset.wallHIn + ' in';
+    if (wallWInput && preset.wallWFt !== undefined) wallWInput.value = preset.wallWFt + ' ft';
+    if (wallDInput && preset.wallDFt !== undefined) wallDInput.value = preset.wallDFt + ' ft';
+    if (dadoGapInput && preset.dadoGapIn !== undefined) dadoGapInput.value = preset.dadoGapIn + ' in';
     if (wallShelvesInput && preset.wallShelves !== undefined) wallShelvesInput.value = preset.wallShelves;
     if (wallDividersInput && preset.wallDividers !== undefined) wallDividersInput.value = preset.wallDividers;
     if (wallShutterSelect && preset.wallShutters !== undefined) wallShutterSelect.value = preset.wallShutters;
@@ -1163,16 +1277,55 @@ function setupCADListeners() {
         });
     });
 
-    // Base Unit Dimensions
-    ['cad-h-in', 'cad-w-ft', 'cad-d-ft', 'cad-plinth-in'].forEach(id => {
+    function attachDimFieldHandlers(inputId, defaultUnit) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+
+        el.addEventListener('focus', () => {
+            el.select();
+        });
+
+        el.addEventListener('input', () => {
+            updateDimensionsFromInputs();
+        });
+
+        const commitValue = () => {
+            const parsed = parseDim(el.value, defaultUnit);
+            if (parsed && parsed.display) {
+                el.value = parsed.display;
+            }
+            updateDimensionsFromInputs();
+        };
+
+        el.addEventListener('blur', commitValue);
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                commitValue();
+                el.blur();
+            }
+        });
+    }
+
+    // Attach smart dimension field handlers (supporting 2in, 2 in, 2ft, 2 ft, auto unit conversion)
+    attachDimFieldHandlers('cad-h-in', 'in');
+    attachDimFieldHandlers('cad-w-ft', 'ft');
+    attachDimFieldHandlers('cad-d-ft', 'ft');
+    attachDimFieldHandlers('cad-plinth-in', 'in');
+
+    attachDimFieldHandlers('cad-wall-h-in', 'in');
+    attachDimFieldHandlers('cad-wall-w-ft', 'ft');
+    attachDimFieldHandlers('cad-wall-d-ft', 'ft');
+    attachDimFieldHandlers('cad-dado-gap-in', 'in');
+
+    // Auto-select text on focus and Enter-blur for integer count inputs
+    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count', 'cab-preset-qty'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('input', updateDimensionsFromInputs);
-    });
-    
-    // Wall Unit Dimensions
-    ['cad-wall-h-in', 'cad-wall-w-ft', 'cad-wall-d-ft', 'cad-dado-gap-in'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', updateDimensionsFromInputs);
+        if (el) {
+            el.addEventListener('focus', () => el.select());
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') el.blur();
+            });
+        }
     });
 
     // Base Partitions

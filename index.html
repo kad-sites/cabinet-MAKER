@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -35,7 +35,7 @@
                             <div class="cad-input-block" style="width: 85px;">
                                 <label class="cad-label">QUANTITY</label>
                                 <div class="qty-control">
-                                    <input type="number" id="cab-preset-qty" class="cad-input-number" value="1" min="1">
+                                    <input type="text" inputmode="numeric" id="cab-preset-qty" class="cad-input-number" value="1" autocomplete="off">
                                     <button type="button" id="btn-duplicate-cab" class="cad-icon-btn" title="Duplicate Cabinet Set (Increases quantity)">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                     </button>
@@ -73,23 +73,23 @@
                                 </div>
                                 <div class="cad-card-grid-4">
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">HEIGHT (IN)</label>
-                                        <input type="number" id="cad-h-in" class="cad-num-input" value="32" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-h-in">HEIGHT (IN)</label>
+                                        <input type="text" id="cad-h-in" class="cad-num-input" value="32 in" data-default-unit="in" autocomplete="off" spellcheck="false">
                                         <span id="cad-h-sub" class="cad-col-subtext">~ 32" (2.67 ft)</span>
                                     </div>
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">WIDTH (FT)</label>
-                                        <input type="number" id="cad-w-ft" class="cad-num-input" value="11" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-w-ft">WIDTH (FT)</label>
+                                        <input type="text" id="cad-w-ft" class="cad-num-input" value="11 ft" data-default-unit="ft" autocomplete="off" spellcheck="false">
                                         <span id="cad-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
                                     </div>
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">DEPTH (FT)</label>
-                                        <input type="number" id="cad-d-ft" class="cad-num-input" value="2" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-d-ft">DEPTH (FT)</label>
+                                        <input type="text" id="cad-d-ft" class="cad-num-input" value="2 ft" data-default-unit="ft" autocomplete="off" spellcheck="false">
                                         <span id="cad-d-sub" class="cad-col-subtext">~ 24" (2 ft)</span>
                                     </div>
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">PLINTH (IN)</label>
-                                        <input type="number" id="cad-plinth-in" class="cad-num-input" value="3" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-plinth-in">PLINTH (IN)</label>
+                                        <input type="text" id="cad-plinth-in" class="cad-num-input" value="3 in" data-default-unit="in" autocomplete="off" spellcheck="false">
                                         <span id="cad-plinth-sub" class="cad-col-subtext">~ 3"</span>
                                     </div>
                                 </div>
@@ -103,23 +103,23 @@
                                 </div>
                                 <div class="cad-card-grid-4">
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">HEIGHT (IN)</label>
-                                        <input type="number" id="cad-wall-h-in" class="cad-num-input" value="30" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-wall-h-in">HEIGHT (IN)</label>
+                                        <input type="text" id="cad-wall-h-in" class="cad-num-input" value="30 in" data-default-unit="in" autocomplete="off" spellcheck="false">
                                         <span id="cad-wall-h-sub" class="cad-col-subtext">~ 30" (2.50 ft)</span>
                                     </div>
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">WIDTH (FT)</label>
-                                        <input type="number" id="cad-wall-w-ft" class="cad-num-input" value="11" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-wall-w-ft">WIDTH (FT)</label>
+                                        <input type="text" id="cad-wall-w-ft" class="cad-num-input" value="11 ft" data-default-unit="ft" autocomplete="off" spellcheck="false">
                                         <span id="cad-wall-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
                                     </div>
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">DEPTH (FT)</label>
-                                        <input type="number" id="cad-wall-d-ft" class="cad-num-input" value="1" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-wall-d-ft">DEPTH (FT)</label>
+                                        <input type="text" id="cad-wall-d-ft" class="cad-num-input" value="1 ft" data-default-unit="ft" autocomplete="off" spellcheck="false">
                                         <span id="cad-wall-d-sub" class="cad-col-subtext">~ 12" (1 ft)</span>
                                     </div>
                                     <div class="cad-grid-col">
-                                        <label class="cad-col-label">WALL GAP (IN)</label>
-                                        <input type="number" id="cad-dado-gap-in" class="cad-num-input" value="22" step="any">
+                                        <label class="cad-col-label" id="lbl-cad-dado-gap-in">WALL GAP (IN)</label>
+                                        <input type="text" id="cad-dado-gap-in" class="cad-num-input" value="22 in" data-default-unit="in" autocomplete="off" spellcheck="false">
                                         <span id="cad-dado-gap-sub" class="cad-col-subtext">~ 22" (Dado)</span>
                                     </div>
                                 </div>
@@ -136,11 +136,11 @@
                                 <div class="cad-card-grid-3">
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHELVES</label>
-                                        <input type="number" id="cad-shelves-count" class="cad-num-input" value="2" min="0" step="1">
+                                        <input type="text" inputmode="numeric" id="cad-shelves-count" class="cad-num-input" value="2" autocomplete="off">
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                        <input type="number" id="cad-dividers-count" class="cad-num-input" value="0" min="0" step="1">
+                                        <input type="text" inputmode="numeric" id="cad-dividers-count" class="cad-num-input" value="0" autocomplete="off">
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHUTTERS (DOORS)</label>
@@ -165,11 +165,11 @@
                                 <div class="cad-card-grid-3">
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHELVES</label>
-                                        <input type="number" id="cad-wall-shelves-count" class="cad-num-input" value="2" min="0" step="1">
+                                        <input type="text" inputmode="numeric" id="cad-wall-shelves-count" class="cad-num-input" value="2" autocomplete="off">
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                        <input type="number" id="cad-wall-dividers-count" class="cad-num-input" value="0" min="0" step="1">
+                                        <input type="text" inputmode="numeric" id="cad-wall-dividers-count" class="cad-num-input" value="0" autocomplete="off">
                                     </div>
                                     <div class="cad-grid-col">
                                         <label class="cad-col-label">SHUTTERS (DOORS)</label>
@@ -223,7 +223,7 @@
                             
                             <div class="form-group" style="margin-bottom: 0.25rem;">
                                 <label style="font-size: 0.75rem;">Thickness (inches)</label>
-                                <input type="number" id="prop-thickness" step="any" style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
+                                <input type="text" id="prop-thickness" style="width: 100%; padding: 0.4rem; font-size: 0.85rem;" autocomplete="off">
                             </div>
 
                             <div class="form-group" style="margin-bottom: 0.25rem;">
@@ -253,6 +253,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=12"></script>
+    <script src="3d.js?v=13"></script>
 </body>
 </html>

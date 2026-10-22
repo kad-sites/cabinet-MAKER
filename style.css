@@ -398,6 +398,18 @@ main {
     white-space: nowrap;
 }
 
+/* Remove up/down spin arrow buttons everywhere on all inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+
+input[type=number] {
+    -moz-appearance: textfield !important;
+    appearance: none !important;
+}
+
 .cad-num-input {
     width: 100%;
     text-align: center;
@@ -411,6 +423,9 @@ main {
     font-family: inherit;
     outline: none;
     transition: all 0.2s;
+    -webkit-appearance: none !important;
+    -moz-appearance: textfield !important;
+    appearance: none !important;
 }
 
 .cad-num-input:focus {
