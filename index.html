@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=16">
+    <link rel="stylesheet" href="style.css?v=18">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -195,6 +195,10 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 3h18M5 21V3h14v18M15 12h2"/></svg>
                                 <span>Toggle Doors</span>
                             </button>
+                            <button type="button" id="btn-toggle-drawers" class="cad-action-btn" title="Slide Drawers on Channels (Pull Out / Push In)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="13 8 17 12 13 16"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                                <span>Pull Drawers</span>
+                            </button>
                             <button type="button" id="btn-add-drawer-quick" class="cad-action-btn" title="Add a Drawer inside Base Cabinet">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
                                 <span>+ Drawer</span>
@@ -274,6 +278,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=17"></script>
+    <script src="3d.js?v=18"></script>
 </body>
 </html>

@@ -17,6 +17,7 @@ let decorObjects = []; // Countertop & Backsplash
 let internalParts = [];
 let partCounter = 1;
 let shuttersOpen = false;
+let drawersOpen = false;
 
 // Height and Coordinate Helpers
 function getBaseBottomY() {
@@ -88,6 +89,20 @@ function init3D() {
     transformControl = new THREE.TransformControls(camera, renderer.domElement);
     transformControl.addEventListener('dragging-changed', function (event) {
         orbit.enabled = !event.value;
+        if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
+            selectedObject.userData.isDragging = event.value;
+            if (!event.value) {
+                selectedObject.userData.targetZ = selectedObject.position.z;
+            }
+        }
+    });
+    transformControl.addEventListener('objectChange', function () {
+        if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
+            const maxZ = selectedObject.userData.maxSlideZ || (selectedObject.userData.drawerD ? selectedObject.userData.drawerD * 0.65 : 14.0);
+            if (selectedObject.position.z < 0) selectedObject.position.z = 0;
+            if (selectedObject.position.z > maxZ) selectedObject.position.z = maxZ;
+            selectedObject.userData.targetZ = selectedObject.position.z;
+        }
     });
     scene.add(transformControl);
 
@@ -424,6 +439,23 @@ function updateDimensionsOverlay() {
 function animate() {
     requestAnimationFrame(animate);
     if (orbit) orbit.update();
+
+    // Smooth sliding of drawers along channels
+    if (cabinetGroup) {
+        cabinetGroup.children.forEach(child => {
+            if (child.userData && child.userData.isDrawerGroup && !child.userData.isDragging) {
+                if (child.userData.targetZ !== undefined) {
+                    const diff = child.userData.targetZ - child.position.z;
+                    if (Math.abs(diff) > 0.05) {
+                        child.position.z += diff * 0.18;
+                    } else {
+                        child.position.z = child.userData.targetZ;
+                    }
+                }
+            }
+        });
+    }
+
     if (renderer && scene && camera) {
         const container = document.getElementById('3d-container');
         if (container && (container.clientWidth !== renderer.domElement.clientWidth || container.clientHeight !== renderer.domElement.clientHeight)) {
@@ -493,9 +525,9 @@ function selectObject(hitBoxMesh) {
         transformControl.showZ = false;
     } else if (type === 'drawer') {
         transformControl.attach(selectedObject);
-        transformControl.showX = true;
-        transformControl.showY = true;
-        transformControl.showZ = false;
+        transformControl.showX = false;
+        transformControl.showY = false;
+        transformControl.showZ = true;
     } else if (type === 'divider') {
         transformControl.attach(selectedObject);
         transformControl.showX = true;
@@ -652,9 +684,13 @@ function setupInspector() {
 
 function deleteSelectedPart() {
     if (selectedObject) {
-        cabinetGroup.remove(selectedObject);
-        internalParts = internalParts.filter(p => p !== selectedObject && p.userData.parentGroup !== selectedObject);
-        deselectObject();
+        if (selectedObject.userData && selectedObject.userData.isDrawerGroup) {
+            removeDrawerGroup(selectedObject);
+        } else {
+            cabinetGroup.remove(selectedObject);
+            internalParts = internalParts.filter(p => p !== selectedObject && p.userData.parentGroup !== selectedObject);
+            deselectObject();
+        }
     }
 }
 
@@ -1686,6 +1722,9 @@ function setupCADListeners() {
     // Action Buttons
     const toggleDoorsBtn = document.getElementById('btn-toggle-shutters');
     if (toggleDoorsBtn) toggleDoorsBtn.addEventListener('click', toggleShutters);
+
+    const toggleDrawersBtn = document.getElementById('btn-toggle-drawers');
+    if (toggleDrawersBtn) toggleDrawersBtn.addEventListener('click', toggleDrawers);
     
     const addDrawerBtn = document.getElementById('btn-add-drawer-quick');
     if (addDrawerBtn) addDrawerBtn.addEventListener('click', () => addDrawer('full'));
@@ -1781,6 +1820,23 @@ function calculateBayLayout(module = 'base') {
     };
 }
 
+function createChannelGuides(group, drawerW, drawerH, drawerD, posX, posY, labelPrefix) {
+    const channelMat = new THREE.MeshPhongMaterial({ color: 0x94a3b8, shininess: 75, specular: 0xdddddd });
+    const channelEdgeMat = new THREE.LineBasicMaterial({ color: 0x475569 });
+
+    const makeOuterGuide = (xPos, label) => {
+        const geo = new THREE.BoxGeometry(0.22, 1.25, drawerD);
+        const mesh = new THREE.Mesh(geo, channelMat);
+        mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), channelEdgeMat));
+        mesh.position.set(xPos, posY - drawerH/2 + 1.2, -0.5);
+        mesh.userData = { isChannelGuide: true, drawerGroup: group, label: label, module: 'base' };
+        cabinetGroup.add(mesh);
+    };
+
+    makeOuterGuide(posX - drawerW/2 - 0.26, `${labelPrefix} Channel Left`);
+    makeOuterGuide(posX + drawerW/2 + 0.26, `${labelPrefix} Channel Right`);
+}
+
 function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labelPrefix, bayIndex, tierIndex) {
     const t = currentThickness;
     const group = new THREE.Group();
@@ -1807,11 +1863,40 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
     makeSubPanel(drawerW, t, drawerD, 0, -drawerH/2 + t/2, 0, `${labelPrefix} Bottom`);
     makeSubPanel(drawerW + 0.5, drawerH + 1, t, 0, 0, drawerD/2 + t/2, `${labelPrefix} Fascia`);
 
+    // Inner Channel Runners (Telescopic slide rails mounted to drawer sides)
+    const runnerMat = new THREE.MeshPhongMaterial({ color: 0xe2e8f0, shininess: 90, specular: 0xffffff });
+    const runnerEdgeMat = new THREE.LineBasicMaterial({ color: 0x64748b });
+    const runnerGeo = new THREE.BoxGeometry(0.18, 1.05, drawerD);
+
+    const runnerL = new THREE.Mesh(runnerGeo, runnerMat);
+    runnerL.add(new THREE.LineSegments(new THREE.EdgesGeometry(runnerGeo), runnerEdgeMat));
+    runnerL.position.set(-drawerW/2 - 0.09, -drawerH/2 + 1.2, 0);
+    runnerL.userData = { isSubPart: true, type: 'slide_runner', label: `${labelPrefix} Channel Slide L`, module: 'base' };
+    group.add(runnerL);
+
+    const runnerR = new THREE.Mesh(runnerGeo, runnerMat);
+    runnerR.add(new THREE.LineSegments(new THREE.EdgesGeometry(runnerGeo), runnerEdgeMat));
+    runnerR.position.set(drawerW/2 + 0.09, -drawerH/2 + 1.2, 0);
+    runnerR.userData = { isSubPart: true, type: 'slide_runner', label: `${labelPrefix} Channel Slide R`, module: 'base' };
+    group.add(runnerR);
+
+    // Modern Chrome Pull Handle on Fascia
+    const handleMat = new THREE.MeshPhongMaterial({ color: 0xf8fafc, shininess: 120, specular: 0xffffff });
+    const handleW = Math.min(10.0, Math.max(4.0, drawerW * 0.35));
+    const handleGeo = new THREE.BoxGeometry(handleW, 0.45, 0.65);
+    const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+    handleMesh.position.set(0, 0, drawerD/2 + t/2 + 0.4);
+    handleMesh.userData = { isSubPart: true, type: 'handle', label: `${labelPrefix} Pull Handle`, module: 'base' };
+    group.add(handleMesh);
+
     // HitBox for raycasting
     const hitBoxGeo = new THREE.BoxGeometry(drawerW + 0.5, drawerH + 1, drawerD + t);
     const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
     const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
     group.add(hitBox);
+
+    const maxSlideZ = drawerD * 0.65;
+    const initialZ = (posZ !== undefined && posZ !== 0) ? posZ : (drawersOpen ? maxSlideZ : 0);
 
     hitBox.userData = { 
         type: 'drawer', 
@@ -1825,13 +1910,15 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
         d: drawerD,
         drawerW: drawerW,
         drawerH: drawerH,
-        drawerD: drawerD
+        drawerD: drawerD,
+        maxSlideZ: maxSlideZ
     };
     internalParts.push(hitBox);
 
     group.userData = { 
         isDrawerGroup: true, 
         module: 'base',
+        hitBox: hitBox,
         labelPrefix: labelPrefix,
         label: `${labelPrefix} Assembly`,
         bayIndex: bayIndex,
@@ -1841,9 +1928,14 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
         d: drawerD,
         drawerW: drawerW,
         drawerH: drawerH,
-        drawerD: drawerD
+        drawerD: drawerD,
+        maxSlideZ: maxSlideZ,
+        targetZ: initialZ
     };
-    group.position.set(posX, posY, posZ);
+    group.position.set(posX, posY, initialZ);
+
+    // Create fixed channel guides mounted to cabinet dividers
+    createChannelGuides(group, drawerW, drawerH, drawerD, posX, posY, labelPrefix);
 
     return { group, hitBox };
 }
@@ -1851,6 +1943,13 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
 function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, bayIndex, tierIndex) {
     if (!group) return;
     
+    // Clean up old channel guides
+    const oldGuides = cabinetGroup.children.filter(c => c.userData && c.userData.isChannelGuide && c.userData.drawerGroup === group);
+    oldGuides.forEach(g => {
+        cabinetGroup.remove(g);
+        if (g.geometry) g.geometry.dispose();
+    });
+
     // Dispose old subparts
     while (group.children.length > 0) {
         const child = group.children[0];
@@ -1889,10 +1988,39 @@ function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, 
     makeSubPanel(drawerW, t, drawerD, 0, -drawerH/2 + t/2, 0, `${labelPrefix} Bottom`);
     makeSubPanel(drawerW + 0.5, drawerH + 1, t, 0, 0, drawerD/2 + t/2, `${labelPrefix} Fascia`);
 
+    // Inner Channel Runners
+    const runnerMat = new THREE.MeshPhongMaterial({ color: 0xe2e8f0, shininess: 90, specular: 0xffffff });
+    const runnerEdgeMat = new THREE.LineBasicMaterial({ color: 0x64748b });
+    const runnerGeo = new THREE.BoxGeometry(0.18, 1.05, drawerD);
+
+    const runnerL = new THREE.Mesh(runnerGeo, runnerMat);
+    runnerL.add(new THREE.LineSegments(new THREE.EdgesGeometry(runnerGeo), runnerEdgeMat));
+    runnerL.position.set(-drawerW/2 - 0.09, -drawerH/2 + 1.2, 0);
+    runnerL.userData = { isSubPart: true, type: 'slide_runner', label: `${labelPrefix} Channel Slide L`, module: 'base' };
+    group.add(runnerL);
+
+    const runnerR = new THREE.Mesh(runnerGeo, runnerMat);
+    runnerR.add(new THREE.LineSegments(new THREE.EdgesGeometry(runnerGeo), runnerEdgeMat));
+    runnerR.position.set(drawerW/2 + 0.09, -drawerH/2 + 1.2, 0);
+    runnerR.userData = { isSubPart: true, type: 'slide_runner', label: `${labelPrefix} Channel Slide R`, module: 'base' };
+    group.add(runnerR);
+
+    // Modern Chrome Pull Handle on Fascia
+    const handleMat = new THREE.MeshPhongMaterial({ color: 0xf8fafc, shininess: 120, specular: 0xffffff });
+    const handleW = Math.min(10.0, Math.max(4.0, drawerW * 0.35));
+    const handleGeo = new THREE.BoxGeometry(handleW, 0.45, 0.65);
+    const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+    handleMesh.position.set(0, 0, drawerD/2 + t/2 + 0.4);
+    handleMesh.userData = { isSubPart: true, type: 'handle', label: `${labelPrefix} Pull Handle`, module: 'base' };
+    group.add(handleMesh);
+
     const hitBoxGeo = new THREE.BoxGeometry(drawerW + 0.5, drawerH + 1, drawerD + t);
     const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
     const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
     group.add(hitBox);
+
+    const maxSlideZ = drawerD * 0.65;
+    const currentSlideZ = (posZ !== undefined && posZ !== 0) ? posZ : (drawersOpen ? maxSlideZ : 0);
 
     hitBox.userData = { 
         type: 'drawer', 
@@ -1906,10 +2034,12 @@ function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, 
         d: drawerD,
         drawerW: drawerW,
         drawerH: drawerH,
-        drawerD: drawerD
+        drawerD: drawerD,
+        maxSlideZ: maxSlideZ
     };
     internalParts.push(hitBox);
 
+    group.userData.hitBox = hitBox;
     group.userData.bayIndex = bayIndex;
     group.userData.tierIndex = tierIndex;
     group.userData.w = drawerW;
@@ -1918,14 +2048,27 @@ function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, 
     group.userData.drawerW = drawerW;
     group.userData.drawerH = drawerH;
     group.userData.drawerD = drawerD;
+    group.userData.maxSlideZ = maxSlideZ;
+    group.userData.targetZ = currentSlideZ;
     group.userData.label = `${labelPrefix} Assembly`;
 
-    group.position.set(posX, posY, posZ);
+    group.position.set(posX, posY, currentSlideZ);
+
+    // Recreate fixed channel guides
+    createChannelGuides(group, drawerW, drawerH, drawerD, posX, posY, labelPrefix);
 }
 
 function removeDrawerGroup(group) {
     if (!group) return;
     if (selectedObject === group) deselectObject();
+
+    // Remove fixed channel guides associated with this drawer
+    const guides = cabinetGroup.children.filter(c => c.userData && c.userData.isChannelGuide && c.userData.drawerGroup === group);
+    guides.forEach(g => {
+        cabinetGroup.remove(g);
+        if (g.geometry) g.geometry.dispose();
+    });
+
     while (group.children.length > 0) {
         const child = group.children[0];
         group.remove(child);
@@ -1974,35 +2117,36 @@ function updateExistingDrawers() {
         tiers.forEach((tierDrawers, tier) => {
             const primaryDrawer = tierDrawers[0];
             const posY = getRowCenterY(tier);
-            rebuildDrawerGroup(primaryDrawer, fullDrawerW, drawerH, drawerD, 0, posY, 0, 0, tier);
+            const currentZ = primaryDrawer.position.z;
+            rebuildDrawerGroup(primaryDrawer, fullDrawerW, drawerH, drawerD, 0, posY, currentZ, 0, tier);
 
             for (let i = 1; i < tierDrawers.length; i++) {
                 removeDrawerGroup(tierDrawers[i]);
             }
         });
     } else {
-        // "Since there is a four slot, it should cover two drawers according to the partition size.
-        // If there is one partition, then according to that, the drawer will be designed and will get updated automatically."
         const targetBays = layout.middleBayIndices;
 
         tiers.forEach((tierDrawers, tier) => {
             const posY = getRowCenterY(tier);
 
             if (tierDrawers.length === 1 && targetBays.length === 2) {
-                // Was 1 drawer (e.g. from 0 partitions or 2 partitions), now expanding to cover the 2 middle slots!
+                // Expand 1 drawer to cover the 2 middle slots
                 const firstDrawer = tierDrawers[0];
                 const bay0 = targetBays[0];
-                rebuildDrawerGroup(firstDrawer, drawerW, drawerH, drawerD, layout.bayCenters[bay0], posY, 0, bay0, tier);
+                const currentZ = firstDrawer.position.z;
+                rebuildDrawerGroup(firstDrawer, drawerW, drawerH, drawerD, layout.bayCenters[bay0], posY, currentZ, bay0, tier);
 
                 const bay1 = targetBays[1];
                 const labelPrefix = `[Base] Drw ${partCounter++}`;
-                const { group } = createDrawerMeshGroup(drawerW, drawerH, drawerD, layout.bayCenters[bay1], posY, 0, labelPrefix, bay1, tier);
+                const { group } = createDrawerMeshGroup(drawerW, drawerH, drawerD, layout.bayCenters[bay1], posY, currentZ, labelPrefix, bay1, tier);
                 cabinetGroup.add(group);
             } else if (tierDrawers.length > targetBays.length && targetBays.length === 1) {
-                // Was 2 drawers, now collapsing to 1 center slot!
+                // Collapse 2 drawers to 1 center slot
                 const primaryDrawer = tierDrawers[0];
                 const centerBay = targetBays[0];
-                rebuildDrawerGroup(primaryDrawer, drawerW, drawerH, drawerD, layout.bayCenters[centerBay], posY, 0, centerBay, tier);
+                const currentZ = primaryDrawer.position.z;
+                rebuildDrawerGroup(primaryDrawer, drawerW, drawerH, drawerD, layout.bayCenters[centerBay], posY, currentZ, centerBay, tier);
                 for (let i = 1; i < tierDrawers.length; i++) {
                     removeDrawerGroup(tierDrawers[i]);
                 }
@@ -2017,7 +2161,8 @@ function updateExistingDrawers() {
                         assignedBay = targetBays[idx];
                     }
                     const posX = layout.bayCenters[assignedBay] !== undefined ? layout.bayCenters[assignedBay] : 0;
-                    rebuildDrawerGroup(drawer, drawerW, drawerH, drawerD, posX, posY, 0, assignedBay, tier);
+                    const currentZ = drawer.position.z;
+                    rebuildDrawerGroup(drawer, drawerW, drawerH, drawerD, posX, posY, currentZ, assignedBay, tier);
                 });
             }
         });
@@ -2066,25 +2211,26 @@ function addDrawer(sizeType) {
     }
 
     const createdHitBoxes = [];
+    const initialSlideZ = drawersOpen ? (drawerD * 0.65) : 0;
+
     targetBays.forEach(bayIdx => {
         const alreadyExists = existingDrawers.some(d => d.userData.bayIndex === bayIdx && d.userData.tierIndex === targetTier);
         if (!alreadyExists || existingDrawers.length === 0) {
             const posX = layout.bayCenters[bayIdx] !== undefined ? layout.bayCenters[bayIdx] : 0;
             const posY = getRowCenterY(targetTier);
             const labelPrefix = `[Base] Drw ${partCounter++}`;
-            const { group, hitBox } = createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, 0, labelPrefix, bayIdx, targetTier);
+            const { group, hitBox } = createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, initialSlideZ, labelPrefix, bayIdx, targetTier);
             cabinetGroup.add(group);
             createdHitBoxes.push(hitBox);
         }
     });
 
-    // If all target slots were occupied in all tiers, add to targetBays anyway
     if (createdHitBoxes.length === 0) {
         targetBays.forEach(bayIdx => {
             const posX = layout.bayCenters[bayIdx] !== undefined ? layout.bayCenters[bayIdx] : 0;
             const posY = getRowCenterY(targetTier);
             const labelPrefix = `[Base] Drw ${partCounter++}`;
-            const { group, hitBox } = createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, 0, labelPrefix, bayIdx, targetTier);
+            const { group, hitBox } = createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, initialSlideZ, labelPrefix, bayIdx, targetTier);
             cabinetGroup.add(group);
             createdHitBoxes.push(hitBox);
         });
@@ -2097,10 +2243,38 @@ function addDrawer(sizeType) {
 
 function toggleShutters() {
     shuttersOpen = !shuttersOpen;
+    const btn = document.getElementById('btn-toggle-shutters');
+    if (btn) {
+        btn.classList.toggle('active', shuttersOpen);
+        const span = btn.querySelector('span');
+        if (span) span.textContent = shuttersOpen ? 'Close Doors' : 'Toggle Doors';
+    }
     cabinetGroup.children.forEach(child => {
         if (child.userData && child.userData.type === 'shutter') {
             child.rotation.y = shuttersOpen ? child.userData.openRotationY : child.userData.closedRotationY;
             child.layers.set(shuttersOpen ? 1 : 0);
+        }
+    });
+}
+
+function toggleDrawers() {
+    drawersOpen = !drawersOpen;
+    const btn = document.getElementById('btn-toggle-drawers');
+    if (btn) {
+        btn.classList.toggle('active', drawersOpen);
+        const span = btn.querySelector('span');
+        if (span) span.textContent = drawersOpen ? 'Push In' : 'Pull Drawers';
+    }
+
+    // Auto-open doors if drawers are pulled with doors closed so they are visible
+    if (drawersOpen && !shuttersOpen) {
+        toggleShutters();
+    }
+
+    cabinetGroup.children.forEach(child => {
+        if (child.userData && child.userData.isDrawerGroup && child.userData.module === 'base') {
+            const maxSlideZ = child.userData.maxSlideZ || (child.userData.drawerD ? child.userData.drawerD * 0.65 : 14.0);
+            child.userData.targetZ = drawersOpen ? maxSlideZ : 0;
         }
     });
 }
