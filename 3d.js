@@ -102,6 +102,12 @@ function init3D() {
             if (selectedObject.position.z < 0) selectedObject.position.z = 0;
             if (selectedObject.position.z > maxZ) selectedObject.position.z = maxZ;
             selectedObject.userData.targetZ = selectedObject.position.z;
+        } else if (selectedObject && selectedObject.userData && selectedObject.userData.type === 'shutter') {
+            const isWall = (selectedObject.userData.module === 'wall');
+            const d = isWall ? currentWallD : currentD;
+            const centerZ = isWall ? getWallCenterZ() : 0;
+            const shutterD = selectedObject.userData.shutterD || 0.75;
+            selectedObject.position.z = centerZ + (d / 2) + (shutterD / 2) + 0.05 + (shutterD / 2);
         }
     });
     scene.add(transformControl);
@@ -125,6 +131,7 @@ function init3D() {
     mouse = new THREE.Vector2();
 
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('dblclick', onDoubleClick);
     window.addEventListener('resize', resize3D);
     if (window.ResizeObserver) {
         const ro = new ResizeObserver(() => {
@@ -488,10 +495,36 @@ function onPointerDown(event) {
         const targetObj = object.userData.parentGroup ? object.userData.parentGroup : object;
 
         if (selectedObject !== targetObj) {
-            selectObject(object);
+            selectObject(object, false); // Single-click: dimensions only, no arrows
+        } else if (transformControl.object) {
+            // Clicking body of already-selected object: return to dimension-only (detach arrows)
+            transformControl.detach();
         }
     } else {
         deselectObject();
+    }
+}
+
+function onDoubleClick(event) {
+    if (transformControl.dragging) return;
+    if (event.button !== 0) return;
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    raycaster.layers.set(0);
+    raycaster.layers.enable(1);
+
+    const hitControls = raycaster.intersectObject(transformControl, true);
+    if (hitControls.length > 0 && transformControl.axis !== null) return;
+
+    const intersects = raycaster.intersectObjects(internalParts, false);
+
+    if (intersects.length > 0) {
+        const object = intersects[0].object;
+        selectObject(object, true); // Double-click: show draggable arrows (X-axis, Y-axis)!
     }
 }
 
@@ -510,34 +543,46 @@ function setEmissive(obj, hex) {
     }
 }
 
-function selectObject(hitBoxMesh) {
-    deselectObject();
-    
+function selectObject(hitBoxMesh, showArrows = false) {
+    if (!hitBoxMesh) return;
     const targetObj = hitBoxMesh.userData.parentGroup ? hitBoxMesh.userData.parentGroup : hitBoxMesh;
-    selectedObject = targetObj;
-    setEmissive(selectedObject, 0x333333);
+
+    if (selectedObject !== targetObj) {
+        deselectObject();
+        selectedObject = targetObj;
+        setEmissive(selectedObject, 0x333333);
+        populateInspector(selectedObject);
+    }
     
-    const type = hitBoxMesh.userData.type;
-    if (type === 'shelf') {
+    const type = hitBoxMesh.userData.type || (selectedObject.userData && selectedObject.userData.type);
+    
+    if (showArrows) {
         transformControl.attach(selectedObject);
-        transformControl.showX = false;
-        transformControl.showY = true;
-        transformControl.showZ = false;
-    } else if (type === 'drawer') {
-        transformControl.attach(selectedObject);
-        transformControl.showX = false;
-        transformControl.showY = false;
-        transformControl.showZ = true;
-    } else if (type === 'divider') {
-        transformControl.attach(selectedObject);
-        transformControl.showX = true;
-        transformControl.showY = false;
-        transformControl.showZ = false;
+        if (type === 'shutter') {
+            // Door / Shutter: Draggable arrows along X-axis and Y-axis
+            transformControl.showX = true;
+            transformControl.showY = true;
+            transformControl.showZ = false;
+        } else if (type === 'shelf') {
+            transformControl.showX = false;
+            transformControl.showY = true;
+            transformControl.showZ = false;
+        } else if (type === 'divider') {
+            transformControl.showX = true;
+            transformControl.showY = false;
+            transformControl.showZ = false;
+        } else if (type === 'drawer') {
+            transformControl.showX = false;
+            transformControl.showY = false;
+            transformControl.showZ = true;
+        } else {
+            transformControl.showX = true;
+            transformControl.showY = true;
+            transformControl.showZ = false;
+        }
     } else {
         transformControl.detach();
     }
-    
-    populateInspector(selectedObject);
 }
 
 function deselectObject() {
@@ -1523,8 +1568,8 @@ function syncShuttersFromSelect(module) {
         shutter.userData.openRotationY = isRightHinged ? Math.PI / 2 : -Math.PI / 2;
         
         shutter.userData.lockZ = true; 
-        shutter.userData.lockX = true;
-        shutter.userData.lockY = true;
+        shutter.userData.lockX = false;
+        shutter.userData.lockY = false;
 
         if (shuttersOpen) {
             shutter.rotation.y = shutter.userData.openRotationY;
