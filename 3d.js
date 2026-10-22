@@ -111,6 +111,12 @@ function init3D() {
 
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('resize', resize3D);
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            resize3D();
+        });
+        ro.observe(container);
+    }
 
     // Property Inspector Setup
     setupInspector();
@@ -1336,8 +1342,10 @@ function toggleShutters() {
 function start3DApp() {
     if (!is3DInitialized) init3D();
     resize3D();
-    setTimeout(resize3D, 80);
-    setTimeout(resize3D, 300);
+    setTimeout(resize3D, 50);
+    setTimeout(resize3D, 150);
+    setTimeout(resize3D, 350);
+    setTimeout(resize3D, 800);
 }
 
 if (document.readyState === 'loading') {
@@ -1345,3 +1353,4 @@ if (document.readyState === 'loading') {
 } else {
     start3DApp();
 }
+window.addEventListener('load', start3DApp);
