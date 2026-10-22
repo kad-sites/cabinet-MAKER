@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=16">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -153,6 +153,7 @@
                                             <option value="5">5 Doors</option>
                                             <option value="6">6 Doors</option>
                                         </select>
+                                        <span id="cad-shutter-sub" class="cad-col-subtext">Each: 32.8" W</span>
                                     </div>
                                 </div>
                             </div>
@@ -182,6 +183,7 @@
                                             <option value="5">5 Doors</option>
                                             <option value="6">6 Doors</option>
                                         </select>
+                                        <span id="cad-wall-shutter-sub" class="cad-col-subtext">Each: 32.8" W</span>
                                     </div>
                                 </div>
                             </div>
@@ -217,27 +219,46 @@
                         <div id="3d-overlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;"></div>
                         
                         <!-- Right Sidebar (Property Inspector) - Floating HUD -->
-                        <div id="property-inspector" style="position: absolute; right: 1rem; top: 1rem; width: 250px; background: rgba(20, 20, 35, 0.95); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; display: none; flex-direction: column; gap: 0.75rem; overflow-y: auto; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                            <h4 style="margin-top: 0; margin-bottom: 0.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; font-weight: 500;">Property Inspector</h4>
-                            <div id="prop-part-name" style="font-weight: bold; color: #4ade80; margin-bottom: 0.25rem;">Part Name</div>
+                        <div id="property-inspector" style="position: absolute; right: 1rem; top: 1rem; width: 260px; background: rgba(20, 20, 35, 0.95); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); padding: 0.85rem 1rem; display: none; flex-direction: column; gap: 0.65rem; overflow-y: auto; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem;">
+                                <h4 style="margin: 0; font-size: 0.85rem; font-weight: 500; color: #f8fafc;">Property Inspector</h4>
+                                <button type="button" id="btn-close-inspector" style="background: transparent; border: none; color: #94a3b8; font-size: 1rem; cursor: pointer; padding: 0 0.2rem; line-height: 1;" title="Close">✕</button>
+                            </div>
+                            <div id="prop-part-name" style="font-weight: 600; font-size: 0.88rem; color: #38bdf8;">Part Name</div>
                             
-                            <div class="form-group" style="margin-bottom: 0.25rem;">
-                                <label style="font-size: 0.75rem;">Thickness (inches)</label>
-                                <input type="text" id="prop-thickness" style="width: 100%; padding: 0.4rem; font-size: 0.85rem;" autocomplete="off">
+                            <!-- Dimensions Display Box in Inspector -->
+                            <div id="prop-dim-box" style="background: rgba(51, 65, 85, 0.5); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 0.5rem 0.6rem; font-size: 0.76rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                                    <span style="color: #cbd5e1;">Width (Breadth):</span>
+                                    <span id="prop-width-val" style="font-weight: 700; color: #facc15; font-family: monospace;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                                    <span style="color: #cbd5e1;">Height:</span>
+                                    <span id="prop-height-val" style="font-weight: 700; color: #f8fafc; font-family: monospace;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #cbd5e1;">Thickness:</span>
+                                    <span id="prop-thick-val" style="font-weight: 700; color: #f8fafc; font-family: monospace;">--</span>
+                                </div>
                             </div>
 
-                            <div class="form-group" style="margin-bottom: 0.25rem;">
-                                <label style="font-size: 0.75rem;">Laminate Coverage</label>
-                                <select id="prop-laminate" style="width: 100%; padding: 0.4rem; background: #2a2a3a; color: white; border: 1px solid #444; border-radius: 4px; font-size: 0.85rem;">
+                            <div class="form-group" style="margin-bottom: 0.2rem;">
+                                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Thickness Edit (inches)</label>
+                                <input type="text" id="prop-thickness" class="cad-num-input" style="width: 100%; padding: 0.25rem 0.4rem; font-size: 0.8rem;" autocomplete="off">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0.2rem;">
+                                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Laminate Coverage</label>
+                                <select id="prop-laminate" class="cad-select-input" style="width: 100%; padding: 0.28rem 0.4rem; font-size: 0.78rem;">
                                     <option value="none">None</option>
                                     <option value="single">Single Side</option>
                                     <option value="double">Both Sides</option>
                                 </select>
                             </div>
                             
-                            <div class="form-group" style="margin-bottom: 0.25rem;">
-                                <label style="font-size: 0.75rem;">Edge Banding (PVC Tape)</label>
-                                <select id="prop-edge" style="width: 100%; padding: 0.4rem; background: #2a2a3a; color: white; border: 1px solid #444; border-radius: 4px; font-size: 0.85rem;">
+                            <div class="form-group" style="margin-bottom: 0.2rem;">
+                                <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Edge Banding (PVC Tape)</label>
+                                <select id="prop-edge" class="cad-select-input" style="width: 100%; padding: 0.28rem 0.4rem; font-size: 0.78rem;">
                                     <option value="none">None (Bare Plywood)</option>
                                     <option value="front">Front Edge Only</option>
                                     <option value="all">All 4 Edges</option>
@@ -253,6 +274,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=15"></script>
+    <script src="3d.js?v=16"></script>
 </body>
 </html>

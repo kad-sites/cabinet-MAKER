@@ -522,3 +522,20 @@ input[type=number] {
     letter-spacing: 0.25px;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
+
+/* 3D Canvas Shutter Dimension HUD */
+.cad-shutter-callout-hud {
+    animation: fadeInShutterHud 0.15s ease-out;
+    transition: transform 0.05s linear;
+}
+
+@keyframes fadeInShutterHud {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -90%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -100%);
+    }
+}

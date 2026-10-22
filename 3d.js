@@ -151,7 +151,7 @@ function updateDimensionsOverlay() {
     }
     
     const type = selectedObject.userData.type || (selectedObject.userData.isDrawerGroup ? 'drawer' : null);
-    if (type !== 'shelf' && type !== 'drawer' && type !== 'divider') {
+    if (type !== 'shelf' && type !== 'drawer' && type !== 'divider' && type !== 'shutter') {
         overlaysContainer.innerHTML = '';
         return;
     }
@@ -185,7 +185,94 @@ function updateDimensionsOverlay() {
     const boxD = isWallPart ? currentWallD : currentD;
     const boxCenterY = isWallPart ? getWallCenterY() : getBaseCenterY();
 
-    if (type === 'divider') {
+    if (type === 'shutter') {
+        const w = selectedObject.userData.shutterW || (selectedObject.geometry ? selectedObject.geometry.parameters.width : 0);
+        const h = selectedObject.userData.shutterH || (selectedObject.geometry ? selectedObject.geometry.parameters.height : 0);
+        const d = selectedObject.userData.shutterD || 0.75;
+        const label = selectedObject.userData.label || "Cabinet Shutter";
+        const totalShutters = selectedObject.userData.totalShutters || '';
+
+        const box = new THREE.Box3().setFromObject(selectedObject);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+
+        const topEdge = new THREE.Vector3(center.x, box.max.y, box.max.z);
+        const leftEdge = new THREE.Vector3(box.min.x, center.y, box.max.z);
+        const rightEdge = new THREE.Vector3(box.max.x, center.y, box.max.z);
+
+        const screenCenter = center.clone().project(camera);
+        const screenTop = topEdge.clone().project(camera);
+        const screenLeft = leftEdge.clone().project(camera);
+        const screenRight = rightEdge.clone().project(camera);
+
+        if (screenCenter.z < 1) {
+            const cX = (screenCenter.x * 0.5 + 0.5) * width;
+            const cY = (screenCenter.y * -0.5 + 0.5) * height;
+            const tY = (screenTop.y * -0.5 + 0.5) * height;
+            const lX = (screenLeft.x * 0.5 + 0.5) * width;
+            const rX = (screenRight.x * 0.5 + 0.5) * width;
+
+            const wFt = (w / 12).toFixed(2);
+            const hFt = (h / 12).toFixed(2);
+
+            // 1. Shutter Dimension Callout HUD hovering over clicked shutter
+            const hud = document.createElement('div');
+            hud.className = 'cad-shutter-callout-hud';
+            hud.innerHTML = `
+                <div style="font-size: 0.68rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; margin-bottom: 2px;">
+                    ${label} ${totalShutters ? `(${totalShutters} Total)` : ''}
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 6px; margin: 2px 0;">
+                    <span style="font-size: 0.72rem; color: #cbd5e1;">WIDTH (BREADTH):</span>
+                    <span style="font-size: 1.05rem; font-weight: 800; color: #facc15; font-family: monospace;">
+                        ${w.toFixed(2)}"
+                    </span>
+                    <span style="font-size: 0.72rem; color: #94a3b8;">(~${wFt} ft)</span>
+                </div>
+                <div style="display: flex; gap: 8px; font-size: 0.7rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3px; margin-top: 2px;">
+                    <span>HEIGHT: <b style="color: #fff;">${h.toFixed(2)}"</b> (~${hFt} ft)</span>
+                    <span>THICK: <b style="color: #fff;">${d.toFixed(2)}"</b></span>
+                </div>
+            `;
+            hud.style.position = 'absolute';
+            hud.style.left = `${cX}px`;
+            hud.style.top = `${tY - 12}px`;
+            hud.style.transform = 'translate(-50%, -100%)';
+            hud.style.background = 'rgba(15, 23, 42, 0.94)';
+            hud.style.border = '1.5px solid #38bdf8';
+            hud.style.borderRadius = '8px';
+            hud.style.padding = '6px 10px';
+            hud.style.boxShadow = '0 8px 20px rgba(0,0,0,0.6), 0 0 12px rgba(56, 189, 248, 0.3)';
+            hud.style.pointerEvents = 'none';
+            hud.style.zIndex = '15';
+            hud.style.whiteSpace = 'nowrap';
+            overlaysContainer.appendChild(hud);
+
+            // 2. Shutter Width Dimension Line
+            const spanW = Math.max(Math.abs(rX - lX), 40);
+            const minX = Math.min(lX, rX);
+            const dimLine = document.createElement('div');
+            dimLine.style.position = 'absolute';
+            dimLine.style.left = `${minX}px`;
+            dimLine.style.top = `${cY}px`;
+            dimLine.style.width = `${spanW}px`;
+            dimLine.style.height = '20px';
+            dimLine.style.transform = 'translateY(-50%)';
+            dimLine.style.pointerEvents = 'none';
+            dimLine.style.display = 'flex';
+            dimLine.style.alignItems = 'center';
+            dimLine.style.justifyContent = 'center';
+            dimLine.innerHTML = `
+                <div style="position: absolute; left: 0; right: 0; height: 2px; background: #facc15; box-shadow: 0 0 6px rgba(250, 204, 21, 0.6);"></div>
+                <div style="position: absolute; left: 0; width: 2px; height: 10px; background: #facc15; transform: translateY(-4px);"></div>
+                <div style="position: absolute; right: 0; width: 2px; height: 10px; background: #facc15; transform: translateY(-4px);"></div>
+                <span style="position: relative; background: #0f172a; color: #facc15; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #facc15; font-family: monospace;">
+                    ◄ ${w.toFixed(2)}" ►
+                </span>
+            `;
+            overlaysContainer.appendChild(dimLine);
+        }
+    } else if (type === 'divider') {
         const objX = selectedObject.position.x;
         const w = selectedObject.geometry.parameters.width;
         
@@ -280,6 +367,7 @@ function onPointerDown(event) {
     
     raycaster.setFromCamera(mouse, camera);
     raycaster.layers.set(0);
+    raycaster.layers.enable(1);
 
     const hitControls = raycaster.intersectObject(transformControl, true);
     if (hitControls.length > 0 && transformControl.axis !== null) return;
@@ -320,17 +408,19 @@ function selectObject(hitBoxMesh) {
     selectedObject = targetObj;
     setEmissive(selectedObject, 0x333333);
     
-    transformControl.attach(selectedObject);
-    
     const type = hitBoxMesh.userData.type;
     if (type === 'shelf' || type === 'drawer') {
+        transformControl.attach(selectedObject);
         transformControl.showX = false;
         transformControl.showY = true;
         transformControl.showZ = false;
     } else if (type === 'divider') {
+        transformControl.attach(selectedObject);
         transformControl.showX = true;
         transformControl.showY = false;
         transformControl.showZ = false;
+    } else {
+        transformControl.detach();
     }
     
     populateInspector(selectedObject);
@@ -354,6 +444,9 @@ function populateInspector(obj) {
     inspector.style.display = 'flex';
     
     const nameEl = document.getElementById('prop-part-name');
+    const widthEl = document.getElementById('prop-width-val');
+    const heightEl = document.getElementById('prop-height-val');
+    const thickValEl = document.getElementById('prop-thick-val');
     const thickEl = document.getElementById('prop-thickness');
     const lamEl = document.getElementById('prop-laminate');
     const edgeEl = document.getElementById('prop-edge');
@@ -363,22 +456,42 @@ function populateInspector(obj) {
     let laminate = obj.userData.customLaminate || "double";
     let edge = obj.userData.customEdge || "front";
     
-    if (obj.userData.isDrawerGroup) {
-        name = obj.userData.label || "Drawer Assembly";
-        thickEl.disabled = true;
-    } else {
-        thickEl.disabled = false;
-        if (obj.userData.customThickness) {
-            thickness = obj.userData.customThickness;
-        } else {
-            if (obj.userData.type === 'shelf') thickness = obj.geometry.parameters.height;
-            else if (obj.userData.type === 'divider') thickness = obj.geometry.parameters.width;
-        }
+    let partW = obj.userData.shutterW || obj.userData.w || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.width : 0);
+    let partH = obj.userData.shutterH || obj.userData.h || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.height : 0);
+    let partD = obj.userData.shutterD || obj.userData.d || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.depth : 0.75);
+
+    if (obj.userData.type === 'shutter') {
+        thickness = obj.userData.shutterD || 0.75;
+    } else if (obj.userData.type === 'shelf') {
+        thickness = obj.userData.customThickness || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.height : currentThickness);
+    } else if (obj.userData.type === 'divider') {
+        thickness = obj.userData.customThickness || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.width : currentThickness);
     }
     
-    nameEl.textContent = name;
-    thickEl.value = (typeof thickness === 'number' ? thickness : parseFloat(thickness) || 0.75) + ' in';
-    lamEl.value = laminate;
+    if (obj.userData.isDrawerGroup) {
+        name = obj.userData.label || "Drawer Assembly";
+        if (thickEl) thickEl.disabled = true;
+    } else {
+        if (thickEl) thickEl.disabled = (obj.userData.type === 'shutter');
+    }
+    
+    if (nameEl) nameEl.textContent = name;
+
+    if (widthEl) {
+        const wVal = parseFloat(partW) || 0;
+        widthEl.textContent = `${wVal.toFixed(2)}" (~${(wVal / 12).toFixed(2)} ft)`;
+    }
+    if (heightEl) {
+        const hVal = parseFloat(partH) || 0;
+        heightEl.textContent = `${hVal.toFixed(2)}" (~${(hVal / 12).toFixed(2)} ft)`;
+    }
+    if (thickValEl) {
+        const tVal = parseFloat(thickness) || 0.75;
+        thickValEl.textContent = `${tVal.toFixed(2)}"`;
+    }
+    
+    if (thickEl) thickEl.value = (typeof thickness === 'number' ? thickness : parseFloat(thickness) || 0.75);
+    if (lamEl) lamEl.value = laminate;
     if (edgeEl) edgeEl.value = edge;
 }
 
@@ -442,6 +555,13 @@ function setupInspector() {
             const currentLam = selectedObject.userData.customLaminate || 'double';
             applyLaminateMaterials(selectedObject, selectedObject.userData.type, currentLam, e.target.value);
             setEmissive(selectedObject, 0x333333);
+        });
+    }
+
+    const closeBtn = document.getElementById('btn-close-inspector');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            deselectObject();
         });
     }
 }
@@ -1151,12 +1271,38 @@ function syncDividersFromCount(module) {
     }
 }
 
+function updateShutterSubtexts() {
+    ['base', 'wall'].forEach(mod => {
+        const selectId = (mod === 'wall') ? 'cad-wall-shutter-select' : 'cad-shutter-select';
+        const subId = (mod === 'wall') ? 'cad-wall-shutter-sub' : 'cad-shutter-sub';
+        const select = document.getElementById(selectId);
+        const subEl = document.getElementById(subId);
+        if (!select || !subEl) return;
+        const count = parseInt(select.value) || 0;
+        if (count <= 0) {
+            subEl.textContent = 'None (Open)';
+            return;
+        }
+        const isWall = (mod === 'wall');
+        const w = isWall ? currentWallW : currentW;
+        const h = isWall ? currentWallH : currentH;
+        const gap = 0.125;
+        const totalGapSpace = gap * (count + 1);
+        const shutterW = (w - totalGapSpace) / count;
+        const shutterH = h - (gap * 2);
+        subEl.textContent = `Each: ${shutterW.toFixed(1)}" W × ${shutterH.toFixed(1)}" H`;
+    });
+}
+
 function syncShuttersFromSelect(module) {
     const selectId = (module === 'wall') ? 'cad-wall-shutter-select' : 'cad-shutter-select';
     const shutterSelect = document.getElementById(selectId);
     if (!shutterSelect) return;
     const count = parseInt(shutterSelect.value) || 0;
     
+    // Update subtext indicator immediately
+    updateShutterSubtexts();
+
     // Remove existing shutters and auto-hinge partitions for this module
     const toRemove = [];
     cabinetGroup.children.forEach(child => {
@@ -1192,9 +1338,19 @@ function syncShuttersFromSelect(module) {
         const shutter = createPanel(shutterW, shutterH, shutterD, 0xdeb887, true, 'shutter');
         shutter.userData.label = `${prefix} Shutter ${i + 1}`;
         shutter.userData.module = module;
+        shutter.userData.type = 'shutter';
+        shutter.userData.shutterIndex = i + 1;
+        shutter.userData.totalShutters = count;
+        shutter.userData.shutterW = shutterW;
+        shutter.userData.shutterH = shutterH;
+        shutter.userData.shutterD = shutterD;
+        shutter.userData.w = shutterW;
+        shutter.userData.h = shutterH;
+        shutter.userData.d = shutterD;
         shutter.userData.customEdge = 'all';
         shutter.userData.customLaminate = 'single';
         applyLaminateMaterials(shutter, 'shutter', 'single', 'all');
+        if (!internalParts.includes(shutter)) internalParts.push(shutter);
         
         let isRightHinged = (i % 2 === 1);
         if (count === 1) isRightHinged = false;
