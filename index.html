@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -260,86 +260,125 @@
             </section>
             <!-- 3D Visualizer Tab -->
             <section id="visualizer-tab" class="tab-content">
-                <div style="display: flex; height: calc(100vh - 180px); flex-direction: row; gap: 1rem;">
+                <div style="display: flex; height: calc(100vh - 85px); flex-direction: row; gap: 1rem;">
                     
                     <!-- CAD Toolbox Sidebar -->
-                    <div style="width: 300px; display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; padding-right: 1rem;">
-                        <div>
-                            <h2>CAD Builder</h2>
-                            <p class="subtitle" style="margin-bottom: 0;">Interactive 3D Design</p>
-                        </div>
-                        
-                        <!-- Outer Box Dimensions -->
-                        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 1rem;">1. Outer Shell</h4>
-                            <div class="form-group" style="margin-bottom: 0.8rem;">
-                                <label>Height (inches)</label>
-                                <input type="number" id="cad-h" value="84" step="any" style="width: 100%; padding: 0.5rem;">
+                    <div class="cad-sidebar-panel">
+                        <!-- Cabinet Name & Quantity -->
+                        <div class="cad-header-row">
+                            <div class="cad-input-block flex-1">
+                                <label class="cad-label">CABINET NAME</label>
+                                <input type="text" id="cab-preset-name" class="cad-input-text" value="Kitchen Base Unit">
                             </div>
-                            <div class="form-group" style="margin-bottom: 0.8rem;">
-                                <label>Width (inches)</label>
-                                <input type="number" id="cad-w" value="36" step="any" style="width: 100%; padding: 0.5rem;">
+                            <div class="cad-input-block" style="width: 90px;">
+                                <label class="cad-label">QUANTITY</label>
+                                <div class="qty-control">
+                                    <input type="number" id="cab-preset-qty" class="cad-input-number" value="1" min="1">
+                                    <button type="button" id="btn-duplicate-cab" class="cad-icon-btn" title="Duplicate Cabinet (Increases quantity)">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="form-group" style="margin-bottom: 0.8rem;">
-                                <label>Depth (inches)</label>
-                                <input type="number" id="cad-d" value="24" step="any" style="width: 100%; padding: 0.5rem;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0.8rem;">
-                                <label>Thickness (inches)</label>
-                                <input type="number" id="cad-t" value="0.75" step="any" style="width: 100%; padding: 0.5rem;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0.5rem;">
-                                <label>Corner Radius (inches)</label>
-                                <input type="number" id="cad-r" value="0" step="any" style="width: 100%; padding: 0.5rem;">
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.8rem;">
-                                <label><input type="checkbox" id="cad-r-tl" checked> Top-Left</label>
-                                <label><input type="checkbox" id="cad-r-tr" checked> Top-Right</label>
-                                <label><input type="checkbox" id="cad-r-bl" checked> Bottom-Left</label>
-                                <label><input type="checkbox" id="cad-r-br" checked> Bottom-Right</label>
-                            </div>
-                            <button id="btn-update-shell" class="btn-secondary" style="width: 100%; font-size: 0.9rem;">Update Shell</button>
                         </div>
 
-                        <!-- Internal Parts -->
-                        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 1rem;">2. Internal Parts</h4>
-                            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 1rem;">Click to add. Then click the part in the 3D view to drag it.</p>
-                            <button id="btn-add-shelf" class="btn-primary" style="width: 100%; margin-bottom: 0.5rem; font-size: 0.9rem; background: #3b82f6;">+ Add Shelf</button>
-                            <button id="btn-add-divider" class="btn-primary" style="width: 100%; margin-bottom: 0.5rem; font-size: 0.9rem; background: #8b5cf6;">+ Add Vertical Divider</button>
-                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <button id="btn-add-full-drawer" class="btn-primary" style="flex: 1; font-size: 0.8rem; background: #f59e0b; padding: 0.5rem;">+ Full Drawer</button>
-                                <button id="btn-add-half-drawer" class="btn-primary" style="flex: 1; font-size: 0.8rem; background: #d97706; padding: 0.5rem;">+ Half Drawer</button>
+                        <!-- Quick Presets -->
+                        <div class="cad-preset-section">
+                            <label class="cad-label">QUICK PRESET</label>
+                            <div class="cad-preset-pills">
+                                <button type="button" class="preset-pill" data-preset="wardrobe">Wardrobe</button>
+                                <button type="button" class="preset-pill active" data-preset="kitchen-base">Kitchen Base</button>
+                                <button type="button" class="preset-pill" data-preset="kitchen-wall">Kitchen Wall</button>
+                                <button type="button" class="preset-pill" data-preset="tv-console">TV Console</button>
+                                <button type="button" class="preset-pill" data-preset="shoe-rack">Shoe Rack</button>
                             </div>
-                            <div class="form-group" style="margin-bottom: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">
-                                <label style="font-size: 0.75rem;">Drawer Slide Gap (per side)</label>
-                                <input type="number" id="cad-drawer-gap" value="0.5" step="any" style="width: 100%; padding: 0.4rem; font-size: 0.8rem;">
-                            </div>
-                            <button id="btn-delete-selected" class="btn-secondary" style="width: 100%; font-size: 0.9rem; background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);">Delete Selected Part</button>
-                        </div>
-                        
-                        <!-- Shutters -->
-                        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 1rem;">3. Front Shutters</h4>
-                            <div class="form-group" style="margin-bottom: 0.8rem;">
-                                <label style="font-size: 0.75rem;">Number of Doors</label>
-                                <input type="number" id="cad-shutter-count" value="2" min="1" step="1" style="width: 100%; padding: 0.4rem; font-size: 0.8rem;">
-                            </div>
-                            <button id="btn-add-shutters" class="btn-primary" style="width: 100%; font-size: 0.9rem; background: #14b8a6; margin-bottom: 0.5rem;">+ Generate Shutters</button>
-                            <button id="btn-toggle-shutters" class="btn-secondary" style="width: 100%; font-size: 0.8rem;">Toggle Doors (Open/Close)</button>
-                            <p id="shutter-warning" class="hidden" style="font-size: 0.75rem; color: #fca5a5; margin-top: 0.5rem; text-align: center;"></p>
                         </div>
 
-                        <!-- Export -->
-                        <div style="margin-top: auto;">
-                            <button id="btn-cad-export" class="btn-primary" style="width: 100%; background: #10b981; font-size: 1.1rem; padding: 1rem;">Send to Optimizer</button>
+                        <!-- 1. Dimensions -->
+                        <div class="cad-card">
+                            <div class="cad-card-header">
+                                <span class="cad-card-title">1. Dimensions</span>
+                                <span id="cad-dim-summary" class="cad-dim-badge">32" H × 132" W × 24" D</span>
+                            </div>
+                            <div class="cad-card-grid-4">
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">HEIGHT (INCHES)</label>
+                                    <input type="number" id="cad-h-in" class="cad-num-input" value="32" step="any">
+                                    <span id="cad-h-sub" class="cad-col-subtext">~ 32" (2.67 ft)</span>
+                                </div>
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">WIDTH (FT)</label>
+                                    <input type="number" id="cad-w-ft" class="cad-num-input" value="11" step="any">
+                                    <span id="cad-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
+                                </div>
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">DEPTH (FT)</label>
+                                    <input type="number" id="cad-d-ft" class="cad-num-input" value="2" step="any">
+                                    <span id="cad-d-sub" class="cad-col-subtext">~ 24" (2 ft)</span>
+                                </div>
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">PLINTH (INCHES)</label>
+                                    <input type="number" id="cad-plinth-in" class="cad-num-input" value="3" step="any">
+                                    <span id="cad-plinth-sub" class="cad-col-subtext">~ 3"</span>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- 2. Partitions & Doors -->
+                        <div class="cad-card">
+                            <div class="cad-card-header">
+                                <span class="cad-card-title">2. Partitions & Doors</span>
+                            </div>
+                            <div class="cad-card-grid-3">
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">SHELVES</label>
+                                    <input type="number" id="cad-shelves-count" class="cad-num-input" value="2" min="0" step="1">
+                                </div>
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">VERTICAL DIVIDERS</label>
+                                    <input type="number" id="cad-dividers-count" class="cad-num-input" value="0" min="0" step="1">
+                                </div>
+                                <div class="cad-grid-col">
+                                    <label class="cad-col-label">SHUTTERS (DOORS)</label>
+                                    <select id="cad-shutter-select" class="cad-select-input">
+                                        <option value="0">None (Open)</option>
+                                        <option value="1">1 Door</option>
+                                        <option value="2" selected>2 Doors</option>
+                                        <option value="3">3 Doors</option>
+                                        <option value="4">4 Doors</option>
+                                        <option value="5">5 Doors</option>
+                                        <option value="6">6 Doors</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions Bar -->
+                        <div class="cad-actions-row">
+                            <button type="button" id="btn-toggle-shutters" class="cad-action-btn" title="Toggle Doors Open/Close">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 3h18M5 21V3h14v18M15 12h2"/></svg>
+                                <span>Toggle Doors</span>
+                            </button>
+                            <button type="button" id="btn-add-drawer-quick" class="cad-action-btn" title="Add a Drawer inside Cabinet">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
+                                <span>+ Drawer</span>
+                            </button>
+                            <button type="button" id="btn-delete-selected" class="cad-action-btn cad-btn-danger" title="Delete Selected Part">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                <span>Delete Part</span>
+                            </button>
+                        </div>
+
+                        <!-- Export to Optimizer -->
+                        <button type="button" id="btn-cad-export" class="cad-export-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            <span>Send to Optimizer & Cut List</span>
+                        </button>
                     </div>
 
                     <!-- 3D Canvas Area -->
-                    <div id="3d-container" style="flex: 1; border-radius: 8px; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); background: #1a1a2e; cursor: default; position: relative;">
+                    <div id="3d-container" style="flex: 1; min-width: 0; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); background: #1a1a2e; cursor: default; position: relative;">
                         <!-- Instructions Overlay -->
-                        <div style="position: absolute; top: 1rem; left: 1rem; pointer-events: none; background: rgba(0,0,0,0.5); padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; color: #fff; z-index: 10;">
+                        <div style="position: absolute; top: 1rem; left: 1rem; pointer-events: none; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); padding: 0.5rem 0.85rem; border-radius: 8px; font-size: 0.8rem; color: #f8fafc; z-index: 10; border: 1px solid rgba(255,255,255,0.08);">
                             <strong>Left Click:</strong> Select / Drag Part<br>
                             <strong>Right Click:</strong> Pan Camera<br>
                             <strong>Scroll:</strong> Zoom
@@ -348,29 +387,28 @@
                         <!-- 3D Dimension Overlays -->
                         <div id="3d-overlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;"></div>
                         
-                        
                         <!-- Right Sidebar (Property Inspector) - Floating HUD -->
-                        <div id="property-inspector" style="position: absolute; right: 1rem; top: 1rem; width: 250px; background: rgba(20, 20, 35, 0.95); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; display: none; flex-direction: column; gap: 1rem; overflow-y: auto; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                            <h4 style="margin-top: 0; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Property Inspector</h4>
-                            <div id="prop-part-name" style="font-weight: bold; color: #4ade80; margin-bottom: 0.5rem;">Part Name</div>
+                        <div id="property-inspector" style="position: absolute; right: 1rem; top: 1rem; width: 250px; background: rgba(20, 20, 35, 0.95); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; display: none; flex-direction: column; gap: 0.75rem; overflow-y: auto; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                            <h4 style="margin-top: 0; margin-bottom: 0.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Property Inspector</h4>
+                            <div id="prop-part-name" style="font-weight: bold; color: #4ade80; margin-bottom: 0.25rem;">Part Name</div>
                             
-                            <div class="form-group" style="margin-bottom: 0.5rem;">
-                                <label>Thickness (inches)</label>
-                                <input type="number" id="prop-thickness" step="any" style="width: 100%; padding: 0.5rem;">
+                            <div class="form-group" style="margin-bottom: 0.25rem;">
+                                <label style="font-size: 0.75rem;">Thickness (inches)</label>
+                                <input type="number" id="prop-thickness" step="any" style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
                             </div>
 
-                            <div class="form-group" style="margin-bottom: 0.5rem;">
-                                <label>Laminate Coverage</label>
-                                <select id="prop-laminate" style="width: 100%; padding: 0.5rem; background: #2a2a3a; color: white; border: 1px solid #444; border-radius: 4px;">
+                            <div class="form-group" style="margin-bottom: 0.25rem;">
+                                <label style="font-size: 0.75rem;">Laminate Coverage</label>
+                                <select id="prop-laminate" style="width: 100%; padding: 0.4rem; background: #2a2a3a; color: white; border: 1px solid #444; border-radius: 4px; font-size: 0.85rem;">
                                     <option value="none">None</option>
                                     <option value="single">Single Side</option>
                                     <option value="double">Both Sides</option>
                                 </select>
                             </div>
                             
-                            <div class="form-group" style="margin-bottom: 0.5rem;">
-                                <label>Edge Banding (PVC Tape)</label>
-                                <select id="prop-edge" style="width: 100%; padding: 0.5rem; background: #2a2a3a; color: white; border: 1px solid #444; border-radius: 4px;">
+                            <div class="form-group" style="margin-bottom: 0.25rem;">
+                                <label style="font-size: 0.75rem;">Edge Banding (PVC Tape)</label>
+                                <select id="prop-edge" style="width: 100%; padding: 0.4rem; background: #2a2a3a; color: white; border: 1px solid #444; border-radius: 4px; font-size: 0.85rem;">
                                     <option value="none">None (Bare Plywood)</option>
                                     <option value="front">Front Edge Only</option>
                                     <option value="all">All 4 Edges</option>
@@ -387,7 +425,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
     <script src="bin-packer.js?v=7"></script>
-    <script src="3d.js?v=2"></script>
+    <script src="3d.js?v=3"></script>
     <script src="app.js?v=9"></script>
 </body>
 </html>

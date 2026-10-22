@@ -3,8 +3,9 @@ let cabinetGroup;
 let is3DInitialized = false;
 let selectedObject = null;
 let currentThickness = 0.75;
-let currentW = 36, currentH = 84, currentD = 24, currentR = 0;
+let currentW = 132, currentH = 32, currentD = 24, currentPlinth = 3, currentR = 0;
 let shellObjects = [];
+let plinthObjects = [];
 let internalParts = [];
 let partCounter = 1;
 
@@ -64,27 +65,13 @@ function init3D() {
     // Property Inspector Setup
     setupInspector();
 
-    // Attach UI listeners
-    document.getElementById('btn-update-shell').addEventListener('click', updateShellFromInputs);
-    document.getElementById('cad-r-tl').addEventListener('change', updateShellFromInputs);
-    document.getElementById('cad-r-tr').addEventListener('change', updateShellFromInputs);
-    document.getElementById('cad-r-bl').addEventListener('change', updateShellFromInputs);
-    document.getElementById('cad-r-br').addEventListener('change', updateShellFromInputs);
-    
-    document.getElementById('btn-add-shelf').addEventListener('click', addShelf);
-    document.getElementById('btn-add-divider').addEventListener('click', addDivider);
-    document.getElementById('btn-add-full-drawer').addEventListener('click', () => addDrawer('full'));
-    document.getElementById('btn-add-half-drawer').addEventListener('click', () => addDrawer('half'));
-    document.getElementById('btn-add-shutters').addEventListener('click', addShutters);
-    document.getElementById('cad-shutter-count').addEventListener('change', addShutters);
-    document.getElementById('btn-toggle-shutters').addEventListener('click', toggleShutters);
-    document.getElementById('btn-delete-selected').addEventListener('click', deleteSelectedPart);
-    document.getElementById('btn-cad-export').addEventListener('click', exportToOptimizer);
+    // Attach CAD UI listeners
+    setupCADListeners();
 
     is3DInitialized = true;
     
-    // Initial Shell
-    updateShellFromInputs();
+    // Initial Shell and Partitions
+    updateDimensionsFromInputs();
     animate();
 }
 
@@ -568,66 +555,134 @@ function createRoundedShell(w, h, d, t, r, colorHex, flags) {
     return mesh;
 }
 
-let cornerFlags = { tl: true, tr: true, bl: true, br: true };
+const CABINET_PRESETS = {
+    'kitchen-base': {
+        name: 'Kitchen Base Unit',
+        hIn: 32,
+        wFt: 11,
+        dFt: 2,
+        plinthIn: 3,
+        shelves: 2,
+        dividers: 0,
+        shutters: '2'
+    },
+    'wardrobe': {
+        name: 'Full Height Wardrobe',
+        hIn: 84,
+        wFt: 4,
+        dFt: 2,
+        plinthIn: 3,
+        shelves: 3,
+        dividers: 1,
+        shutters: '2'
+    },
+    'kitchen-wall': {
+        name: 'Kitchen Wall Unit',
+        hIn: 30,
+        wFt: 3,
+        dFt: 1,
+        plinthIn: 0,
+        shelves: 2,
+        dividers: 0,
+        shutters: '2'
+    },
+    'tv-console': {
+        name: 'TV Media Console',
+        hIn: 20,
+        wFt: 6,
+        dFt: 1.5,
+        plinthIn: 2,
+        shelves: 1,
+        dividers: 2,
+        shutters: '2'
+    },
+    'shoe-rack': {
+        name: 'Shoe Rack Cabinet',
+        hIn: 36,
+        wFt: 3,
+        dFt: 1.25,
+        plinthIn: 2,
+        shelves: 4,
+        dividers: 0,
+        shutters: '2'
+    }
+};
 
-function updateShellFromInputs() {
-    currentH = parseFloat(document.getElementById('cad-h').value) || 84;
-    currentW = parseFloat(document.getElementById('cad-w').value) || 36;
-    currentD = parseFloat(document.getElementById('cad-d').value) || 24;
-    currentThickness = parseFloat(document.getElementById('cad-t').value) || 0.75;
-    currentR = parseFloat(document.getElementById('cad-r').value) || 0;
+function updateDimensionsFromInputs() {
+    const hInput = document.getElementById('cad-h-in');
+    const wInput = document.getElementById('cad-w-ft');
+    const dInput = document.getElementById('cad-d-ft');
+    const plinthInput = document.getElementById('cad-plinth-in');
     
-    cornerFlags.tl = document.getElementById('cad-r-tl').checked;
-    cornerFlags.tr = document.getElementById('cad-r-tr').checked;
-    cornerFlags.bl = document.getElementById('cad-r-bl').checked;
-    cornerFlags.br = document.getElementById('cad-r-br').checked;
+    if (!hInput || !wInput || !dInput) return;
+    
+    const hIn = parseFloat(hInput.value) || 32;
+    const wFt = parseFloat(wInput.value) || 11;
+    const dFt = parseFloat(dInput.value) || 2;
+    const plinthIn = plinthInput ? (parseFloat(plinthInput.value) || 0) : 0;
+    
+    currentH = hIn;
+    currentW = wFt * 12; // feet to inches
+    currentD = dFt * 12; // feet to inches
+    currentPlinth = plinthIn;
+    currentThickness = 0.75;
+    
+    // Update subtext labels
+    const hSub = document.getElementById('cad-h-sub');
+    const wSub = document.getElementById('cad-w-sub');
+    const dSub = document.getElementById('cad-d-sub');
+    const plinthSub = document.getElementById('cad-plinth-sub');
+    const summary = document.getElementById('cad-dim-summary');
+    
+    if (hSub) hSub.textContent = `~ ${hIn.toFixed(0)}" (${(hIn / 12).toFixed(2)} ft)`;
+    if (wSub) wSub.textContent = `~ ${(wFt * 12).toFixed(0)}" (${wFt} ft)`;
+    if (dSub) dSub.textContent = `~ ${(dFt * 12).toFixed(0)}" (${dFt} ft)`;
+    if (plinthSub) plinthSub.textContent = `~ ${plinthIn.toFixed(0)}"`;
+    if (summary) summary.textContent = `${hIn.toFixed(0)}" H × ${(wFt * 12).toFixed(0)}" W × ${(dFt * 12).toFixed(0)}" D`;
     
     buildShell();
+    syncPartitionsAndDoors();
 }
 
 function buildShell() {
     deselectObject();
     
-    // Remove old shell
+    // Remove old shell and plinth
     shellObjects.forEach(obj => cabinetGroup.remove(obj));
     shellObjects = [];
+    plinthObjects.forEach(obj => cabinetGroup.remove(obj));
+    plinthObjects = [];
 
     const t = currentThickness;
     const w = currentW;
     const h = currentH;
     const d = currentD;
-    const r = currentR;
+    const plinth = currentPlinth;
     const innerW = w - (2 * t);
     const innerH = h - (2 * t);
     
     const shellColor = 0xcd853f; 
 
-    if (r > 0 && (cornerFlags.tl || cornerFlags.tr || cornerFlags.bl || cornerFlags.br)) {
-        // Advanced rounded shell
-        const shell = createRoundedShell(w, h, d, t, r, shellColor, cornerFlags);
-        cabinetGroup.add(shell);
-    } else {
-        // Standard sharp 5-piece shell
-        const left = createPanel(t, h, d, shellColor, false, 'side');
-        left.position.set(-w/2 + t/2, 0, 0);
-        left.userData.label = "Left Side";
-        cabinetGroup.add(left);
+    // Standard sharp 5-piece shell
+    const left = createPanel(t, h, d, shellColor, false, 'side');
+    left.position.set(-w/2 + t/2, 0, 0);
+    left.userData.label = "Left Side";
+    cabinetGroup.add(left);
 
-        const right = createPanel(t, h, d, shellColor, false, 'side');
-        right.position.set(w/2 - t/2, 0, 0);
-        right.userData.label = "Right Side";
-        cabinetGroup.add(right);
-        
-        const top = createPanel(innerW, t, d, shellColor, false, 'top');
-        top.position.set(0, h/2 - t/2, 0);
-        top.userData.label = "Top";
-        cabinetGroup.add(top);
+    const right = createPanel(t, h, d, shellColor, false, 'side');
+    right.position.set(w/2 - t/2, 0, 0);
+    right.userData.label = "Right Side";
+    cabinetGroup.add(right);
+    
+    const top = createPanel(innerW, t, d, shellColor, false, 'top');
+    top.position.set(0, h/2 - t/2, 0);
+    top.userData.label = "Top";
+    cabinetGroup.add(top);
 
-        const bot = createPanel(innerW, t, d, shellColor, false, 'bottom');
-        bot.position.set(0, -h/2 + t/2, 0);
-        bot.userData.label = "Bottom";
-        cabinetGroup.add(bot);
-    }
+    const bot = createPanel(innerW, t, d, shellColor, false, 'bottom');
+    bot.position.set(0, -h/2 + t/2, 0);
+    bot.userData.label = "Bottom";
+    cabinetGroup.add(bot);
 
     // Back Panel (recessed inside the box)
     const back = createPanel(innerW, innerH, t, shellColor, false, 'back');
@@ -635,11 +690,265 @@ function buildShell() {
     back.userData.label = "Back Panel";
     cabinetGroup.add(back);
 
+    // Render Plinth / Skirting kickboard if plinth > 0
+    if (plinth > 0) {
+        const plinthColor = 0x27272a; // dark kickboard
+        const kickRecess = 2; // 2" recessed toe kick
+        const plinthY = -h/2 - plinth/2;
+        
+        // Front kickboard
+        const kickboard = createPanel(w - 2*t, plinth, t, plinthColor, false, 'plinth');
+        kickboard.position.set(0, plinthY, d/2 - kickRecess - t/2);
+        kickboard.userData.label = "Plinth Kickboard";
+        kickboard.userData.w = w - 2*t; kickboard.userData.h = plinth; kickboard.userData.d = t;
+        cabinetGroup.add(kickboard);
+        plinthObjects.push(kickboard);
+        
+        // Left plinth support
+        const plinthL = createPanel(t, plinth, d - kickRecess, plinthColor, false, 'plinth');
+        plinthL.position.set(-w/2 + t/2, plinthY, -kickRecess/2);
+        plinthL.userData.label = "Plinth Side";
+        plinthL.userData.w = t; plinthL.userData.h = plinth; plinthL.userData.d = d - kickRecess;
+        cabinetGroup.add(plinthL);
+        plinthObjects.push(plinthL);
+        
+        // Right plinth support
+        const plinthR = createPanel(t, plinth, d - kickRecess, plinthColor, false, 'plinth');
+        plinthR.position.set(w/2 - t/2, plinthY, -kickRecess/2);
+        plinthR.userData.label = "Plinth Side";
+        plinthR.userData.w = t; plinthR.userData.h = plinth; plinthR.userData.d = d - kickRecess;
+        cabinetGroup.add(plinthR);
+        plinthObjects.push(plinthR);
+    }
+
     // Update Camera
     const maxDim = Math.max(w, h, d);
-    camera.position.set(0, maxDim * 0.5, maxDim * 1.5);
+    camera.position.set(0, maxDim * 0.4, maxDim * 1.6);
     orbit.target.set(0, 0, 0);
     orbit.update();
+}
+
+function syncPartitionsAndDoors() {
+    syncShelvesFromCount();
+    syncDividersFromCount();
+    syncShuttersFromSelect();
+}
+
+function syncShelvesFromCount() {
+    const shelvesInput = document.getElementById('cad-shelves-count');
+    if (!shelvesInput) return;
+    const count = parseInt(shelvesInput.value) || 0;
+    
+    // Remove existing auto shelves
+    const toRemove = [];
+    internalParts.forEach(part => {
+        if (part.userData && part.userData.isAutoShelf) {
+            toRemove.push(part);
+        }
+    });
+    toRemove.forEach(part => {
+        cabinetGroup.remove(part);
+        internalParts = internalParts.filter(p => p !== part);
+    });
+    
+    if (count <= 0) return;
+    
+    const t = currentThickness;
+    const innerW = currentW - (2 * t);
+    const innerH = currentH - (2 * t);
+    const shelfDepth = currentD - 1.0;
+    const shelfColor = 0xdeb887;
+    
+    const spacing = innerH / (count + 1);
+    const startY = -innerH / 2;
+    
+    for (let i = 1; i <= count; i++) {
+        const shelf = createPanel(innerW, t, shelfDepth, shelfColor, true, 'shelf');
+        shelf.position.set(0, startY + (i * spacing), -0.5);
+        shelf.userData.label = `Shelf ${i}`;
+        shelf.userData.isAutoShelf = true;
+        cabinetGroup.add(shelf);
+    }
+}
+
+function syncDividersFromCount() {
+    const divInput = document.getElementById('cad-dividers-count');
+    if (!divInput) return;
+    const count = parseInt(divInput.value) || 0;
+    
+    // Remove existing auto dividers
+    const toRemove = [];
+    internalParts.forEach(part => {
+        if (part.userData && part.userData.isAutoDivider) {
+            toRemove.push(part);
+        }
+    });
+    toRemove.forEach(part => {
+        cabinetGroup.remove(part);
+        internalParts = internalParts.filter(p => p !== part);
+    });
+    
+    if (count <= 0) return;
+    
+    const t = currentThickness;
+    const innerW = currentW - (2 * t);
+    const innerH = currentH - (2 * t);
+    const divDepth = currentD - 1.0;
+    const divColor = 0xdeb887;
+    
+    const spacing = innerW / (count + 1);
+    const startX = -innerW / 2;
+    
+    for (let i = 1; i <= count; i++) {
+        const divider = createPanel(t, innerH, divDepth, divColor, true, 'divider');
+        divider.position.set(startX + (i * spacing), 0, -0.5);
+        divider.userData.label = `Vertical Divider ${i}`;
+        divider.userData.isAutoDivider = true;
+        cabinetGroup.add(divider);
+    }
+}
+
+function syncShuttersFromSelect() {
+    const shutterSelect = document.getElementById('cad-shutter-select');
+    if (!shutterSelect) return;
+    const count = parseInt(shutterSelect.value) || 0;
+    
+    // Remove existing shutters and auto-hinge partitions
+    const toRemove = [];
+    cabinetGroup.children.forEach(child => {
+        if (child.userData && (child.userData.type === 'shutter' || child.userData.isAutoHingePartition)) {
+            toRemove.push(child);
+        }
+    });
+    toRemove.forEach(child => {
+        cabinetGroup.remove(child);
+        internalParts = internalParts.filter(p => p !== child);
+    });
+    
+    if (count <= 0) return;
+    
+    const gap = 0.125; // 1/8 inch
+    const totalGapSpace = gap * (count + 1);
+    const shutterW = (currentW - totalGapSpace) / count;
+    const shutterH = currentH - (gap * 2);
+    const shutterD = 0.75;
+    
+    let startX = (-currentW / 2) + gap + (shutterW / 2);
+    const zPos = (currentD / 2) + (shutterD / 2) + 0.05;
+    
+    for (let i = 0; i < count; i++) {
+        const shutter = createPanel(shutterW, shutterH, shutterD, 0xdeb887, true, 'shutter');
+        shutter.userData.label = `Shutter ${i + 1}`;
+        shutter.userData.customEdge = 'all';
+        shutter.userData.customLaminate = 'single';
+        applyLaminateMaterials(shutter, 'shutter', 'single', 'all');
+        
+        let isRightHinged = (i % 2 === 1);
+        if (count === 1) isRightHinged = false;
+        
+        shutter.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
+        shutter.children.forEach(c => {
+            if (c.geometry) c.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
+        });
+
+        shutter.position.set(isRightHinged ? startX + shutterW/2 : startX - shutterW/2, 0, zPos + shutterD/2);
+        shutter.userData.closedRotationY = shutter.rotation.y;
+        shutter.userData.openRotationY = isRightHinged ? Math.PI / 2 : -Math.PI / 2;
+        
+        shutter.userData.lockZ = true; 
+        shutter.userData.lockX = true;
+        shutter.userData.lockY = true;
+        
+        cabinetGroup.add(shutter);
+        
+        if (i % 2 === 1 && i < count - 1) {
+            const gapCenterX = startX + (shutterW / 2) + (gap / 2);
+            const t = currentThickness;
+            const innerH = currentH - (2 * t);
+            const divDepth = currentD - 1.0; 
+            
+            const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
+            divider.position.set(gapCenterX, 0, -0.5);
+            divider.userData.label = `Auto Hinge Partition`;
+            divider.userData.isAutoHingePartition = true;
+            cabinetGroup.add(divider);
+        }
+        
+        startX += shutterW + gap;
+    }
+}
+
+function applyPreset(presetKey) {
+    const preset = CABINET_PRESETS[presetKey];
+    if (!preset) return;
+    
+    document.querySelectorAll('.preset-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === presetKey);
+    });
+    
+    const nameInput = document.getElementById('cab-preset-name');
+    const hInput = document.getElementById('cad-h-in');
+    const wInput = document.getElementById('cad-w-ft');
+    const dInput = document.getElementById('cad-d-ft');
+    const plinthInput = document.getElementById('cad-plinth-in');
+    const shelvesInput = document.getElementById('cad-shelves-count');
+    const dividersInput = document.getElementById('cad-dividers-count');
+    const shutterSelect = document.getElementById('cad-shutter-select');
+    
+    if (nameInput) nameInput.value = preset.name;
+    if (hInput) hInput.value = preset.hIn;
+    if (wInput) wInput.value = preset.wFt;
+    if (dInput) dInput.value = preset.dFt;
+    if (plinthInput) plinthInput.value = preset.plinthIn;
+    if (shelvesInput) shelvesInput.value = preset.shelves;
+    if (dividersInput) dividersInput.value = preset.dividers;
+    if (shutterSelect) shutterSelect.value = preset.shutters;
+    
+    updateDimensionsFromInputs();
+}
+
+function setupCADListeners() {
+    ['cad-h-in', 'cad-w-ft', 'cad-d-ft', 'cad-plinth-in'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateDimensionsFromInputs);
+    });
+    
+    const shelvesInput = document.getElementById('cad-shelves-count');
+    if (shelvesInput) shelvesInput.addEventListener('input', syncShelvesFromCount);
+    
+    const divInput = document.getElementById('cad-dividers-count');
+    if (divInput) divInput.addEventListener('input', syncDividersFromCount);
+    
+    const shutterSelect = document.getElementById('cad-shutter-select');
+    if (shutterSelect) shutterSelect.addEventListener('change', syncShuttersFromSelect);
+    
+    document.querySelectorAll('.preset-pill').forEach(btn => {
+        btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+    });
+    
+    const dupBtn = document.getElementById('btn-duplicate-cab');
+    if (dupBtn) {
+        dupBtn.addEventListener('click', () => {
+            const qtyInput = document.getElementById('cab-preset-qty');
+            if (qtyInput) {
+                qtyInput.value = (parseInt(qtyInput.value) || 1) + 1;
+                qtyInput.style.transform = 'scale(1.2)';
+                setTimeout(() => { qtyInput.style.transform = 'scale(1)'; }, 200);
+            }
+        });
+    }
+    
+    const toggleDoorsBtn = document.getElementById('btn-toggle-shutters');
+    if (toggleDoorsBtn) toggleDoorsBtn.addEventListener('click', toggleShutters);
+    
+    const addDrawerBtn = document.getElementById('btn-add-drawer-quick');
+    if (addDrawerBtn) addDrawerBtn.addEventListener('click', () => addDrawer('full'));
+    
+    const deleteBtn = document.getElementById('btn-delete-selected');
+    if (deleteBtn) deleteBtn.addEventListener('click', deleteSelectedPart);
+    
+    const exportBtn = document.getElementById('btn-cad-export');
+    if (exportBtn) exportBtn.addEventListener('click', exportToOptimizer);
 }
 
 function addShelf() {
@@ -940,6 +1249,17 @@ function exportToOptimizer() {
             });
         }
     });
+
+    // 1b. Export Plinth / Kickboard (if present)
+    plinthObjects.forEach(obj => {
+        const dims = [obj.userData.w, obj.userData.h, obj.userData.d].sort((a,b) => b-a);
+        exportedParts.push({
+            label: obj.userData.label || "Plinth Kickboard",
+            w: dims[1],
+            h: dims[0],
+            laminate: "none"
+        });
+    });
     
     // 2. Export Internal Parts & Drawer Groups
     cabinetGroup.children.forEach(obj => {
@@ -977,15 +1297,32 @@ function exportToOptimizer() {
         });
     });
 
-    window.cabinetParts = exportedParts;
+    // Multiply by Quantity & add Cabinet Name
+    const qtyInput = document.getElementById('cab-preset-qty');
+    const cabQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+    const nameInput = document.getElementById('cab-preset-name');
+    const cabName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : "Cabinet";
+
+    const allMultipliedParts = [];
+    for (let q = 1; q <= cabQty; q++) {
+        const prefix = cabQty > 1 ? `${cabName} #${q}` : cabName;
+        exportedParts.forEach(p => {
+            allMultipliedParts.push({
+                ...p,
+                label: `${prefix} - ${p.label}`
+            });
+        });
+    }
+
+    window.cabinetParts = allMultipliedParts;
     
     // UI updates
     const ul = document.getElementById('generated-parts');
     if (ul) {
         ul.innerHTML = '';
-        exportedParts.forEach(p => {
+        allMultipliedParts.forEach(p => {
             const li = document.createElement('li');
-            li.textContent = `${p.label}: ${p.w.toFixed(1)}" x ${p.h.toFixed(1)}"`;
+            li.textContent = `${p.label}: ${p.w.toFixed(1)}" × ${p.h.toFixed(1)}"`;
             ul.appendChild(li);
         });
         document.getElementById('parts-list').classList.remove('hidden');
@@ -999,7 +1336,7 @@ function exportToOptimizer() {
 
     const matSelect = document.getElementById('cab-material');
     if (!matSelect || !matSelect.value) {
-        alert("Please select a Plywood / Core material in the Designer tab first, then try exporting again!");
+        alert("Please select a Plywood / Core material in the Cut Material tab first, then try exporting again!");
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('designer-tab').classList.add('active');
