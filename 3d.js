@@ -19,7 +19,6 @@ let decorObjects = []; // Countertop & Backsplash
 let internalParts = [];
 let partCounter = 1;
 let shuttersOpen = false;
-let drawersOpen = false;
 
 // Height and Coordinate Helpers
 function getBaseBottomY() {
@@ -97,12 +96,6 @@ function init3D() {
 
     transformControl.addEventListener('dragging-changed', function (event) {
         orbit.enabled = !event.value;
-        if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
-            selectedObject.userData.isDragging = event.value;
-            if (!event.value) {
-                selectedObject.userData.targetZ = selectedObject.position.z;
-            }
-        }
     });
     transformControl.addEventListener('objectChange', function () {
         if (transformControl.object === shutterDragProxy && selectedObject && selectedObject.userData && selectedObject.userData.type === 'shutter') {
@@ -115,7 +108,6 @@ function init3D() {
             const maxZ = selectedObject.userData.maxSlideZ || (selectedObject.userData.drawerD ? selectedObject.userData.drawerD * 0.65 : 14.0);
             if (selectedObject.position.z < 0) selectedObject.position.z = 0;
             if (selectedObject.position.z > maxZ) selectedObject.position.z = maxZ;
-            selectedObject.userData.targetZ = selectedObject.position.z;
         } else if (selectedObject && selectedObject.userData && selectedObject.userData.type === 'shutter') {
             const isWall = (selectedObject.userData.module === 'wall');
             const d = isWall ? currentWallD : currentD;
@@ -383,22 +375,6 @@ function updateDimensionsOverlay() {
 function animate() {
     requestAnimationFrame(animate);
     if (orbit) orbit.update();
-
-    // Smooth sliding of drawers along channels
-    if (cabinetGroup) {
-        cabinetGroup.children.forEach(child => {
-            if (child.userData && child.userData.isDrawerGroup && !child.userData.isDragging) {
-                if (child.userData.targetZ !== undefined) {
-                    const diff = child.userData.targetZ - child.position.z;
-                    if (Math.abs(diff) > 0.05) {
-                        child.position.z += diff * 0.18;
-                    } else {
-                        child.position.z = child.userData.targetZ;
-                    }
-                }
-            }
-        });
-    }
 
     if (renderer && scene && camera) {
         const container = document.getElementById('3d-container');
@@ -1848,9 +1824,6 @@ function setupCADListeners() {
     // Action Buttons
     const toggleDoorsBtn = document.getElementById('btn-toggle-shutters');
     if (toggleDoorsBtn) toggleDoorsBtn.addEventListener('click', toggleShutters);
-
-    const toggleDrawersBtn = document.getElementById('btn-toggle-drawers');
-    if (toggleDrawersBtn) toggleDrawersBtn.addEventListener('click', toggleDrawers);
     
     const addDrawerBtn = document.getElementById('btn-add-drawer-quick');
     if (addDrawerBtn) addDrawerBtn.addEventListener('click', () => addDrawer('full'));
@@ -2060,7 +2033,7 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
     group.add(hitBox);
 
     const maxSlideZ = drawerD * 0.65;
-    const initialZ = (posZ !== undefined && posZ !== 0) ? posZ : (drawersOpen ? maxSlideZ : 0);
+    const initialZ = (posZ !== undefined) ? posZ : 0;
 
     hitBox.userData = { 
         type: 'drawer', 
@@ -2093,8 +2066,7 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
         drawerW: drawerW,
         drawerH: drawerH,
         drawerD: drawerD,
-        maxSlideZ: maxSlideZ,
-        targetZ: initialZ
+        maxSlideZ: maxSlideZ
     };
     group.position.set(posX, posY, initialZ);
 
@@ -2184,7 +2156,7 @@ function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, 
     group.add(hitBox);
 
     const maxSlideZ = drawerD * 0.65;
-    const currentSlideZ = (posZ !== undefined && posZ !== 0) ? posZ : (drawersOpen ? maxSlideZ : 0);
+    const currentSlideZ = (posZ !== undefined) ? posZ : 0;
 
     hitBox.userData = { 
         type: 'drawer', 
@@ -2213,7 +2185,6 @@ function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, 
     group.userData.drawerH = drawerH;
     group.userData.drawerD = drawerD;
     group.userData.maxSlideZ = maxSlideZ;
-    group.userData.targetZ = currentSlideZ;
     group.userData.label = `${labelPrefix} Assembly`;
 
     group.position.set(posX, posY, currentSlideZ);
@@ -2375,7 +2346,7 @@ function addDrawer(sizeType) {
     }
 
     const createdHitBoxes = [];
-    const initialSlideZ = drawersOpen ? (drawerD * 0.65) : 0;
+    const initialSlideZ = 0;
 
     targetBays.forEach(bayIdx => {
         const alreadyExists = existingDrawers.some(d => d.userData.bayIndex === bayIdx && d.userData.tierIndex === targetTier);
@@ -2417,28 +2388,6 @@ function toggleShutters() {
         if (child.userData && child.userData.type === 'shutter') {
             child.rotation.y = shuttersOpen ? child.userData.openRotationY : child.userData.closedRotationY;
             child.layers.set(shuttersOpen ? 1 : 0);
-        }
-    });
-}
-
-function toggleDrawers() {
-    drawersOpen = !drawersOpen;
-    const btn = document.getElementById('btn-toggle-drawers');
-    if (btn) {
-        btn.classList.toggle('active', drawersOpen);
-        const span = btn.querySelector('span');
-        if (span) span.textContent = drawersOpen ? 'Push In' : 'Pull Drawers';
-    }
-
-    // Auto-open doors if drawers are pulled with doors closed so they are visible
-    if (drawersOpen && !shuttersOpen) {
-        toggleShutters();
-    }
-
-    cabinetGroup.children.forEach(child => {
-        if (child.userData && child.userData.isDrawerGroup && child.userData.module === 'base') {
-            const maxSlideZ = child.userData.maxSlideZ || (child.userData.drawerD ? child.userData.drawerD * 0.65 : 14.0);
-            child.userData.targetZ = drawersOpen ? maxSlideZ : 0;
         }
     });
 }
