@@ -425,6 +425,68 @@ input:focus, select:focus {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
+/* Module Selector: Base / Both (Kitchen Set) / Wall */
+.cad-module-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+    background: rgba(15, 23, 42, 0.7);
+    padding: 0.25rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.module-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.74rem;
+    font-weight: 500;
+    padding: 0.35rem 0.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.module-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.module-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+}
+
+.badge-tag {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+}
+
+.base-tag {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.wall-tag {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
 /* Presets - Grid-based Segmented Control (Zero Horizontal Scrolling) */
 .cad-preset-section {
     background: rgba(30, 41, 59, 0.7);
@@ -435,8 +497,8 @@ input:focus, select:focus {
 
 .cad-preset-pills {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.35rem;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.3rem;
     width: 100%;
     overflow: hidden;
 }
@@ -445,9 +507,9 @@ input:focus, select:focus {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #94a3b8;
-    font-size: 0.74rem;
+    font-size: 0.7rem;
     font-weight: 500;
-    padding: 0.32rem 0.2rem;
+    padding: 0.32rem 0.15rem;
     border-radius: 6px;
     cursor: pointer;
     text-align: center;

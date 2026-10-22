@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro</title>
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -267,98 +267,171 @@
                         <!-- Cabinet Name & Quantity -->
                         <div class="cad-header-row">
                             <div class="cad-input-block flex-1">
-                                <label class="cad-label">CABINET NAME</label>
-                                <input type="text" id="cab-preset-name" class="cad-input-text" value="Kitchen Base Unit">
+                                <label class="cad-label">PROJECT / CABINET NAME</label>
+                                <input type="text" id="cab-preset-name" class="cad-input-text" value="Modular Kitchen Set">
                             </div>
-                            <div class="cad-input-block" style="width: 90px;">
+                            <div class="cad-input-block" style="width: 85px;">
                                 <label class="cad-label">QUANTITY</label>
                                 <div class="qty-control">
                                     <input type="number" id="cab-preset-qty" class="cad-input-number" value="1" min="1">
-                                    <button type="button" id="btn-duplicate-cab" class="cad-icon-btn" title="Duplicate Cabinet (Increases quantity)">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    <button type="button" id="btn-duplicate-cab" class="cad-icon-btn" title="Duplicate Cabinet Set (Increases quantity)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Kitchen View Toggle: Base / Both / Wall -->
+                        <div class="cad-module-toggle">
+                            <button type="button" class="module-btn" data-mode="base">🔽 Base Only</button>
+                            <button type="button" class="module-btn active" data-mode="both">🔄 Base + Wall (Set)</button>
+                            <button type="button" class="module-btn" data-mode="wall">🔼 Wall Only</button>
                         </div>
 
                         <!-- Quick Presets -->
                         <div class="cad-preset-section">
                             <label class="cad-label">QUICK PRESET</label>
                             <div class="cad-preset-pills">
+                                <button type="button" class="preset-pill active" data-preset="kitchen-set">Kitchen Set</button>
+                                <button type="button" class="preset-pill" data-preset="kitchen-base">Base Unit</button>
+                                <button type="button" class="preset-pill" data-preset="kitchen-wall">Wall Unit</button>
                                 <button type="button" class="preset-pill" data-preset="wardrobe">Wardrobe</button>
-                                <button type="button" class="preset-pill active" data-preset="kitchen-base">Kitchen Base</button>
-                                <button type="button" class="preset-pill" data-preset="kitchen-wall">Kitchen Wall</button>
                                 <button type="button" class="preset-pill" data-preset="tv-console">TV Console</button>
                                 <button type="button" class="preset-pill" data-preset="shoe-rack">Shoe Rack</button>
                             </div>
                         </div>
 
-                        <!-- 1. Dimensions -->
-                        <div class="cad-card">
-                            <div class="cad-card-header">
-                                <span class="cad-card-title">1. Dimensions</span>
-                                <span id="cad-dim-summary" class="cad-dim-badge">32" H × 132" W × 24" D</span>
+                        <!-- 1. Dimensions Card -->
+                        <div class="cad-card" id="cad-dimensions-card">
+                            <!-- Base Unit Dimensions -->
+                            <div class="cad-dim-section" id="cad-base-dim-section">
+                                <div class="cad-card-header">
+                                    <span class="cad-card-title"><span class="badge-tag base-tag">BASE</span>Dimensions</span>
+                                    <span id="cad-dim-summary" class="cad-dim-badge">32" H × 132" W × 24" D</span>
+                                </div>
+                                <div class="cad-card-grid-4">
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">HEIGHT (IN)</label>
+                                        <input type="number" id="cad-h-in" class="cad-num-input" value="32" step="any">
+                                        <span id="cad-h-sub" class="cad-col-subtext">~ 32" (2.67 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">WIDTH (FT)</label>
+                                        <input type="number" id="cad-w-ft" class="cad-num-input" value="11" step="any">
+                                        <span id="cad-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">DEPTH (FT)</label>
+                                        <input type="number" id="cad-d-ft" class="cad-num-input" value="2" step="any">
+                                        <span id="cad-d-sub" class="cad-col-subtext">~ 24" (2 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">PLINTH (IN)</label>
+                                        <input type="number" id="cad-plinth-in" class="cad-num-input" value="3" step="any">
+                                        <span id="cad-plinth-sub" class="cad-col-subtext">~ 3"</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="cad-card-grid-4">
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">HEIGHT (INCHES)</label>
-                                    <input type="number" id="cad-h-in" class="cad-num-input" value="32" step="any">
-                                    <span id="cad-h-sub" class="cad-col-subtext">~ 32" (2.67 ft)</span>
+
+                            <!-- Wall Unit Dimensions (Visible in 'both' and 'wall' modes) -->
+                            <div class="cad-dim-section" id="cad-wall-dim-section" style="margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.08);">
+                                <div class="cad-card-header">
+                                    <span class="cad-card-title"><span class="badge-tag wall-tag">WALL</span>Dimensions</span>
+                                    <span id="cad-wall-dim-summary" class="cad-dim-badge">30" H × 132" W × 12" D</span>
                                 </div>
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">WIDTH (FT)</label>
-                                    <input type="number" id="cad-w-ft" class="cad-num-input" value="11" step="any">
-                                    <span id="cad-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
-                                </div>
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">DEPTH (FT)</label>
-                                    <input type="number" id="cad-d-ft" class="cad-num-input" value="2" step="any">
-                                    <span id="cad-d-sub" class="cad-col-subtext">~ 24" (2 ft)</span>
-                                </div>
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">PLINTH (INCHES)</label>
-                                    <input type="number" id="cad-plinth-in" class="cad-num-input" value="3" step="any">
-                                    <span id="cad-plinth-sub" class="cad-col-subtext">~ 3"</span>
+                                <div class="cad-card-grid-4">
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">HEIGHT (IN)</label>
+                                        <input type="number" id="cad-wall-h-in" class="cad-num-input" value="30" step="any">
+                                        <span id="cad-wall-h-sub" class="cad-col-subtext">~ 30" (2.50 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">WIDTH (FT)</label>
+                                        <input type="number" id="cad-wall-w-ft" class="cad-num-input" value="11" step="any">
+                                        <span id="cad-wall-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">DEPTH (FT)</label>
+                                        <input type="number" id="cad-wall-d-ft" class="cad-num-input" value="1" step="any">
+                                        <span id="cad-wall-d-sub" class="cad-col-subtext">~ 12" (1 ft)</span>
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">WALL GAP (IN)</label>
+                                        <input type="number" id="cad-dado-gap-in" class="cad-num-input" value="22" step="any">
+                                        <span id="cad-dado-gap-sub" class="cad-col-subtext">~ 22" (Dado)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 2. Partitions & Doors -->
-                        <div class="cad-card">
-                            <div class="cad-card-header">
-                                <span class="cad-card-title">2. Partitions & Doors</span>
+                        <!-- 2. Partitions & Doors Card -->
+                        <div class="cad-card" id="cad-partitions-card">
+                            <!-- Base Partitions -->
+                            <div class="cad-part-section" id="cad-base-part-section">
+                                <div class="cad-card-header">
+                                    <span class="cad-card-title"><span class="badge-tag base-tag">BASE</span>Partitions & Doors</span>
+                                </div>
+                                <div class="cad-card-grid-3">
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">SHELVES</label>
+                                        <input type="number" id="cad-shelves-count" class="cad-num-input" value="2" min="0" step="1">
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">VERTICAL DIVIDERS</label>
+                                        <input type="number" id="cad-dividers-count" class="cad-num-input" value="0" min="0" step="1">
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">SHUTTERS (DOORS)</label>
+                                        <select id="cad-shutter-select" class="cad-select-input">
+                                            <option value="0">None (Open)</option>
+                                            <option value="1">1 Door</option>
+                                            <option value="2">2 Doors</option>
+                                            <option value="3">3 Doors</option>
+                                            <option value="4" selected>4 Doors</option>
+                                            <option value="5">5 Doors</option>
+                                            <option value="6">6 Doors</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="cad-card-grid-3">
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">SHELVES</label>
-                                    <input type="number" id="cad-shelves-count" class="cad-num-input" value="2" min="0" step="1">
+
+                            <!-- Wall Partitions (Visible in 'both' and 'wall' modes) -->
+                            <div class="cad-part-section" id="cad-wall-part-section" style="margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.08);">
+                                <div class="cad-card-header">
+                                    <span class="cad-card-title"><span class="badge-tag wall-tag">WALL</span>Partitions & Doors</span>
                                 </div>
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                    <input type="number" id="cad-dividers-count" class="cad-num-input" value="0" min="0" step="1">
-                                </div>
-                                <div class="cad-grid-col">
-                                    <label class="cad-col-label">SHUTTERS (DOORS)</label>
-                                    <select id="cad-shutter-select" class="cad-select-input">
-                                        <option value="0">None (Open)</option>
-                                        <option value="1">1 Door</option>
-                                        <option value="2" selected>2 Doors</option>
-                                        <option value="3">3 Doors</option>
-                                        <option value="4">4 Doors</option>
-                                        <option value="5">5 Doors</option>
-                                        <option value="6">6 Doors</option>
-                                    </select>
+                                <div class="cad-card-grid-3">
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">SHELVES</label>
+                                        <input type="number" id="cad-wall-shelves-count" class="cad-num-input" value="2" min="0" step="1">
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">VERTICAL DIVIDERS</label>
+                                        <input type="number" id="cad-wall-dividers-count" class="cad-num-input" value="0" min="0" step="1">
+                                    </div>
+                                    <div class="cad-grid-col">
+                                        <label class="cad-col-label">SHUTTERS (DOORS)</label>
+                                        <select id="cad-wall-shutter-select" class="cad-select-input">
+                                            <option value="0">None (Open)</option>
+                                            <option value="1">1 Door</option>
+                                            <option value="2">2 Doors</option>
+                                            <option value="3">3 Doors</option>
+                                            <option value="4" selected>4 Doors</option>
+                                            <option value="5">5 Doors</option>
+                                            <option value="6">6 Doors</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Quick Actions Bar -->
                         <div class="cad-actions-row">
-                            <button type="button" id="btn-toggle-shutters" class="cad-action-btn" title="Toggle Doors Open/Close">
+                            <button type="button" id="btn-toggle-shutters" class="cad-action-btn" title="Toggle Doors Open/Close (Both Base & Wall)">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 3h18M5 21V3h14v18M15 12h2"/></svg>
                                 <span>Toggle Doors</span>
                             </button>
-                            <button type="button" id="btn-add-drawer-quick" class="cad-action-btn" title="Add a Drawer inside Cabinet">
+                            <button type="button" id="btn-add-drawer-quick" class="cad-action-btn" title="Add a Drawer inside Base Cabinet">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
                                 <span>+ Drawer</span>
                             </button>
@@ -425,7 +498,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
     <script src="bin-packer.js?v=7"></script>
-    <script src="3d.js?v=3"></script>
+    <script src="3d.js?v=4"></script>
     <script src="app.js?v=9"></script>
 </body>
 </html>

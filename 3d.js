@@ -2,12 +2,61 @@ let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
 let cabinetGroup;
 let is3DInitialized = false;
 let selectedObject = null;
-let currentThickness = 0.75;
-let currentW = 132, currentH = 32, currentD = 24, currentPlinth = 3, currentR = 0;
+let currentKitchenMode = 'both'; // 'base', 'both', or 'wall'
+let currentThickness = 0.75; // Standard 3/4" (18-19mm) plywood
+
+// Base Cabinet Dimensions (inches)
+let currentW = 132, currentH = 32, currentD = 24, currentPlinth = 3;
+
+// Wall Cabinet Dimensions (inches)
+let currentWallW = 132, currentWallH = 30, currentWallD = 12, currentDadoGap = 22;
+
 let shellObjects = [];
 let plinthObjects = [];
+let decorObjects = []; // Countertop & Backsplash
 let internalParts = [];
 let partCounter = 1;
+let shuttersOpen = false;
+
+// Height and Coordinate Helpers
+function getBaseBottomY() {
+    return currentPlinth;
+}
+
+function getBaseTopY() {
+    return currentPlinth + currentH;
+}
+
+function getBaseCenterY() {
+    return currentPlinth + (currentH / 2);
+}
+
+function getCountertopTopY() {
+    return getBaseTopY() + 1.25; // 1.25" countertop slab
+}
+
+function getWallBottomY() {
+    if (currentKitchenMode === 'both') {
+        return getCountertopTopY() + currentDadoGap;
+    }
+    return 0;
+}
+
+function getWallTopY() {
+    return getWallBottomY() + currentWallH;
+}
+
+function getWallCenterY() {
+    return getWallBottomY() + (currentWallH / 2);
+}
+
+function getWallCenterZ() {
+    if (currentKitchenMode === 'both') {
+        // Wall cabinet mounted against back wall (back of base unit is at -currentD / 2)
+        return (-currentD / 2) + (currentWallD / 2);
+    }
+    return 0;
+}
 
 function init3D() {
     if (is3DInitialized) return;
@@ -21,7 +70,7 @@ function init3D() {
     // Camera setup
     const aspect = container.clientWidth / container.clientHeight;
     camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    camera.position.set(0, 50, 120);
+    camera.position.set(0, 50, 140);
 
     // Renderer setup
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -31,24 +80,28 @@ function init3D() {
 
     // Orbit Controls
     orbit = new THREE.OrbitControls(camera, renderer.domElement);
-    orbit.enableDamping = false; // Disabled "fluidic" glide for precise CAD feel
-    orbit.maxPolarAngle = Math.PI / 2 + 0.1; // Prevent camera from going completely underneath the floor
+    orbit.enableDamping = false;
+    orbit.maxPolarAngle = Math.PI / 2 + 0.1;
     orbit.minDistance = 10;
     orbit.maxDistance = 500;
 
-    // Transform Controls (for dragging)
+    // Transform Controls (for dragging internal parts)
     transformControl = new THREE.TransformControls(camera, renderer.domElement);
     transformControl.addEventListener('dragging-changed', function (event) {
-        orbit.enabled = !event.value; // Disable orbit while dragging
+        orbit.enabled = !event.value;
     });
     scene.add(transformControl);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    dirLight.position.set(50, 100, 50);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
+    dirLight.position.set(60, 120, 80);
     scene.add(dirLight);
+
+    const backFillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    backFillLight.position.set(-60, 80, -60);
+    scene.add(backFillLight);
 
     cabinetGroup = new THREE.Group();
     scene.add(cabinetGroup);
@@ -58,8 +111,6 @@ function init3D() {
     mouse = new THREE.Vector2();
 
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
-
-    // Resize
     window.addEventListener('resize', resize3D);
 
     // Property Inspector Setup
@@ -70,8 +121,8 @@ function init3D() {
 
     is3DInitialized = true;
     
-    // Initial Shell and Partitions
-    updateDimensionsFromInputs();
+    // Initial build
+    setKitchenMode('both');
     animate();
 }
 
@@ -94,7 +145,6 @@ function updateDimensionsOverlay() {
         return;
     }
     
-    // Only show for Y-axis or X-axis moving things
     const type = selectedObject.userData.type || (selectedObject.userData.isDrawerGroup ? 'drawer' : null);
     if (type !== 'shelf' && type !== 'drawer' && type !== 'divider') {
         overlaysContainer.innerHTML = '';
@@ -124,6 +174,12 @@ function updateDimensionsOverlay() {
         return div;
     };
 
+    const isWallPart = (selectedObject.userData.module === 'wall');
+    const boxW = isWallPart ? currentWallW : currentW;
+    const boxH = isWallPart ? currentWallH : currentH;
+    const boxD = isWallPart ? currentWallD : currentD;
+    const boxCenterY = isWallPart ? getWallCenterY() : getBaseCenterY();
+
     if (type === 'divider') {
         const objX = selectedObject.position.x;
         const w = selectedObject.geometry.parameters.width;
@@ -131,15 +187,15 @@ function updateDimensionsOverlay() {
         const leftSurface = objX - (w / 2);
         const rightSurface = objX + (w / 2);
         
-        const cabInnerLeft = -currentW / 2 + currentThickness;
-        const cabInnerRight = currentW / 2 - currentThickness;
+        const cabInnerLeft = -boxW / 2 + currentThickness;
+        const cabInnerRight = boxW / 2 - currentThickness;
         
         const distLeft = (leftSurface - cabInnerLeft).toFixed(1);
         const distRight = (cabInnerRight - rightSurface).toFixed(1);
 
         const pos = new THREE.Vector3();
         selectedObject.getWorldPosition(pos);
-        pos.z += currentD / 2; // Move to front edge
+        pos.z += boxD / 2;
 
         const leftPos = pos.clone(); leftPos.x = leftSurface - (leftSurface - cabInnerLeft)/2;
         const rightPos = pos.clone(); rightPos.x = rightSurface + (cabInnerRight - rightSurface)/2;
@@ -161,23 +217,23 @@ function updateDimensionsOverlay() {
         let h = 0;
         if (selectedObject.userData.isDrawerGroup) {
             const hitBox = selectedObject.children[selectedObject.children.length - 1];
-            h = hitBox.geometry.parameters.height;
+            h = hitBox.geometry ? hitBox.geometry.parameters.height : 8;
         } else {
-            h = selectedObject.geometry.parameters.height;
+            h = selectedObject.geometry ? selectedObject.geometry.parameters.height : currentThickness;
         }
         
         const topSurface = objY + (h / 2);
         const bottomSurface = objY - (h / 2);
         
-        const cabInnerTop = currentH / 2 - currentThickness;
-        const cabInnerBottom = -currentH / 2 + currentThickness;
+        const cabInnerTop = boxCenterY + boxH / 2 - currentThickness;
+        const cabInnerBottom = boxCenterY - boxH / 2 + currentThickness;
         
         const distTop = (cabInnerTop - topSurface).toFixed(1);
         const distBottom = (bottomSurface - cabInnerBottom).toFixed(1);
 
         const pos = new THREE.Vector3();
         selectedObject.getWorldPosition(pos);
-        pos.z += currentD / 2; 
+        pos.z += boxD / 2; 
 
         const topPos = pos.clone(); topPos.y = topSurface + (cabInnerTop - topSurface)/2;
         const botPos = pos.clone(); botPos.y = bottomSurface - (bottomSurface - cabInnerBottom)/2;
@@ -218,7 +274,6 @@ function onPointerDown(event) {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
     raycaster.setFromCamera(mouse, camera);
-    // Only intersect layer 0 (visible items)
     raycaster.layers.set(0);
 
     const hitControls = raycaster.intersectObject(transformControl, true);
@@ -228,11 +283,8 @@ function onPointerDown(event) {
 
     if (intersects.length > 0) {
         const object = intersects[0].object;
-        
-        // For groups (like drawers), the hitBox holds the parent group reference
         const targetObj = object.userData.parentGroup ? object.userData.parentGroup : object;
 
-        // If we clicked a NEW object, select it. If we clicked the ALREADY selected object, do nothing (keep it selected).
         if (selectedObject !== targetObj) {
             selectObject(object);
         }
@@ -259,9 +311,7 @@ function setEmissive(obj, hex) {
 function selectObject(hitBoxMesh) {
     deselectObject();
     
-    // For groups (like drawers), the hitBox holds the parent group reference
     const targetObj = hitBoxMesh.userData.parentGroup ? hitBoxMesh.userData.parentGroup : hitBoxMesh;
-    
     selectedObject = targetObj;
     setEmissive(selectedObject, 0x333333);
     
@@ -278,17 +328,15 @@ function selectObject(hitBoxMesh) {
         transformControl.showZ = false;
     }
     
-    // Populate Property Inspector
     populateInspector(selectedObject);
 }
 
 function deselectObject() {
     if (selectedObject) {
         transformControl.detach();
-        setEmissive(selectedObject, 0x000000); // Reset color
+        setEmissive(selectedObject, 0x000000);
         selectedObject = null;
         
-        // Hide Property Inspector
         const inspector = document.getElementById('property-inspector');
         if (inspector) inspector.style.display = 'none';
     }
@@ -305,21 +353,19 @@ function populateInspector(obj) {
     const lamEl = document.getElementById('prop-laminate');
     const edgeEl = document.getElementById('prop-edge');
     
-    // Fallbacks
     let name = obj.userData.label || "Cabinet Part";
     let thickness = currentThickness;
-    let laminate = obj.userData.customLaminate || "double"; // Default everything to double sided except shell maybe
-    let edge = obj.userData.customEdge || "front"; // Default to front edge banded
+    let laminate = obj.userData.customLaminate || "double";
+    let edge = obj.userData.customEdge || "front";
     
     if (obj.userData.isDrawerGroup) {
-        name = "Drawer Assembly";
-        thickEl.disabled = true; // Hard to dynamically rebuild drawer thickness in real-time, disable for now
+        name = obj.userData.label || "Drawer Assembly";
+        thickEl.disabled = true;
     } else {
         thickEl.disabled = false;
         if (obj.userData.customThickness) {
             thickness = obj.userData.customThickness;
         } else {
-            // Infer thickness from geometry
             if (obj.userData.type === 'shelf') thickness = obj.geometry.parameters.height;
             else if (obj.userData.type === 'divider') thickness = obj.geometry.parameters.width;
         }
@@ -343,7 +389,6 @@ function setupInspector() {
         
         selectedObject.userData.customThickness = newT;
         
-        // Dynamically rebuild geometry
         const type = selectedObject.userData.type;
         let w = selectedObject.geometry.parameters.width;
         let h = selectedObject.geometry.parameters.height;
@@ -356,7 +401,6 @@ function setupInspector() {
         selectedObject.geometry.dispose();
         selectedObject.geometry = geo;
         
-        // Update Edge lines
         const edges = selectedObject.children.find(c => c.type === 'LineSegments');
         if (edges) {
             edges.geometry.dispose();
@@ -369,8 +413,6 @@ function setupInspector() {
         selectedObject.userData.customLaminate = e.target.value;
         const currentEdge = selectedObject.userData.customEdge || 'front';
         applyLaminateMaterials(selectedObject, selectedObject.userData.type, e.target.value, currentEdge);
-        
-        // Re-apply emissive glow so it doesn't disappear when material changes
         setEmissive(selectedObject, 0x333333);
     });
     
@@ -381,7 +423,6 @@ function setupInspector() {
             selectedObject.userData.customEdge = e.target.value;
             const currentLam = selectedObject.userData.customLaminate || 'double';
             applyLaminateMaterials(selectedObject, selectedObject.userData.type, currentLam, e.target.value);
-            
             setEmissive(selectedObject, 0x333333);
         });
     }
@@ -390,7 +431,6 @@ function setupInspector() {
 function deleteSelectedPart() {
     if (selectedObject) {
         cabinetGroup.remove(selectedObject);
-        // Remove from internalParts (either the object itself, or its hitBox)
         internalParts = internalParts.filter(p => p !== selectedObject && p.userData.parentGroup !== selectedObject);
         deselectObject();
     }
@@ -399,29 +439,26 @@ function deleteSelectedPart() {
 function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig) {
     const ply = new THREE.MeshPhongMaterial({ color: 0xdeb887, shininess: 10 });
     const liner = new THREE.MeshPhongMaterial({ color: 0xe5e7eb, shininess: 20 });
-    const edgeBand = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 }); // slightly darker grey for edge band
+    const edgeBand = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
     
     const materials = [
         ply.clone(), ply.clone(), ply.clone(), 
         ply.clone(), ply.clone(), ply.clone()
     ];
     
-    // Order of BoxGeometry faces: 0:+x, 1:-x, 2:+y, 3:-y, 4:+z, 5:-z
-    // Top/Bottom (or Left/Right) Laminate
     if (laminateConfig === 'double') {
         if (type === 'shelf') { materials[2] = liner.clone(); materials[3] = liner.clone(); }
         else if (type === 'divider') { materials[0] = liner.clone(); materials[1] = liner.clone(); }
         else if (type === 'shutter') { materials[4] = liner.clone(); materials[5] = liner.clone(); }
     } else if (laminateConfig === 'single') {
-        if (type === 'shelf') { materials[2] = liner.clone(); } // Top
-        else if (type === 'divider') { materials[1] = liner.clone(); } // Left
-        else if (type === 'shutter') { materials[5] = liner.clone(); } // Back (Inner Liner)
+        if (type === 'shelf') { materials[2] = liner.clone(); }
+        else if (type === 'divider') { materials[1] = liner.clone(); }
+        else if (type === 'shutter') { materials[5] = liner.clone(); }
     }
     
-    // Edge Banding
     if (edgeConfig === 'front') {
-        if (type === 'shutter') materials[0] = edgeBand.clone(); // Arbitrary edge for shutter if 'front' is chosen
-        else materials[4] = edgeBand.clone(); // +z face is front
+        if (type === 'shutter') materials[0] = edgeBand.clone();
+        else materials[4] = edgeBand.clone();
     } else if (edgeConfig === 'all') {
         if (type === 'shelf') {
             materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
@@ -444,7 +481,7 @@ function createPanel(w, h, d, colorHex, isInternal, type) {
         applyLaminateMaterials(mesh, type, 'double', 'front');
         internalParts.push(mesh);
     } else {
-        mesh.material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
+        mesh.material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 12 });
         mesh.userData = { isShell: true, w: w, h: h, d: d };
         shellObjects.push(mesh);
     }
@@ -458,176 +495,184 @@ function createPanel(w, h, d, colorHex, isInternal, type) {
 }
 
 function createRoundedShell(w, h, d, t, r, colorHex, flags) {
-    const shape = new THREE.Shape();
-    
-    // Outer boundary
-    const ow = w; const oh = h;
-    
-    if (flags.bl) shape.moveTo(-ow/2 + r, -oh/2);
-    else shape.moveTo(-ow/2, -oh/2);
-    
-    if (flags.br) {
-        shape.lineTo(ow/2 - r, -oh/2);
-        shape.quadraticCurveTo(ow/2, -oh/2, ow/2, -oh/2 + r);
-    } else {
-        shape.lineTo(ow/2, -oh/2);
-    }
-    
-    if (flags.tr) {
-        shape.lineTo(ow/2, oh/2 - r);
-        shape.quadraticCurveTo(ow/2, oh/2, ow/2 - r, oh/2);
-    } else {
-        shape.lineTo(ow/2, oh/2);
-    }
-    
-    if (flags.tl) {
-        shape.lineTo(-ow/2 + r, oh/2);
-        shape.quadraticCurveTo(-ow/2, oh/2, -ow/2, oh/2 - r);
-    } else {
-        shape.lineTo(-ow/2, oh/2);
-    }
-    
-    if (flags.bl) {
-        shape.lineTo(-ow/2, -oh/2 + r);
-        shape.quadraticCurveTo(-ow/2, -oh/2, -ow/2 + r, -oh/2);
-    } else {
-        shape.lineTo(-ow/2, -oh/2);
-    }
-
-    // Inner hole
-    const holePath = new THREE.Path();
-    const iw = w - 2*t; const ih = h - 2*t;
-    const ir = Math.max(0, r - t);
-    
-    if (flags.bl && ir > 0) holePath.moveTo(-iw/2 + ir, -ih/2);
-    else holePath.moveTo(-iw/2, -ih/2);
-    
-    if (flags.br && ir > 0) {
-        holePath.lineTo(iw/2 - ir, -ih/2);
-        holePath.quadraticCurveTo(iw/2, -ih/2, iw/2, -ih/2 + ir);
-    } else {
-        holePath.lineTo(iw/2, -ih/2);
-    }
-    
-    if (flags.tr && ir > 0) {
-        holePath.lineTo(iw/2, ih/2 - ir);
-        holePath.quadraticCurveTo(iw/2, ih/2, iw/2 - ir, ih/2);
-    } else {
-        holePath.lineTo(iw/2, ih/2);
-    }
-    
-    if (flags.tl && ir > 0) {
-        holePath.lineTo(-iw/2 + ir, ih/2);
-        holePath.quadraticCurveTo(-iw/2, ih/2, -iw/2, ih/2 - ir);
-    } else {
-        holePath.lineTo(-iw/2, ih/2);
-    }
-    
-    if (flags.bl && ir > 0) {
-        holePath.lineTo(-iw/2, -ih/2 + ir);
-        holePath.quadraticCurveTo(-iw/2, -ih/2, -iw/2 + ir, -ih/2);
-    } else {
-        holePath.lineTo(-iw/2, -ih/2);
-    }
-    
-    shape.holes.push(holePath);
-
-    const extrudeSettings = {
-        depth: d,
-        bevelEnabled: false,
-        curveSegments: 12
-    };
-
-    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    geometry.translate(0, 0, -d/2);
-    
-    const material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
-    const mesh = new THREE.Mesh(geometry, material);
-    
-    const edgeGeo = new THREE.EdgesGeometry(geometry, 20);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
-    const edges = new THREE.LineSegments(edgeGeo, edgeMat);
-    mesh.add(edges);
-
-    // Store data to be mathematically exploded into standard rectangular flat parts for cut list
-    mesh.userData = { isComplexShell: true, w: w, h: h, d: d, t: t };
-    shellObjects.push(mesh);
-    return mesh;
+    return createPanel(w, h, d, colorHex, false, 'shell');
 }
 
 const CABINET_PRESETS = {
-    'kitchen-base': {
-        name: 'Kitchen Base Unit',
+    'kitchen-set': {
+        name: 'Modular Kitchen Set',
+        mode: 'both',
         hIn: 32,
         wFt: 11,
         dFt: 2,
         plinthIn: 3,
         shelves: 2,
         dividers: 0,
-        shutters: '2'
+        shutters: '4',
+        wallHIn: 30,
+        wallWFt: 11,
+        wallDFt: 1,
+        dadoGapIn: 22,
+        wallShelves: 2,
+        wallDividers: 0,
+        wallShutters: '4'
+    },
+    'kitchen-base': {
+        name: 'Kitchen Base Unit',
+        mode: 'base',
+        hIn: 32,
+        wFt: 11,
+        dFt: 2,
+        plinthIn: 3,
+        shelves: 2,
+        dividers: 0,
+        shutters: '4',
+        wallHIn: 30,
+        wallWFt: 11,
+        wallDFt: 1,
+        dadoGapIn: 22,
+        wallShelves: 2,
+        wallDividers: 0,
+        wallShutters: '4'
+    },
+    'kitchen-wall': {
+        name: 'Kitchen Wall Unit',
+        mode: 'wall',
+        hIn: 32,
+        wFt: 11,
+        dFt: 2,
+        plinthIn: 3,
+        shelves: 2,
+        dividers: 0,
+        shutters: '4',
+        wallHIn: 30,
+        wallWFt: 3,
+        wallDFt: 1,
+        dadoGapIn: 0,
+        wallShelves: 2,
+        wallDividers: 0,
+        wallShutters: '2'
     },
     'wardrobe': {
         name: 'Full Height Wardrobe',
+        mode: 'base',
         hIn: 84,
         wFt: 4,
         dFt: 2,
         plinthIn: 3,
         shelves: 3,
         dividers: 1,
-        shutters: '2'
-    },
-    'kitchen-wall': {
-        name: 'Kitchen Wall Unit',
-        hIn: 30,
-        wFt: 3,
-        dFt: 1,
-        plinthIn: 0,
-        shelves: 2,
-        dividers: 0,
-        shutters: '2'
+        shutters: '2',
+        wallHIn: 30,
+        wallWFt: 4,
+        wallDFt: 1,
+        dadoGapIn: 0,
+        wallShelves: 2,
+        wallDividers: 0,
+        wallShutters: '2'
     },
     'tv-console': {
         name: 'TV Media Console',
+        mode: 'base',
         hIn: 20,
         wFt: 6,
         dFt: 1.5,
         plinthIn: 2,
         shelves: 1,
         dividers: 2,
-        shutters: '2'
+        shutters: '2',
+        wallHIn: 30,
+        wallWFt: 6,
+        wallDFt: 1,
+        dadoGapIn: 0,
+        wallShelves: 2,
+        wallDividers: 0,
+        wallShutters: '2'
     },
     'shoe-rack': {
         name: 'Shoe Rack Cabinet',
+        mode: 'base',
         hIn: 36,
         wFt: 3,
         dFt: 1.25,
         plinthIn: 2,
         shelves: 4,
         dividers: 0,
-        shutters: '2'
+        shutters: '2',
+        wallHIn: 30,
+        wallWFt: 3,
+        wallDFt: 1,
+        dadoGapIn: 0,
+        wallShelves: 2,
+        wallDividers: 0,
+        wallShutters: '2'
     }
 };
 
+function setKitchenMode(mode) {
+    currentKitchenMode = mode;
+    
+    // Update toggle buttons active state
+    document.querySelectorAll('.module-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+
+    // Update section visibility
+    const baseDimSec = document.getElementById('cad-base-dim-section');
+    const wallDimSec = document.getElementById('cad-wall-dim-section');
+    const basePartSec = document.getElementById('cad-base-part-section');
+    const wallPartSec = document.getElementById('cad-wall-part-section');
+
+    if (baseDimSec) baseDimSec.style.display = (mode === 'wall') ? 'none' : 'block';
+    if (wallDimSec) {
+        wallDimSec.style.display = (mode === 'base') ? 'none' : 'block';
+        if (mode === 'wall') {
+            wallDimSec.style.marginTop = '0';
+            wallDimSec.style.paddingTop = '0';
+            wallDimSec.style.borderTop = 'none';
+        } else {
+            wallDimSec.style.marginTop = '0.4rem';
+            wallDimSec.style.paddingTop = '0.4rem';
+            wallDimSec.style.borderTop = '1px dashed rgba(255,255,255,0.08)';
+        }
+    }
+    
+    if (basePartSec) basePartSec.style.display = (mode === 'wall') ? 'none' : 'block';
+    if (wallPartSec) {
+        wallPartSec.style.display = (mode === 'base') ? 'none' : 'block';
+        if (mode === 'wall') {
+            wallPartSec.style.marginTop = '0';
+            wallPartSec.style.paddingTop = '0';
+            wallPartSec.style.borderTop = 'none';
+        } else {
+            wallPartSec.style.marginTop = '0.4rem';
+            wallPartSec.style.paddingTop = '0.4rem';
+            wallPartSec.style.borderTop = '1px dashed rgba(255,255,255,0.08)';
+        }
+    }
+
+    updateDimensionsFromInputs();
+}
+
 function updateDimensionsFromInputs() {
+    // 1. Read Base Unit Inputs
     const hInput = document.getElementById('cad-h-in');
     const wInput = document.getElementById('cad-w-ft');
     const dInput = document.getElementById('cad-d-ft');
     const plinthInput = document.getElementById('cad-plinth-in');
     
-    if (!hInput || !wInput || !dInput) return;
-    
-    const hIn = parseFloat(hInput.value) || 32;
-    const wFt = parseFloat(wInput.value) || 11;
-    const dFt = parseFloat(dInput.value) || 2;
+    const hIn = hInput ? (parseFloat(hInput.value) || 32) : 32;
+    const wFt = wInput ? (parseFloat(wInput.value) || 11) : 11;
+    const dFt = dInput ? (parseFloat(dInput.value) || 2) : 2;
     const plinthIn = plinthInput ? (parseFloat(plinthInput.value) || 0) : 0;
     
     currentH = hIn;
-    currentW = wFt * 12; // feet to inches
-    currentD = dFt * 12; // feet to inches
+    currentW = wFt * 12;
+    currentD = dFt * 12;
     currentPlinth = plinthIn;
     currentThickness = 0.75;
     
-    // Update subtext labels
+    // Update Base Subtext Labels
     const hSub = document.getElementById('cad-h-sub');
     const wSub = document.getElementById('cad-w-sub');
     const dSub = document.getElementById('cad-d-sub');
@@ -639,110 +684,256 @@ function updateDimensionsFromInputs() {
     if (dSub) dSub.textContent = `~ ${(dFt * 12).toFixed(0)}" (${dFt} ft)`;
     if (plinthSub) plinthSub.textContent = `~ ${plinthIn.toFixed(0)}"`;
     if (summary) summary.textContent = `${hIn.toFixed(0)}" H × ${(wFt * 12).toFixed(0)}" W × ${(dFt * 12).toFixed(0)}" D`;
+
+    // 2. Read Wall Unit Inputs
+    const wallHInput = document.getElementById('cad-wall-h-in');
+    const wallWInput = document.getElementById('cad-wall-w-ft');
+    const wallDInput = document.getElementById('cad-wall-d-ft');
+    const dadoGapInput = document.getElementById('cad-dado-gap-in');
+
+    const wallHIn = wallHInput ? (parseFloat(wallHInput.value) || 30) : 30;
+    const wallWFt = wallWInput ? (parseFloat(wallWInput.value) || 11) : 11;
+    const wallDFt = wallDInput ? (parseFloat(wallDInput.value) || 1) : 1;
+    const dadoGapIn = dadoGapInput ? (parseFloat(dadoGapInput.value) || 22) : 22;
+
+    currentWallH = wallHIn;
+    currentWallW = wallWFt * 12;
+    currentWallD = wallDFt * 12;
+    currentDadoGap = dadoGapIn;
+
+    // Update Wall Subtext Labels
+    const wallHSub = document.getElementById('cad-wall-h-sub');
+    const wallWSub = document.getElementById('cad-wall-w-sub');
+    const wallDSub = document.getElementById('cad-wall-d-sub');
+    const dadoGapSub = document.getElementById('cad-dado-gap-sub');
+    const wallSummary = document.getElementById('cad-wall-dim-summary');
+
+    if (wallHSub) wallHSub.textContent = `~ ${wallHIn.toFixed(0)}" (${(wallHIn / 12).toFixed(2)} ft)`;
+    if (wallWSub) wallWSub.textContent = `~ ${(wallWFt * 12).toFixed(0)}" (${wallWFt} ft)`;
+    if (wallDSub) wallDSub.textContent = `~ ${(wallDFt * 12).toFixed(0)}" (${wallDFt} ft)`;
+    if (dadoGapSub) dadoGapSub.textContent = `~ ${dadoGapIn.toFixed(0)}" (Dado)`;
+    if (wallSummary) wallSummary.textContent = `${wallHIn.toFixed(0)}" H × ${(wallWFt * 12).toFixed(0)}" W × ${(wallDFt * 12).toFixed(0)}" D`;
     
     buildShell();
     syncPartitionsAndDoors();
 }
 
+function buildBoxShell(module, w, h, d, centerY, centerZ, labelPrefix) {
+    const t = currentThickness;
+    const innerW = w - (2 * t);
+    const innerH = h - (2 * t);
+    const shellColor = 0xcd853f; 
+
+    // Left Side
+    const left = createPanel(t, h, d, shellColor, false, 'side');
+    left.position.set(-w/2 + t/2, centerY, centerZ);
+    left.userData.label = `${labelPrefix} Left Side`;
+    left.userData.module = module;
+    left.userData.w = t; left.userData.h = h; left.userData.d = d;
+    cabinetGroup.add(left);
+
+    // Right Side
+    const right = createPanel(t, h, d, shellColor, false, 'side');
+    right.position.set(w/2 - t/2, centerY, centerZ);
+    right.userData.label = `${labelPrefix} Right Side`;
+    right.userData.module = module;
+    right.userData.w = t; right.userData.h = h; right.userData.d = d;
+    cabinetGroup.add(right);
+
+    // Top
+    const top = createPanel(innerW, t, d, shellColor, false, 'top');
+    top.position.set(0, centerY + h/2 - t/2, centerZ);
+    top.userData.label = `${labelPrefix} Top`;
+    top.userData.module = module;
+    top.userData.w = innerW; top.userData.h = t; top.userData.d = d;
+    cabinetGroup.add(top);
+
+    // Bottom
+    const bot = createPanel(innerW, t, d, shellColor, false, 'bottom');
+    bot.position.set(0, centerY - h/2 + t/2, centerZ);
+    bot.userData.label = `${labelPrefix} Bottom`;
+    bot.userData.module = module;
+    bot.userData.w = innerW; bot.userData.h = t; bot.userData.d = d;
+    cabinetGroup.add(bot);
+
+    // Back Panel
+    const back = createPanel(innerW, innerH, t, shellColor, false, 'back');
+    back.position.set(0, centerY, centerZ - d/2 + t/2);
+    back.userData.label = `${labelPrefix} Back Panel`;
+    back.userData.module = module;
+    back.userData.w = innerW; back.userData.h = innerH; back.userData.d = t;
+    cabinetGroup.add(back);
+}
+
+function buildPlinth(w, d, plinth, labelPrefix) {
+    if (plinth <= 0) return;
+    const t = currentThickness;
+    const plinthColor = 0x27272a;
+    const kickRecess = 2; // 2" recessed toe kick
+    const plinthY = plinth / 2;
+
+    // Front kickboard
+    const kickboard = createPanel(w - 2*t, plinth, t, plinthColor, false, 'plinth');
+    kickboard.position.set(0, plinthY, d/2 - kickRecess - t/2);
+    kickboard.userData.label = `${labelPrefix} Plinth Kickboard`;
+    kickboard.userData.module = 'base';
+    kickboard.userData.w = w - 2*t; kickboard.userData.h = plinth; kickboard.userData.d = t;
+    cabinetGroup.add(kickboard);
+    plinthObjects.push(kickboard);
+
+    // Left plinth support
+    const plinthL = createPanel(t, plinth, d - kickRecess, plinthColor, false, 'plinth');
+    plinthL.position.set(-w/2 + t/2, plinthY, -kickRecess/2);
+    plinthL.userData.label = `${labelPrefix} Plinth Side L`;
+    plinthL.userData.module = 'base';
+    plinthL.userData.w = t; plinthL.userData.h = plinth; plinthL.userData.d = d - kickRecess;
+    cabinetGroup.add(plinthL);
+    plinthObjects.push(plinthL);
+
+    // Right plinth support
+    const plinthR = createPanel(t, plinth, d - kickRecess, plinthColor, false, 'plinth');
+    plinthR.position.set(w/2 - t/2, plinthY, -kickRecess/2);
+    plinthR.userData.label = `${labelPrefix} Plinth Side R`;
+    plinthR.userData.module = 'base';
+    plinthR.userData.w = t; plinthR.userData.h = plinth; plinthR.userData.d = d - kickRecess;
+    cabinetGroup.add(plinthR);
+    plinthObjects.push(plinthR);
+}
+
+function buildDecor() {
+    if (currentKitchenMode !== 'both') return;
+
+    // 1. Sleek Countertop Slab (1.25" thick polished quartz/granite)
+    const ctThick = 1.25;
+    const ctW = currentW + 1.0;
+    const ctD = currentD + 1.0;
+    const ctY = getBaseTopY() + ctThick / 2;
+    const ctZ = 0.5;
+
+    const ctGeo = new THREE.BoxGeometry(ctW, ctThick, ctD);
+    const ctMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
+    const ctMesh = new THREE.Mesh(ctGeo, ctMat);
+    ctMesh.position.set(0, ctY, ctZ);
+    const ctEdge = new THREE.LineSegments(new THREE.EdgesGeometry(ctGeo), new THREE.LineBasicMaterial({ color: 0x475569 }));
+    ctMesh.add(ctEdge);
+    ctMesh.userData = { isDecor: true, label: "Granite/Quartz Countertop" };
+    cabinetGroup.add(ctMesh);
+    decorObjects.push(ctMesh);
+
+    // 2. Dado Backsplash Panel
+    if (currentDadoGap > 0) {
+        const bsW = Math.max(currentW, currentWallW);
+        const bsH = currentDadoGap;
+        const bsD = 0.5;
+        const bsY = getCountertopTopY() + bsH / 2;
+        const bsZ = (-currentD / 2) + bsD / 2;
+
+        const bsGeo = new THREE.BoxGeometry(bsW, bsH, bsD);
+        const bsMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 20 });
+        const bsMesh = new THREE.Mesh(bsGeo, bsMat);
+        bsMesh.position.set(0, bsY, bsZ);
+        const bsEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bsGeo), new THREE.LineBasicMaterial({ color: 0x64748b }));
+        bsMesh.add(bsEdge);
+        bsMesh.userData = { isDecor: true, label: "Dado Backsplash Wall" };
+        cabinetGroup.add(bsMesh);
+        decorObjects.push(bsMesh);
+    }
+}
+
+function updateCameraFraming() {
+    let centerY = 0;
+    let maxDim = 100;
+
+    if (currentKitchenMode === 'both') {
+        const totalH = getWallTopY();
+        centerY = totalH / 2;
+        const maxW = Math.max(currentW, currentWallW);
+        maxDim = Math.max(maxW, totalH, currentD);
+    } else if (currentKitchenMode === 'base') {
+        const totalH = getBaseTopY();
+        centerY = totalH / 2;
+        maxDim = Math.max(currentW, totalH, currentD);
+    } else {
+        const totalH = currentWallH;
+        centerY = totalH / 2;
+        maxDim = Math.max(currentWallW, totalH, currentWallD);
+    }
+
+    camera.position.set(0, centerY + (maxDim * 0.35), maxDim * 1.55);
+    orbit.target.set(0, centerY, 0);
+    orbit.update();
+}
+
 function buildShell() {
     deselectObject();
     
-    // Remove old shell and plinth
+    // Remove existing shells, plinths, and decor
     shellObjects.forEach(obj => cabinetGroup.remove(obj));
     shellObjects = [];
     plinthObjects.forEach(obj => cabinetGroup.remove(obj));
     plinthObjects = [];
+    decorObjects.forEach(obj => cabinetGroup.remove(obj));
+    decorObjects = [];
 
-    const t = currentThickness;
-    const w = currentW;
-    const h = currentH;
-    const d = currentD;
-    const plinth = currentPlinth;
-    const innerW = w - (2 * t);
-    const innerH = h - (2 * t);
-    
-    const shellColor = 0xcd853f; 
-
-    // Standard sharp 5-piece shell
-    const left = createPanel(t, h, d, shellColor, false, 'side');
-    left.position.set(-w/2 + t/2, 0, 0);
-    left.userData.label = "Left Side";
-    cabinetGroup.add(left);
-
-    const right = createPanel(t, h, d, shellColor, false, 'side');
-    right.position.set(w/2 - t/2, 0, 0);
-    right.userData.label = "Right Side";
-    cabinetGroup.add(right);
-    
-    const top = createPanel(innerW, t, d, shellColor, false, 'top');
-    top.position.set(0, h/2 - t/2, 0);
-    top.userData.label = "Top";
-    cabinetGroup.add(top);
-
-    const bot = createPanel(innerW, t, d, shellColor, false, 'bottom');
-    bot.position.set(0, -h/2 + t/2, 0);
-    bot.userData.label = "Bottom";
-    cabinetGroup.add(bot);
-
-    // Back Panel (recessed inside the box)
-    const back = createPanel(innerW, innerH, t, shellColor, false, 'back');
-    back.position.set(0, 0, -d/2 + t/2);
-    back.userData.label = "Back Panel";
-    cabinetGroup.add(back);
-
-    // Render Plinth / Skirting kickboard if plinth > 0
-    if (plinth > 0) {
-        const plinthColor = 0x27272a; // dark kickboard
-        const kickRecess = 2; // 2" recessed toe kick
-        const plinthY = -h/2 - plinth/2;
-        
-        // Front kickboard
-        const kickboard = createPanel(w - 2*t, plinth, t, plinthColor, false, 'plinth');
-        kickboard.position.set(0, plinthY, d/2 - kickRecess - t/2);
-        kickboard.userData.label = "Plinth Kickboard";
-        kickboard.userData.w = w - 2*t; kickboard.userData.h = plinth; kickboard.userData.d = t;
-        cabinetGroup.add(kickboard);
-        plinthObjects.push(kickboard);
-        
-        // Left plinth support
-        const plinthL = createPanel(t, plinth, d - kickRecess, plinthColor, false, 'plinth');
-        plinthL.position.set(-w/2 + t/2, plinthY, -kickRecess/2);
-        plinthL.userData.label = "Plinth Side";
-        plinthL.userData.w = t; plinthL.userData.h = plinth; plinthL.userData.d = d - kickRecess;
-        cabinetGroup.add(plinthL);
-        plinthObjects.push(plinthL);
-        
-        // Right plinth support
-        const plinthR = createPanel(t, plinth, d - kickRecess, plinthColor, false, 'plinth');
-        plinthR.position.set(w/2 - t/2, plinthY, -kickRecess/2);
-        plinthR.userData.label = "Plinth Side";
-        plinthR.userData.w = t; plinthR.userData.h = plinth; plinthR.userData.d = d - kickRecess;
-        cabinetGroup.add(plinthR);
-        plinthObjects.push(plinthR);
+    if (currentKitchenMode === 'both') {
+        // Base Unit
+        buildBoxShell('base', currentW, currentH, currentD, getBaseCenterY(), 0, '[Base]');
+        buildPlinth(currentW, currentD, currentPlinth, '[Base]');
+        buildDecor();
+        // Wall Unit (elevated at eye level flush against back wall)
+        buildBoxShell('wall', currentWallW, currentWallH, currentWallD, getWallCenterY(), getWallCenterZ(), '[Wall]');
+    } else if (currentKitchenMode === 'base') {
+        buildBoxShell('base', currentW, currentH, currentD, getBaseCenterY(), 0, '[Base]');
+        buildPlinth(currentW, currentD, currentPlinth, '[Base]');
+    } else if (currentKitchenMode === 'wall') {
+        buildBoxShell('wall', currentWallW, currentWallH, currentWallD, getWallCenterY(), 0, '[Wall]');
     }
 
-    // Update Camera
-    const maxDim = Math.max(w, h, d);
-    camera.position.set(0, maxDim * 0.4, maxDim * 1.6);
-    orbit.target.set(0, 0, 0);
-    orbit.update();
+    updateCameraFraming();
+}
+
+function cleanupInactiveParts() {
+    if (currentKitchenMode === 'base') {
+        const toRemove = cabinetGroup.children.filter(c => c.userData && c.userData.module === 'wall');
+        toRemove.forEach(c => {
+            cabinetGroup.remove(c);
+            internalParts = internalParts.filter(p => p !== c && p.userData.parentGroup !== c);
+        });
+    } else if (currentKitchenMode === 'wall') {
+        const toRemove = cabinetGroup.children.filter(c => c.userData && c.userData.module === 'base');
+        toRemove.forEach(c => {
+            cabinetGroup.remove(c);
+            internalParts = internalParts.filter(p => p !== c && p.userData.parentGroup !== c);
+        });
+    }
 }
 
 function syncPartitionsAndDoors() {
-    syncShelvesFromCount();
-    syncDividersFromCount();
-    syncShuttersFromSelect();
+    cleanupInactiveParts();
+
+    if (currentKitchenMode === 'base' || currentKitchenMode === 'both') {
+        syncShelvesFromCount('base');
+        syncDividersFromCount('base');
+        syncShuttersFromSelect('base');
+    }
+    
+    if (currentKitchenMode === 'wall' || currentKitchenMode === 'both') {
+        syncShelvesFromCount('wall');
+        syncDividersFromCount('wall');
+        syncShuttersFromSelect('wall');
+    }
 }
 
-function syncShelvesFromCount() {
-    const shelvesInput = document.getElementById('cad-shelves-count');
-    if (!shelvesInput) return;
-    const count = parseInt(shelvesInput.value) || 0;
+function syncShelvesFromCount(module) {
+    const inputId = (module === 'wall') ? 'cad-wall-shelves-count' : 'cad-shelves-count';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const count = parseInt(input.value) || 0;
     
-    // Remove existing auto shelves
+    // Remove existing auto shelves for this module
     const toRemove = [];
     internalParts.forEach(part => {
-        if (part.userData && part.userData.isAutoShelf) {
+        if (part.userData && part.userData.isAutoShelf && part.userData.module === module) {
             toRemove.push(part);
         }
     });
@@ -754,32 +945,41 @@ function syncShelvesFromCount() {
     if (count <= 0) return;
     
     const t = currentThickness;
-    const innerW = currentW - (2 * t);
-    const innerH = currentH - (2 * t);
-    const shelfDepth = currentD - 1.0;
-    const shelfColor = 0xdeb887;
+    const isWall = (module === 'wall');
+    const w = isWall ? currentWallW : currentW;
+    const h = isWall ? currentWallH : currentH;
+    const d = isWall ? currentWallD : currentD;
     
+    const innerW = w - (2 * t);
+    const innerH = h - (2 * t);
+    const shelfDepth = d - 1.0;
+    const shelfColor = 0xdeb887;
+    const prefix = isWall ? '[Wall]' : '[Base]';
+
+    const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
+    const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     const spacing = innerH / (count + 1);
-    const startY = -innerH / 2;
     
     for (let i = 1; i <= count; i++) {
         const shelf = createPanel(innerW, t, shelfDepth, shelfColor, true, 'shelf');
-        shelf.position.set(0, startY + (i * spacing), -0.5);
-        shelf.userData.label = `Shelf ${i}`;
+        shelf.position.set(0, innerBottomY + (i * spacing), centerZ);
+        shelf.userData.label = `${prefix} Shelf ${i}`;
         shelf.userData.isAutoShelf = true;
+        shelf.userData.module = module;
         cabinetGroup.add(shelf);
     }
 }
 
-function syncDividersFromCount() {
-    const divInput = document.getElementById('cad-dividers-count');
-    if (!divInput) return;
-    const count = parseInt(divInput.value) || 0;
+function syncDividersFromCount(module) {
+    const inputId = (module === 'wall') ? 'cad-wall-dividers-count' : 'cad-dividers-count';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const count = parseInt(input.value) || 0;
     
-    // Remove existing auto dividers
+    // Remove existing auto dividers for this module
     const toRemove = [];
     internalParts.forEach(part => {
-        if (part.userData && part.userData.isAutoDivider) {
+        if (part.userData && part.userData.isAutoDivider && part.userData.module === module) {
             toRemove.push(part);
         }
     });
@@ -791,32 +991,43 @@ function syncDividersFromCount() {
     if (count <= 0) return;
     
     const t = currentThickness;
-    const innerW = currentW - (2 * t);
-    const innerH = currentH - (2 * t);
-    const divDepth = currentD - 1.0;
+    const isWall = (module === 'wall');
+    const w = isWall ? currentWallW : currentW;
+    const h = isWall ? currentWallH : currentH;
+    const d = isWall ? currentWallD : currentD;
+    
+    const innerW = w - (2 * t);
+    const innerH = h - (2 * t);
+    const divDepth = d - 1.0;
     const divColor = 0xdeb887;
+    const prefix = isWall ? '[Wall]' : '[Base]';
+
+    const centerY = isWall ? getWallCenterY() : getBaseCenterY();
+    const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     
     const spacing = innerW / (count + 1);
     const startX = -innerW / 2;
     
     for (let i = 1; i <= count; i++) {
         const divider = createPanel(t, innerH, divDepth, divColor, true, 'divider');
-        divider.position.set(startX + (i * spacing), 0, -0.5);
-        divider.userData.label = `Vertical Divider ${i}`;
+        divider.position.set(startX + (i * spacing), centerY, centerZ);
+        divider.userData.label = `${prefix} Vertical Divider ${i}`;
         divider.userData.isAutoDivider = true;
+        divider.userData.module = module;
         cabinetGroup.add(divider);
     }
 }
 
-function syncShuttersFromSelect() {
-    const shutterSelect = document.getElementById('cad-shutter-select');
+function syncShuttersFromSelect(module) {
+    const selectId = (module === 'wall') ? 'cad-wall-shutter-select' : 'cad-shutter-select';
+    const shutterSelect = document.getElementById(selectId);
     if (!shutterSelect) return;
     const count = parseInt(shutterSelect.value) || 0;
     
-    // Remove existing shutters and auto-hinge partitions
+    // Remove existing shutters and auto-hinge partitions for this module
     const toRemove = [];
     cabinetGroup.children.forEach(child => {
-        if (child.userData && (child.userData.type === 'shutter' || child.userData.isAutoHingePartition)) {
+        if (child.userData && child.userData.module === module && (child.userData.type === 'shutter' || child.userData.isAutoHingePartition)) {
             toRemove.push(child);
         }
     });
@@ -827,18 +1038,27 @@ function syncShuttersFromSelect() {
     
     if (count <= 0) return;
     
-    const gap = 0.125; // 1/8 inch
+    const isWall = (module === 'wall');
+    const w = isWall ? currentWallW : currentW;
+    const h = isWall ? currentWallH : currentH;
+    const d = isWall ? currentWallD : currentD;
+    const prefix = isWall ? '[Wall]' : '[Base]';
+
+    const gap = 0.125; // 1/8 inch reveal
     const totalGapSpace = gap * (count + 1);
-    const shutterW = (currentW - totalGapSpace) / count;
-    const shutterH = currentH - (gap * 2);
-    const shutterD = 0.75;
+    const shutterW = (w - totalGapSpace) / count;
+    const shutterH = h - (gap * 2);
+    const shutterD = 0.75; // Standard 3/4" door
     
-    let startX = (-currentW / 2) + gap + (shutterW / 2);
-    const zPos = (currentD / 2) + (shutterD / 2) + 0.05;
+    let startX = (-w / 2) + gap + (shutterW / 2);
+    const centerY = isWall ? getWallCenterY() : getBaseCenterY();
+    const centerZ = isWall ? getWallCenterZ() : 0;
+    const frontZ = centerZ + (d / 2) + (shutterD / 2) + 0.05;
     
     for (let i = 0; i < count; i++) {
         const shutter = createPanel(shutterW, shutterH, shutterD, 0xdeb887, true, 'shutter');
-        shutter.userData.label = `Shutter ${i + 1}`;
+        shutter.userData.label = `${prefix} Shutter ${i + 1}`;
+        shutter.userData.module = module;
         shutter.userData.customEdge = 'all';
         shutter.userData.customLaminate = 'single';
         applyLaminateMaterials(shutter, 'shutter', 'single', 'all');
@@ -851,26 +1071,33 @@ function syncShuttersFromSelect() {
             if (c.geometry) c.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
         });
 
-        shutter.position.set(isRightHinged ? startX + shutterW/2 : startX - shutterW/2, 0, zPos + shutterD/2);
-        shutter.userData.closedRotationY = shutter.rotation.y;
+        shutter.position.set(isRightHinged ? startX + shutterW/2 : startX - shutterW/2, centerY, frontZ + shutterD/2);
+        shutter.userData.closedRotationY = 0;
         shutter.userData.openRotationY = isRightHinged ? Math.PI / 2 : -Math.PI / 2;
         
         shutter.userData.lockZ = true; 
         shutter.userData.lockX = true;
         shutter.userData.lockY = true;
+
+        if (shuttersOpen) {
+            shutter.rotation.y = shutter.userData.openRotationY;
+            shutter.layers.set(1);
+        }
         
         cabinetGroup.add(shutter);
         
+        // Auto hinge partition between door pairs
         if (i % 2 === 1 && i < count - 1) {
             const gapCenterX = startX + (shutterW / 2) + (gap / 2);
             const t = currentThickness;
-            const innerH = currentH - (2 * t);
-            const divDepth = currentD - 1.0; 
+            const innerH = h - (2 * t);
+            const divDepth = d - 1.0; 
             
             const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
-            divider.position.set(gapCenterX, 0, -0.5);
-            divider.userData.label = `Auto Hinge Partition`;
+            divider.position.set(gapCenterX, centerY, isWall ? (getWallCenterZ() - 0.5) : -0.5);
+            divider.userData.label = `${prefix} Auto Hinge Partition`;
             divider.userData.isAutoHingePartition = true;
+            divider.userData.module = module;
             cabinetGroup.add(divider);
         }
         
@@ -894,6 +1121,14 @@ function applyPreset(presetKey) {
     const shelvesInput = document.getElementById('cad-shelves-count');
     const dividersInput = document.getElementById('cad-dividers-count');
     const shutterSelect = document.getElementById('cad-shutter-select');
+
+    const wallHInput = document.getElementById('cad-wall-h-in');
+    const wallWInput = document.getElementById('cad-wall-w-ft');
+    const wallDInput = document.getElementById('cad-wall-d-ft');
+    const dadoGapInput = document.getElementById('cad-dado-gap-in');
+    const wallShelvesInput = document.getElementById('cad-wall-shelves-count');
+    const wallDividersInput = document.getElementById('cad-wall-dividers-count');
+    const wallShutterSelect = document.getElementById('cad-wall-shutter-select');
     
     if (nameInput) nameInput.value = preset.name;
     if (hInput) hInput.value = preset.hIn;
@@ -903,29 +1138,70 @@ function applyPreset(presetKey) {
     if (shelvesInput) shelvesInput.value = preset.shelves;
     if (dividersInput) dividersInput.value = preset.dividers;
     if (shutterSelect) shutterSelect.value = preset.shutters;
+
+    if (wallHInput && preset.wallHIn !== undefined) wallHInput.value = preset.wallHIn;
+    if (wallWInput && preset.wallWFt !== undefined) wallWInput.value = preset.wallWFt;
+    if (wallDInput && preset.wallDFt !== undefined) wallDInput.value = preset.wallDFt;
+    if (dadoGapInput && preset.dadoGapIn !== undefined) dadoGapInput.value = preset.dadoGapIn;
+    if (wallShelvesInput && preset.wallShelves !== undefined) wallShelvesInput.value = preset.wallShelves;
+    if (wallDividersInput && preset.wallDividers !== undefined) wallDividersInput.value = preset.wallDividers;
+    if (wallShutterSelect && preset.wallShutters !== undefined) wallShutterSelect.value = preset.wallShutters;
     
-    updateDimensionsFromInputs();
+    setKitchenMode(preset.mode || 'both');
 }
 
 function setupCADListeners() {
+    // Module Mode Buttons (Base Only / Base + Wall / Wall Only)
+    document.querySelectorAll('.module-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            setKitchenMode(mode);
+            document.querySelectorAll('.preset-pill').forEach(p => {
+                if (mode === 'both') p.classList.toggle('active', p.dataset.preset === 'kitchen-set');
+                else if (mode === 'base') p.classList.toggle('active', p.dataset.preset === 'kitchen-base');
+                else if (mode === 'wall') p.classList.toggle('active', p.dataset.preset === 'kitchen-wall');
+            });
+        });
+    });
+
+    // Base Unit Dimensions
     ['cad-h-in', 'cad-w-ft', 'cad-d-ft', 'cad-plinth-in'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', updateDimensionsFromInputs);
     });
     
+    // Wall Unit Dimensions
+    ['cad-wall-h-in', 'cad-wall-w-ft', 'cad-wall-d-ft', 'cad-dado-gap-in'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateDimensionsFromInputs);
+    });
+
+    // Base Partitions
     const shelvesInput = document.getElementById('cad-shelves-count');
-    if (shelvesInput) shelvesInput.addEventListener('input', syncShelvesFromCount);
+    if (shelvesInput) shelvesInput.addEventListener('input', () => syncShelvesFromCount('base'));
     
     const divInput = document.getElementById('cad-dividers-count');
-    if (divInput) divInput.addEventListener('input', syncDividersFromCount);
+    if (divInput) divInput.addEventListener('input', () => syncDividersFromCount('base'));
     
     const shutterSelect = document.getElementById('cad-shutter-select');
-    if (shutterSelect) shutterSelect.addEventListener('change', syncShuttersFromSelect);
+    if (shutterSelect) shutterSelect.addEventListener('change', () => syncShuttersFromSelect('base'));
+
+    // Wall Partitions
+    const wallShelvesInput = document.getElementById('cad-wall-shelves-count');
+    if (wallShelvesInput) wallShelvesInput.addEventListener('input', () => syncShelvesFromCount('wall'));
     
+    const wallDivInput = document.getElementById('cad-wall-dividers-count');
+    if (wallDivInput) wallDivInput.addEventListener('input', () => syncDividersFromCount('wall'));
+    
+    const wallShutterSelect = document.getElementById('cad-wall-shutter-select');
+    if (wallShutterSelect) wallShutterSelect.addEventListener('change', () => syncShuttersFromSelect('wall'));
+    
+    // Preset Buttons
     document.querySelectorAll('.preset-pill').forEach(btn => {
         btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
     });
     
+    // Duplicate Cabinet Button
     const dupBtn = document.getElementById('btn-duplicate-cab');
     if (dupBtn) {
         dupBtn.addEventListener('click', () => {
@@ -938,6 +1214,7 @@ function setupCADListeners() {
         });
     }
     
+    // Action Buttons
     const toggleDoorsBtn = document.getElementById('btn-toggle-shutters');
     if (toggleDoorsBtn) toggleDoorsBtn.addEventListener('click', toggleShutters);
     
@@ -951,67 +1228,74 @@ function setupCADListeners() {
     if (exportBtn) exportBtn.addEventListener('click', exportToOptimizer);
 }
 
-function addShelf() {
+function addShelf(module) {
+    const targetModule = module || (selectedObject ? selectedObject.userData.module : (currentKitchenMode === 'wall' ? 'wall' : 'base'));
+    const isWall = (targetModule === 'wall');
     const t = currentThickness;
-    const innerW = currentW - (2 * t);
-    const shelfDepth = currentD - 1.0; 
+    const w = isWall ? currentWallW : currentW;
+    const d = isWall ? currentWallD : currentD;
+    const innerW = w - (2 * t);
+    const shelfDepth = d - 1.0; 
+    const prefix = isWall ? '[Wall]' : '[Base]';
+    const centerY = isWall ? getWallCenterY() : getBaseCenterY();
+    const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     
-    const shelfColor = 0xdeb887; 
-    const shelf = createPanel(innerW, t, shelfDepth, shelfColor, true, 'shelf');
-    
-    shelf.position.set(0, 0, -0.5);
-    shelf.userData.label = `Shelf ${partCounter++}`;
+    const shelf = createPanel(innerW, t, shelfDepth, 0xdeb887, true, 'shelf');
+    shelf.position.set(0, centerY, centerZ);
+    shelf.userData.label = `${prefix} Shelf ${partCounter++}`;
+    shelf.userData.module = targetModule;
     
     cabinetGroup.add(shelf);
     selectObject(shelf);
 }
 
-function addDivider() {
+function addDivider(module) {
+    const targetModule = module || (selectedObject ? selectedObject.userData.module : (currentKitchenMode === 'wall' ? 'wall' : 'base'));
+    const isWall = (targetModule === 'wall');
     const t = currentThickness;
-    const innerH = currentH - (2 * t);
-    const divDepth = currentD - 1.0; 
+    const h = isWall ? currentWallH : currentH;
+    const d = isWall ? currentWallD : currentD;
+    const innerH = h - (2 * t);
+    const divDepth = d - 1.0; 
+    const prefix = isWall ? '[Wall]' : '[Base]';
+    const centerY = isWall ? getWallCenterY() : getBaseCenterY();
+    const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     
-    const divColor = 0xdeb887;
-    const divider = createPanel(t, innerH, divDepth, divColor, true, 'divider');
-    
-    divider.position.set(0, 0, -0.5);
-    divider.userData.label = `Vertical Divider ${partCounter++}`;
+    const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
+    divider.position.set(0, centerY, centerZ);
+    divider.userData.label = `${prefix} Vertical Divider ${partCounter++}`;
+    divider.userData.module = targetModule;
     
     cabinetGroup.add(divider);
     selectObject(divider);
 }
 
 function addDrawer(sizeType) {
+    if (currentKitchenMode === 'wall') {
+        alert("Drawers are placed inside Base cabinets. Please switch to Base or Base + Wall mode.");
+        return;
+    }
     const t = currentThickness;
-    const gapPerSide = parseFloat(document.getElementById('cad-drawer-gap').value) || 0.5;
-    const totalGap = gapPerSide * 2;
-    
+    const gap = 0.5; // standard 1/2" slide clearance per side
+    const totalGap = gap * 2;
     const innerW = currentW - (2 * t);
     
-    // For Full Drawer, use full internal width. 
-    // For Half Drawer, assume it fits perfectly between the left wall and a centered vertical divider.
-    let drawerW;
-    let posX;
-    
-    if (sizeType === 'full') {
-        drawerW = innerW - totalGap;
-        posX = 0;
-    } else {
+    let drawerW = innerW - totalGap;
+    let posX = 0;
+    if (sizeType === 'half') {
         const usableHalfSpace = (innerW / 2) - (t / 2);
         drawerW = usableHalfSpace - totalGap;
         posX = -(innerW / 4) - (t / 4);
     }
     
-    const drawerH = 8.0; // Default drawer height 8 inches
-    const drawerD = currentD - 2.0; 
-    
+    const drawerH = 8.0; // standard 8" drawer height
+    const drawerD = currentD - 2.0;
     const colorHex = 0xdeb887;
     
     const group = new THREE.Group();
     const dInnerW = drawerW - (2 * t);
     const dInnerD = drawerD - (2 * t);
 
-    // Provide standard material for pieces
     const material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
 
@@ -1020,206 +1304,41 @@ function addDrawer(sizeType) {
         const mesh = new THREE.Mesh(geo, material);
         mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
         mesh.position.set(px, py, pz);
-        mesh.userData = { isSubPart: true, w: w, h: h, d: d, label: label };
+        mesh.userData = { isSubPart: true, w: w, h: h, d: d, label: label, module: 'base' };
         group.add(mesh);
     };
 
-    const labelPrefix = `Drw ${partCounter++}`;
+    const labelPrefix = `[Base] Drw ${partCounter++}`;
 
     makeSubPanel(t, drawerH, drawerD, -drawerW/2 + t/2, 0, 0, `${labelPrefix} Side L`);
     makeSubPanel(t, drawerH, drawerD, drawerW/2 - t/2, 0, 0, `${labelPrefix} Side R`);
-    makeSubPanel(dInnerW, drawerH, t, 0, 0, drawerD/2 - t/2, `${labelPrefix} Front`);
+    makeSubPanel(dInnerW, drawerH, t, 0, 0, drawerD/2 - t/2, `${labelPrefix} Front Inner`);
     makeSubPanel(dInnerW, drawerH, t, 0, 0, -drawerD/2 + t/2, `${labelPrefix} Back`);
-    makeSubPanel(drawerW, t, drawerD, 0, -drawerH/2 + t/2, 0, `${labelPrefix} Bottom`); // Bottom caps it
+    makeSubPanel(drawerW, t, drawerD, 0, -drawerH/2 + t/2, 0, `${labelPrefix} Bottom`);
+    makeSubPanel(drawerW + 0.5, drawerH + 1, t, 0, 0, drawerD/2 + t/2, `${labelPrefix} Fascia`);
 
     // HitBox for raycasting
-    const hitBoxGeo = new THREE.BoxGeometry(drawerW, drawerH, drawerD);
+    const hitBoxGeo = new THREE.BoxGeometry(drawerW + 0.5, drawerH + 1, drawerD + t);
     const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
     const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
     group.add(hitBox);
     
-    hitBox.userData = { type: 'drawer', parentGroup: group };
+    hitBox.userData = { type: 'drawer', label: `${labelPrefix} Assembly`, parentGroup: group, module: 'base' };
     internalParts.push(hitBox);
 
-    group.userData = { isDrawerGroup: true };
-    group.position.set(posX, 0, -1.0);
+    group.userData = { isDrawerGroup: true, module: 'base' };
+    group.position.set(posX, getBaseCenterY(), 0);
     
     cabinetGroup.add(group);
     selectObject(hitBox);
 }
 
-function addDrawer(type) {
-    const gapEl = document.getElementById('cad-drawer-gap');
-    const gap = parseFloat(gapEl.value) || 0.5;
-    
-    const h = type === 'full' ? 10 : 5;
-    const innerW = currentW - (2 * currentThickness);
-    
-    const w = innerW;
-    const d = currentD - 2;
-    
-    const drawerGroup = new THREE.Group();
-    drawerGroup.position.set(0, 0, 0);
-    
-    const boxW = w - (gap * 2);
-    
-    // Left side
-    const lSide = createPanel(currentThickness, h, d, 0xdeb887, true, 'drawer_part');
-    lSide.position.set(-boxW/2 + currentThickness/2, 0, 0);
-    lSide.userData = { isSubPart: true, label: "Drawer Side", w: currentThickness, h: h, d: d };
-    
-    // Right side
-    const rSide = createPanel(currentThickness, h, d, 0xdeb887, true, 'drawer_part');
-    rSide.position.set(boxW/2 - currentThickness/2, 0, 0);
-    rSide.userData = { isSubPart: true, label: "Drawer Side", w: currentThickness, h: h, d: d };
-    
-    // Back
-    const bW = boxW - (2 * currentThickness);
-    const back = createPanel(bW, h, currentThickness, 0xdeb887, true, 'drawer_part');
-    back.position.set(0, 0, -d/2 + currentThickness/2);
-    back.userData = { isSubPart: true, label: "Drawer Back", w: bW, h: h, d: currentThickness };
-    
-    // Front (Inner)
-    const front = createPanel(bW, h, currentThickness, 0xdeb887, true, 'drawer_part');
-    front.position.set(0, 0, d/2 - currentThickness/2);
-    front.userData = { isSubPart: true, label: "Drawer Front Inner", w: bW, h: h, d: currentThickness };
-    
-    // Bottom (assume 1/4 inch inset)
-    const botW = boxW - currentThickness;
-    const botD = d - currentThickness;
-    const bottom = createPanel(botW, 0.25, botD, 0xdeb887, true, 'drawer_part');
-    bottom.position.set(0, -h/2 + 0.5, 0);
-    bottom.userData = { isSubPart: true, label: "Drawer Bottom", w: botW, h: 0.25, d: botD };
-    
-    // Fascia (Outer Front) - covers the gap
-    const fascia = createPanel(w - 0.25, h + 1, currentThickness, 0xdeb887, true, 'drawer_part');
-    fascia.position.set(0, 0, d/2 + currentThickness/2);
-    fascia.userData = { isSubPart: true, label: "Drawer Fascia", w: w - 0.25, h: h + 1, d: currentThickness };
-    
-    // Hitbox for selection
-    const hitBoxGeo = new THREE.BoxGeometry(w, h + 1, d + currentThickness);
-    const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
-    const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
-    hitBox.position.set(0, 0, 0);
-    hitBox.userData = { type: 'drawer', label: type === 'full' ? "Full Drawer" : "Half Drawer", isDrawerGroup: true };
-    internalParts.push(hitBox);
-    
-    drawerGroup.add(lSide, rSide, back, front, bottom, fascia, hitBox);
-    
-    drawerGroup.userData = { isDrawerGroup: true };
-    hitBox.userData.parentGroup = drawerGroup;
-    
-    cabinetGroup.add(drawerGroup);
-}
-
-function addShutters() {
-    const countInput = document.getElementById('cad-shutter-count');
-    const warningEl = document.getElementById('shutter-warning');
-    let count = parseInt(countInput.value) || 2;
-    
-    // Smart validation
-    let optimumWidth = currentW / count;
-    if (optimumWidth < 9 && count > 1) {
-        count = Math.max(1, Math.floor(currentW / 9));
-        countInput.value = count;
-        warningEl.textContent = `Too many doors for this width. Reduced to ${count}.`;
-        warningEl.classList.remove('hidden');
-    } else if (optimumWidth > 26) {
-        count = Math.ceil(currentW / 24);
-        countInput.value = count;
-        warningEl.textContent = `Doors would be too wide. Increased to ${count}.`;
-        warningEl.classList.remove('hidden');
-    } else {
-        warningEl.classList.add('hidden');
-    }
-    
-    // Remove existing shutters and auto-partitions
-    const toRemove = [];
-    cabinetGroup.children.forEach(child => {
-        if (child.userData && child.userData.type === 'shutter') toRemove.push(child);
-        if (child.userData && child.userData.isAutoHingePartition) toRemove.push(child);
-    });
-    toRemove.forEach(child => {
-        cabinetGroup.remove(child);
-        internalParts = internalParts.filter(p => p !== child);
-    });
-    
-    // Standard gap (reveal) between doors and around edges
-    const gap = 0.125; // 1/8 inch
-    const totalGapSpace = gap * (count + 1); // e.g. 2 doors have 3 gaps (left, middle, right)
-    
-    const shutterW = (currentW - totalGapSpace) / count;
-    const shutterH = currentH - (gap * 2); // Top and bottom gaps
-    const shutterD = 0.75; // Standard 3/4" thick door
-    
-    let startX = (-currentW / 2) + gap + (shutterW / 2);
-    const zPos = (currentD / 2) + (shutterD / 2) + 0.05; // Placed on the very front edge (Full Overlay)
-    
-    for (let i = 0; i < count; i++) {
-        const shutter = createPanel(shutterW, shutterH, shutterD, 0xdeb887, true, 'shutter');
-        shutter.userData.label = `Shutter ${i + 1}`;
-        shutter.userData.customEdge = 'all'; // Default edge banding all 4 edges
-        shutter.userData.customLaminate = 'single'; // Usually single inner side laminate
-        applyLaminateMaterials(shutter, 'shutter', 'single', 'all'); // Refresh materials with new edge default
-        
-        // Doors should alternate hinging to create pairs. 
-        // Door 0: Left, Door 1: Right, Door 2: Left, Door 3: Right
-        let isRightHinged = (i % 2 === 1);
-        
-        // However, if there's only 1 door total, or it's the very last odd-count door (like Door 3 of a 3-door set), 
-        // it can hinge either way, but our logic is mathematically sound as long as it matches the partitions.
-        // If count = 1, force left hinge.
-        if (count === 1) isRightHinged = false; 
-        
-        shutter.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
-        
-        // Also translate the edges geometry to match
-        shutter.children.forEach(c => {
-            if (c.geometry) {
-                c.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
-            }
-        });
-
-        shutter.position.set(isRightHinged ? startX + shutterW/2 : startX - shutterW/2, 0, zPos + shutterD/2);
-        
-        shutter.userData.closedRotationY = shutter.rotation.y;
-        shutter.userData.openRotationY = isRightHinged ? Math.PI / 2 : -Math.PI / 2;
-        
-        // Disable translation controls for shutters so they stay flat
-        shutter.userData.lockZ = true; 
-        shutter.userData.lockX = true;
-        shutter.userData.lockY = true;
-        
-        cabinetGroup.add(shutter);
-        
-        // AI Structural Partition Logic: Place an upright after every ODD index (e.g. after Door 2, Door 4)
-        // EXCEPT if it's the very last door, because the last door hinges on the right shell wall.
-        if (i % 2 === 1 && i < count - 1) {
-            const gapCenterX = startX + (shutterW / 2) + (gap / 2);
-            const t = currentThickness;
-            const innerH = currentH - (2 * t);
-            const divDepth = currentD - 1.0; 
-            
-            const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
-            divider.position.set(gapCenterX, 0, -0.5);
-            divider.userData.label = `Auto Hinge Partition`;
-            divider.userData.isAutoHingePartition = true;
-            
-            cabinetGroup.add(divider);
-        }
-        
-        startX += shutterW + gap;
-    }
-}
-
-let shuttersOpen = false;
 function toggleShutters() {
     shuttersOpen = !shuttersOpen;
     cabinetGroup.children.forEach(child => {
         if (child.userData && child.userData.type === 'shutter') {
             child.rotation.y = shuttersOpen ? child.userData.openRotationY : child.userData.closedRotationY;
-            // Disable raycasting when open so we can click through them to internal shelves
-            child.layers.set(shuttersOpen ? 1 : 0); 
+            child.layers.set(shuttersOpen ? 1 : 0);
         }
     });
 }
@@ -1227,27 +1346,16 @@ function toggleShutters() {
 function exportToOptimizer() {
     const exportedParts = [];
     
-    // 1. Export Shell
+    // 1. Export Shell Panels (Base and/or Wall)
     shellObjects.forEach(obj => {
         let laminate = obj.userData.customLaminate || "double";
-        
-        if (obj.userData.isComplexShell) {
-            // Explode the hollow extrusion into flat cut list parts
-            const t = obj.userData.t;
-            const innerW = obj.userData.w - (2 * t);
-            exportedParts.push({ label: "Left Side", w: obj.userData.h, h: obj.userData.d, laminate: laminate });
-            exportedParts.push({ label: "Right Side", w: obj.userData.h, h: obj.userData.d, laminate: laminate });
-            exportedParts.push({ label: "Top", w: innerW, h: obj.userData.d, laminate: laminate });
-            exportedParts.push({ label: "Bottom", w: innerW, h: obj.userData.d, laminate: laminate });
-        } else {
-            const dims = [obj.userData.w, obj.userData.h, obj.userData.d].sort((a,b) => b-a);
-            exportedParts.push({
-                label: obj.userData.label,
-                w: dims[1], 
-                h: dims[0],
-                laminate: laminate
-            });
-        }
+        const dims = [obj.userData.w, obj.userData.h, obj.userData.d].sort((a,b) => b-a);
+        exportedParts.push({
+            label: obj.userData.label,
+            w: dims[1], 
+            h: dims[0],
+            laminate: laminate
+        });
     });
 
     // 1b. Export Plinth / Kickboard (if present)
@@ -1264,9 +1372,8 @@ function exportToOptimizer() {
     // 2. Export Internal Parts & Drawer Groups
     cabinetGroup.children.forEach(obj => {
         if (obj.userData.isDrawerGroup) {
-            // The hitbox has the custom properties
             const hitBox = obj.children[obj.children.length - 1];
-            let laminate = hitBox.userData.customLaminate || "double";
+            let laminate = (hitBox && hitBox.userData.customLaminate) || "double";
             
             obj.children.forEach(child => {
                 if (child.userData.isSubPart) {
@@ -1282,12 +1389,11 @@ function exportToOptimizer() {
         }
     });
 
-    // Simple single-mesh internal parts
+    // Single-mesh internal parts (shelves, dividers, shutters, hinge partitions)
     internalParts.forEach(hitBox => {
-        // If it's a drawer hitBox, it has no dimensions to export itself (handled above)
-        if (hitBox.userData.parentGroup) return; 
+        if (hitBox.userData.parentGroup) return;
         
-        let laminate = hitBox.userData.customLaminate || "double";
+        let laminate = hitBox.userData.customLaminate || (hitBox.userData.type === 'shutter' ? 'single' : 'double');
         const dims = [hitBox.userData.w, hitBox.userData.h, hitBox.userData.d].sort((a,b) => b-a);
         exportedParts.push({
             label: hitBox.userData.label,
@@ -1352,8 +1458,8 @@ function exportToOptimizer() {
 
     const micaParts = [];
     if (selectedLinerMat) {
-        exportedParts.forEach(p => {
-            if (p.laminate === "none") return; // Do not export mica for this part
+        allMultipliedParts.forEach(p => {
+            if (p.laminate === "none") return;
             
             if (p.laminate === "single") {
                 micaParts.push({ label: `${p.label} (Single Side)`, w: p.w, h: p.h });
@@ -1365,7 +1471,7 @@ function exportToOptimizer() {
     }
 
     if (window.runGlobalOptimization && selectedMat) {
-        window.runGlobalOptimization(exportedParts, micaParts, selectedMat, selectedLinerMat);
+        window.runGlobalOptimization(allMultipliedParts, micaParts, selectedMat, selectedLinerMat);
     } else {
         alert("Optimization engine not ready. Please make sure materials are loaded.");
     }
