@@ -2,6 +2,8 @@ let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
 let cabinetGroup;
 let is3DInitialized = false;
 let selectedObject = null;
+let shutterDragProxy = null;
+let lastProxyPos = null;
 let currentKitchenMode = 'both'; // 'base', 'both', or 'wall'
 let currentThickness = 0.75; // Standard 3/4" (18-19mm) plywood
 
@@ -87,6 +89,12 @@ function init3D() {
 
     // Transform Controls (for dragging internal parts)
     transformControl = new THREE.TransformControls(camera, renderer.domElement);
+    transformControl.renderOrder = 999;
+    
+    shutterDragProxy = new THREE.Object3D();
+    scene.add(shutterDragProxy);
+    lastProxyPos = new THREE.Vector3();
+
     transformControl.addEventListener('dragging-changed', function (event) {
         orbit.enabled = !event.value;
         if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
@@ -97,7 +105,13 @@ function init3D() {
         }
     });
     transformControl.addEventListener('objectChange', function () {
-        if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
+        if (transformControl.object === shutterDragProxy && selectedObject && selectedObject.userData && selectedObject.userData.type === 'shutter') {
+            const deltaX = shutterDragProxy.position.x - lastProxyPos.x;
+            const deltaY = shutterDragProxy.position.y - lastProxyPos.y;
+            selectedObject.position.x += deltaX;
+            selectedObject.position.y += deltaY;
+            lastProxyPos.copy(shutterDragProxy.position);
+        } else if (selectedObject && selectedObject.userData && selectedObject.userData.isDrawerGroup) {
             const maxZ = selectedObject.userData.maxSlideZ || (selectedObject.userData.drawerD ? selectedObject.userData.drawerD * 0.65 : 14.0);
             if (selectedObject.position.z < 0) selectedObject.position.z = 0;
             if (selectedObject.position.z > maxZ) selectedObject.position.z = maxZ;
@@ -557,32 +571,53 @@ function selectObject(hitBoxMesh, showArrows = false) {
     const type = hitBoxMesh.userData.type || (selectedObject.userData && selectedObject.userData.type);
     
     if (showArrows) {
-        transformControl.attach(selectedObject);
         if (type === 'shutter') {
-            // Door / Shutter: Draggable arrows along X-axis and Y-axis
+            // Door / Shutter: Center draggable arrows (X and Y axis) right on the door panel
+            const box = new THREE.Box3().setFromObject(selectedObject);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            if (shutterDragProxy) {
+                shutterDragProxy.position.copy(center);
+                lastProxyPos.copy(center);
+                transformControl.attach(shutterDragProxy);
+            } else {
+                transformControl.attach(selectedObject);
+            }
             transformControl.showX = true;
             transformControl.showY = true;
             transformControl.showZ = false;
         } else if (type === 'shelf') {
+            transformControl.attach(selectedObject);
             transformControl.showX = false;
             transformControl.showY = true;
             transformControl.showZ = false;
         } else if (type === 'divider') {
+            transformControl.attach(selectedObject);
             transformControl.showX = true;
             transformControl.showY = false;
             transformControl.showZ = false;
         } else if (type === 'drawer') {
+            transformControl.attach(selectedObject);
             transformControl.showX = false;
             transformControl.showY = false;
             transformControl.showZ = true;
         } else {
+            transformControl.attach(selectedObject);
             transformControl.showX = true;
             transformControl.showY = true;
             transformControl.showZ = false;
         }
+
+        transformControl.renderOrder = 999;
+        transformControl.traverse(c => {
+            c.renderOrder = 999;
+            if (c.material) c.material.depthTest = false;
+        });
     } else {
         transformControl.detach();
     }
+    updateDimensionsOverlay();
+    if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
 function deselectObject() {
@@ -593,6 +628,8 @@ function deselectObject() {
         
         const inspector = document.getElementById('property-inspector');
         if (inspector) inspector.style.display = 'none';
+        updateDimensionsOverlay();
+        if (renderer && scene && camera) renderer.render(scene, camera);
     }
 }
 
