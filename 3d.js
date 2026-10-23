@@ -2984,16 +2984,23 @@ function buildFlipShoeDrawers() {
     const d = currentD;
     const layout = calculateBayLayout('base');
     const numFlaps = Math.max(1, currentFlipFlaps || 3);
-    const gap = 0.125;
-    const shutterD = 0.75;
-    const totalGaps = gap * (numFlaps + 1);
-    const flapH = (h - totalGaps) / numFlaps;
 
-    const baseBottom = getBaseBottomY();
-    const frontZ = (d / 2) + (shutterD / 2) + 0.05;
-    const pivotRecess = 1.35; // recessed from front surface to inside carcase
-    const pivotElev = 1.25;   // raised above flap bottom
-    const pivotZ = (d / 2) - pivotRecess;
+    // Inset shutter configuration: 6mm groove gap on all sides
+    const grooveGap = 6 / 25.4; // 6mm = 0.2362 inches
+    const shutterD = 0.75; // 3/4" commercial shutter thickness
+
+    // Carcass inner clear opening boundaries (shutter goes INSIDE the carcass)
+    const innerBottomY = getBaseBottomY() + t; // top surface of bottom carcass panel
+    const innerH = h - (2 * t);                 // clear vertical height inside carcass opening
+    const totalVerticalGaps = (numFlaps + 1) * grooveGap;
+    const flapH = (innerH - totalVerticalGaps) / numFlaps;
+
+    // Inset depth: Front face of shutter sits inside carcass, recessed by 0.08" (~2mm) from carcass front edge
+    const frontFaceZ = (d / 2) - 0.08;
+    const frontZ = frontFaceZ - (shutterD / 2);
+    const pivotRecess = 1.45; // pivot axis recessed inside carcass behind front face
+    const pivotElev = 1.25;   // raised above flap bottom edge
+    const pivotZ = frontFaceZ - pivotRecess;
 
     const bracketMat = new THREE.MeshPhongMaterial({
         color: (currentFlipBracket === 'sector_white') ? 0xf4f4f5 : 0x27272a,
@@ -3007,11 +3014,13 @@ function buildFlipShoeDrawers() {
 
     for (let b = 0; b < layout.numBays; b++) {
         const bayCenterX = layout.bayCenters[b];
-        const bayW = layout.pocketW - gap;
+        // Bay width with 6mm groove gap on both left and right sides (inside carcass opening)
+        const bayW = layout.pocketW - (2 * grooveGap);
         const innerBayW = Math.max(2, bayW - 1.2); // inside hopper width between side sector brackets
 
         for (let r = 0; r < numFlaps; r++) {
-            const flapBottomY = baseBottom + gap + r * (flapH + gap);
+            // Vertical placement inside carcass with 6mm groove gap below, between flaps, and above top flap
+            const flapBottomY = innerBottomY + grooveGap + r * (flapH + grooveGap);
             const flapCenterY = flapBottomY + flapH / 2;
             const pivotY = flapBottomY + pivotElev;
 
@@ -3021,7 +3030,7 @@ function buildFlipShoeDrawers() {
             // Relatives to pivot origin (0, 0, 0):
             const relFlapY = flapCenterY - pivotY;
             const relFlapZ = frontZ - pivotZ;
-            const flapInsideZ = relFlapZ - shutterD / 2;
+            const flapInsideZ = relFlapZ - (shutterD / 2);
 
             // 1. Front Shutter Flap Panel: Transparent with 2" Border / Aluminum Profile / Solid
             if (currentShutterStyle === 'plywood_glass') {
