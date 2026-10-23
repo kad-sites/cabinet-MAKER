@@ -1,9 +1,9 @@
 // Defined Carcass & Shutter Color Palette
-let COLOR_CARCASS = 0xd1d5db;       // Clean light gray interior carcass (industry standard)
+let COLOR_CARCASS = 0xb4bcc8;       // Clean solid light gray interior carcass (never washes out)
 let COLOR_SHUTTER = 0x7f92a3;       // Solid pastel shade: refined Nordic dusty blue (different from carcass)
-let COLOR_SHELF = 0xd1d5db;         // Clean light gray interior shelves & dividers so they look like shelves
-let COLOR_DRAWER = 0xd1d5db;        // Light gray drawer box ply color
-let COLOR_EDGE_LINE = 0x64748b;     // Defined contrasting edge outline
+let COLOR_SHELF = 0x768291;         // 1-2 steps darker architectural gray shelves (never white at any angle)
+let COLOR_DRAWER = 0xb4bcc8;        // Light gray drawer box ply color
+let COLOR_EDGE_LINE = 0x475569;     // Defined contrasting edge outline
 
 let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
 let perspectiveCamera, orthoCamera;
@@ -162,14 +162,14 @@ function init3D() {
     scene.add(transformControl);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.60);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
-    dirLight.position.set(60, 120, 80);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.45);
+    dirLight.position.set(60, 100, 80);
     scene.add(dirLight);
 
-    const backFillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-    backFillLight.position.set(-60, 80, -60);
+    const backFillLight = new THREE.DirectionalLight(0xffffff, 0.25);
+    backFillLight.position.set(-60, 60, -60);
     scene.add(backFillLight);
 
     cabinetGroup = new THREE.Group();
@@ -902,9 +902,21 @@ function deleteSelectedPart() {
 
 function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight) {
     const isShutter = (type === 'shutter' || type === 'return_shutter');
-    const color = isShutter ? COLOR_SHUTTER : COLOR_SHELF;
-    const ply = new THREE.MeshPhongMaterial({ color: color, shininess: 12 });
-    const edgeBand = new THREE.MeshPhongMaterial({ color: isShutter ? 0x475569 : 0x9ca3af, shininess: 15 });
+    const isDivider = (type === 'divider');
+    const color = isShutter ? COLOR_SHUTTER : (isDivider ? COLOR_CARCASS : COLOR_SHELF);
+    
+    // For shelves, dividers, and carcass interior: ZERO specular glare (matte finish)
+    // This completely prevents shelves from flaring or looking white at any angle!
+    const ply = new THREE.MeshPhongMaterial({
+        color: color,
+        specular: isShutter ? 0x222222 : 0x000000,
+        shininess: isShutter ? 14 : 0
+    });
+    const edgeBand = new THREE.MeshPhongMaterial({
+        color: 0x475569,
+        specular: 0x000000,
+        shininess: 0
+    });
     
     const materials = [
         ply.clone(), ply.clone(), ply.clone(), 
@@ -934,8 +946,27 @@ function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight)
             materials[2] = edgeBand.clone();
             materials[3] = edgeBand.clone();
         }
+    } else if (type === 'bottom') {
+        // Bottom cabinet floor: top face (Face 2, normal +Y) inside cabinet matches shelves!
+        const carcassPly = new THREE.MeshPhongMaterial({
+            color: COLOR_CARCASS,
+            specular: 0x000000,
+            shininess: 0
+        });
+        const shelfPly = new THREE.MeshPhongMaterial({
+            color: COLOR_SHELF,
+            specular: 0x000000,
+            shininess: 0
+        });
+        materials[0] = carcassPly.clone();
+        materials[1] = carcassPly.clone();
+        materials[2] = shelfPly.clone(); // Top face inside cabinet where items sit: matches gray shelves!
+        materials[3] = carcassPly.clone();
+        materials[4] = edgeBand.clone(); // Front edge
+        materials[5] = carcassPly.clone();
     } else {
-        // Shelf or Divider: uniformly light gray on all 6 faces (top, bottom, left, right, front, back)
+        // Shelf or Divider: uniformly gray on all 6 faces (top, bottom, left, right, front, back)
+        // With matte finish (specular: 0), top face will never reflect white glare at any angle
         materials[0] = ply.clone();
         materials[1] = ply.clone();
         materials[2] = ply.clone();
@@ -954,12 +985,22 @@ function createPanel(w, h, d, colorHex, isInternal, type) {
     const geometry = new THREE.BoxGeometry(w, h, d);
     const mesh = new THREE.Mesh(geometry);
     
-    if (isInternal) {
+    if (isInternal || type === 'bottom') {
         mesh.userData = { type: type, w: w, h: h, d: d, customLaminate: 'double', customEdge: 'front' };
         applyLaminateMaterials(mesh, type, 'double', 'front');
-        internalParts.push(mesh);
+        if (isInternal) {
+            internalParts.push(mesh);
+        } else {
+            mesh.userData.isShell = true;
+            shellObjects.push(mesh);
+        }
     } else {
-        mesh.material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 12 });
+        // Carcass shell panels (sides, back, top): matte finish with specular 0x000000
+        mesh.material = new THREE.MeshPhongMaterial({
+            color: colorHex,
+            specular: 0x000000,
+            shininess: 0
+        });
         mesh.userData = { isShell: true, w: w, h: h, d: d };
         shellObjects.push(mesh);
     }
@@ -1400,9 +1441,23 @@ function setShutterColor(colorHex, badgeName) {
     if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
+function getDarkerShelfColorForCarcass(carcassHex) {
+    // Returns an architectural gray 1 to 2 steps darker than the carcass inside color
+    if (carcassHex === 0xb4bcc8 || carcassHex === 0xcfd4dc || carcassHex === 0xd1d5db) {
+        return 0x768291; // 1-2 steps darker architectural slate/graphite gray
+    } else if (carcassHex === 0x2b3038) {
+        return 0x64748b; // Defined gray shelf against dark slate
+    } else if (carcassHex === 0x38312d) {
+        return 0x6b7280; // Defined gray shelf against smoked walnut
+    } else if (carcassHex === 0xc8bfae) {
+        return 0x878074; // 1-2 steps darker tone against cashmere birch
+    }
+    return 0x768291;
+}
+
 function setCarcassColor(colorHex, badgeName) {
     COLOR_CARCASS = colorHex;
-    COLOR_SHELF = colorHex;
+    COLOR_SHELF = getDarkerShelfColorForCarcass(colorHex);
     document.querySelectorAll('.carcass-color-pill').forEach(b => {
         b.classList.toggle('active', parseInt(b.dataset.color, 16) === colorHex);
     });
@@ -1425,8 +1480,17 @@ function makeExtrudedShelfPanel(pts, t, colorHex, label, module) {
     const geo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: t, bevelEnabled: false });
     geo.rotateX(Math.PI / 2);
 
-    const faceMat = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 12 });
-    const sideMat = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
+    // Matte zero-specular finish on miter corner shelves
+    const faceMat = new THREE.MeshPhongMaterial({
+        color: COLOR_SHELF,
+        specular: 0x000000,
+        shininess: 0
+    });
+    const sideMat = new THREE.MeshPhongMaterial({
+        color: 0x475569,
+        specular: 0x000000,
+        shininess: 0
+    });
     const mesh = new THREE.Mesh(geo, [faceMat, sideMat]);
     const edgeGeo = new THREE.EdgesGeometry(geo);
     const edgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
@@ -2823,7 +2887,11 @@ function syncShelvesFromCount(module) {
                 const lipH = 1.25;
                 const lipT = Math.min(t, 0.5);
                 const lipGeo = new THREE.BoxGeometry(innerW, lipH, lipT);
-                const lipMat = new THREE.MeshPhongMaterial({ color: shelfColor, shininess: 12 });
+                const lipMat = new THREE.MeshPhongMaterial({
+                    color: shelfColor,
+                    specular: 0x000000,
+                    shininess: 0
+                });
                 const lipMesh = new THREE.Mesh(lipGeo, lipMat);
                 lipMesh.position.set(0, lipH / 2, shelfDepth / 2 - lipT / 2);
                 lipMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(lipGeo), new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE })));
@@ -3043,7 +3111,11 @@ function buildFlipShoeDrawers() {
         color: (currentFlipBracket === 'sector_white') ? 0xf4f4f5 : 0x27272a,
         shininess: 40
     });
-    const shelfMat = new THREE.MeshPhongMaterial({ color: COLOR_SHELF, shininess: 12 });
+    const shelfMat = new THREE.MeshPhongMaterial({
+        color: COLOR_SHELF,
+        specular: 0x000000,
+        shininess: 0
+    });
     const shelfEdgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 1.5 });
     const flapEdgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
     const metalEdgeMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 1.5 });
@@ -3593,7 +3665,7 @@ function syncShuttersFromSelect(module) {
             const t = currentThickness;
             const innerH = h - (2 * t);
             const divDepth = d - 1.0;
-            const divider = createPanel(t, innerH, divDepth, COLOR_SHELF, true, 'divider');
+            const divider = createPanel(t, innerH, divDepth, COLOR_CARCASS, true, 'divider');
             divider.position.set(gapCenterX, centerY, isWall ? (getWallCenterZ() - 0.5) : -0.5);
             divider.userData.label = `${prefix} Auto Hinge Partition`;
             divider.userData.isAutoHingePartition = true;
