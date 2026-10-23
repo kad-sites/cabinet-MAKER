@@ -444,7 +444,7 @@ main {
 }
 
 .shape-symbol {
-    font-weight: 700;
+    font-weight: 500;
     font-size: 0.85rem;
 }
 
@@ -509,7 +509,7 @@ main {
 .dim-unit-pill.active {
     background: var(--accent-gold);
     color: var(--accent-gold-text);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .dim-columns-grid {
@@ -612,7 +612,7 @@ main {
     background: var(--accent-gold);
     border-color: var(--accent-gold);
     color: var(--accent-gold-text);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Tilt Angle Selector */
@@ -650,7 +650,7 @@ main {
     border-color: var(--accent-cyan);
     background: rgba(56, 189, 248, 0.1);
     color: var(--accent-cyan);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* ========================================================
@@ -680,7 +680,7 @@ main {
     background: var(--accent-gold);
     color: var(--accent-gold-text);
     font-size: 0.62rem;
-    font-weight: 700;
+    font-weight: 500;
     border-radius: 4px;
     padding: 2px 7px;
     letter-spacing: 0.5px;
@@ -997,7 +997,7 @@ main {
 .hud-view-btn.active {
     background: var(--accent-blue-active);
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .hud-fullscreen-btn {
@@ -1079,7 +1079,7 @@ main {
 }
 
 .inspector-part-name {
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.88rem;
     color: var(--accent-cyan);
 }
@@ -1108,7 +1108,7 @@ main {
 }
 
 .prop-dim-val {
-    font-weight: 700;
+    font-weight: 500;
     color: var(--text-primary);
     font-family: monospace;
 }
@@ -1159,7 +1159,7 @@ main {
     padding: 9px 12px;
     background: linear-gradient(135deg, #0284c7, #0369a1);
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.78rem;
     border: 1px solid rgba(56, 189, 248, 0.4);
     border-radius: 6px;
