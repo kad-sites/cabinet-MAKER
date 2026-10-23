@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -534,7 +534,10 @@
                                         <span>━ Straight</span>
                                     </button>
                                     <button type="button" class="shelf-pill shelf-style-btn" data-style="slanted">
-                                        <span>Slanted (Shoe)</span>
+                                        <span>Slanted</span>
+                                    </button>
+                                    <button type="button" class="shelf-pill shelf-style-btn" data-style="flip" title="Foldable Tilt-Out Shoe Drawers with Angular Divider Plates">
+                                        <span>🔄 Flip-Down</span>
                                     </button>
                                 </div>
                             </div>
@@ -546,6 +549,46 @@
                                     <button type="button" class="angle-btn angle-pill" data-angle="20">20°</button>
                                     <button type="button" class="angle-btn angle-pill active" data-angle="25">25°</button>
                                     <button type="button" class="angle-btn angle-pill" data-angle="30">30°</button>
+                                </div>
+                            </div>
+
+                            <!-- Flip-Down Shoe Hopper Controls (Visible when Flip-down is active) -->
+                            <div id="cad-flip-shoe-wrap" class="flip-shoe-config-bar" style="display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <span class="dim-col-label" style="margin-bottom: 0;">TIERS PER FLAP</span>
+                                    <span class="badge-gold-pill" id="badge-flip-tiers">2 TIERS (DOUBLE SHOE)</span>
+                                </div>
+                                <div class="tier-pills-group" style="display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 4px; margin-bottom: 8px;">
+                                    <button type="button" class="flip-tier-btn shelf-pill" data-tiers="1">1 Tier</button>
+                                    <button type="button" class="flip-tier-btn shelf-pill active" data-tiers="2">2 Tiers (Double Shoe)</button>
+                                    <button type="button" class="flip-tier-btn shelf-pill" data-tiers="3">3 Tiers</button>
+                                </div>
+                                <div class="dim-columns-grid cols-2" style="margin-top: 6px;">
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Flap Compartments</label>
+                                        <div class="theme-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-flip-flaps-count" class="theme-input num-input cad-stepper-input" value="3" autocomplete="off">
+                                            <div class="theme-stepper-arrows">
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-flip-flaps-count">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                </button>
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-flip-flaps-count">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <span class="dim-subtext">Tilt-out units</span>
+                                    </div>
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Side Brackets</label>
+                                        <div class="theme-select-wrap">
+                                            <select id="cad-flip-bracket-select" class="theme-select">
+                                                <option value="sector_black" selected>Matte Black Sector</option>
+                                                <option value="sector_white">White Nylon Sector</option>
+                                            </select>
+                                        </div>
+                                        <span class="dim-subtext">Pivoting track</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -816,6 +859,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=31"></script>
+    <script src="3d.js?v=32"></script>
 </body>
 </html>

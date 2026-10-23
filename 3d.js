@@ -29,9 +29,12 @@ let currentLReturnSide = 'right'; // 'right' or 'left'
 let currentULeftFt = 7;
 let currentURightFt = 7;
 
-// Shoe Rack Angular Shelves State ('straight' or 'slanted')
+// Shoe Rack Shelves & Mechanism State ('straight', 'slanted', 'flip')
 let currentShelfStyle = 'straight';
 let currentShelfAngle = 25; // 20, 25, 30 degrees
+let currentFlipTiers = 2; // 1, 2 (double shoe), 3 tiers
+let currentFlipFlaps = 3; // 2, 3, 4 tilt-out hopper rows
+let currentFlipBracket = 'sector_black'; // 'sector_black', 'sector_white'
 
 // Shutter Door & Glass Studio State
 let currentShutterStyle = 'solid'; // 'solid', 'plywood_glass', 'aluminum_glass'
@@ -194,6 +197,17 @@ function init3D() {
     
     // Initial build
     setKitchenMode('both');
+    
+    Object.defineProperty(window, 'internalParts', { get: () => internalParts, configurable: true });
+    Object.defineProperty(window, 'cabinetGroup', { get: () => cabinetGroup, configurable: true });
+    Object.defineProperty(window, 'selectedObject', { get: () => selectedObject, configurable: true });
+    Object.defineProperty(window, 'currentShelfStyle', { get: () => currentShelfStyle, configurable: true });
+    window.selectObject = selectObject;
+    window.deselectObject = deselectObject;
+    window.setViewMode = setViewMode;
+    window.toggleShutters = toggleShutters;
+    window.buildFlipShoeDrawers = buildFlipShoeDrawers;
+
     animate();
 }
 
@@ -372,43 +386,7 @@ function updateDimensionsOverlay() {
             const lX = (screenLeft.x * 0.5 + 0.5) * width;
             const rX = (screenRight.x * 0.5 + 0.5) * width;
 
-            const wFt = (w / 12).toFixed(2);
-            const hFt = (h / 12).toFixed(2);
-
-            // 1. Shutter Dimension Callout HUD hovering over clicked shutter
-            const hud = document.createElement('div');
-            hud.className = 'cad-shutter-callout-hud';
-            hud.innerHTML = `
-                <div style="font-size: 0.68rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; margin-bottom: 2px;">
-                    ${label} ${totalShutters ? `(${totalShutters} Total)` : ''}
-                </div>
-                <div style="display: flex; align-items: baseline; gap: 6px; margin: 2px 0;">
-                    <span style="font-size: 0.72rem; color: #cbd5e1;">WIDTH (BREADTH):</span>
-                    <span style="font-size: 1.05rem; font-weight: 800; color: #facc15; font-family: monospace;">
-                        ${w.toFixed(2)}"
-                    </span>
-                    <span style="font-size: 0.72rem; color: #94a3b8;">(~${wFt} ft)</span>
-                </div>
-                <div style="display: flex; gap: 8px; font-size: 0.7rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3px; margin-top: 2px;">
-                    <span>HEIGHT: <b style="color: #fff;">${h.toFixed(2)}"</b> (~${hFt} ft)</span>
-                    <span>THICK: <b style="color: #fff;">${d.toFixed(2)}"</b></span>
-                </div>
-            `;
-            hud.style.position = 'absolute';
-            hud.style.left = `${cX}px`;
-            hud.style.top = `${tY - 12}px`;
-            hud.style.transform = 'translate(-50%, -100%)';
-            hud.style.background = 'rgba(15, 23, 42, 0.94)';
-            hud.style.border = '1.5px solid #38bdf8';
-            hud.style.borderRadius = '8px';
-            hud.style.padding = '6px 10px';
-            hud.style.boxShadow = '0 8px 20px rgba(0,0,0,0.6), 0 0 12px rgba(56, 189, 248, 0.3)';
-            hud.style.pointerEvents = 'none';
-            hud.style.zIndex = '15';
-            hud.style.whiteSpace = 'nowrap';
-            overlaysContainer.appendChild(hud);
-
-            // 2. Shutter Width Dimension Line
+            // Simple Shutter Width Dimension Line (detailed specs shown in right Property Inspector)
             const spanW = Math.max(Math.abs(rX - lX), 40);
             const minX = Math.min(lX, rX);
             const dimLine = document.createElement('div');
@@ -687,13 +665,19 @@ function populateInspector(obj) {
 
     if (obj.userData.type === 'shutter') {
         thickness = obj.userData.shutterD || 0.75;
-        const styleLabel = obj.userData.shutterStyle === 'aluminum_glass' 
-            ? 'Aluminum Profile + Glass' 
-            : (obj.userData.shutterStyle === 'plywood_glass' ? '2" Ply Frame + Glass' : 'Solid Shutter');
-        const glassLabel = (obj.userData.shutterStyle !== 'solid' && obj.userData.glassType) 
-            ? ` (${obj.userData.glassType.replace('_', ' ')})` 
-            : '';
-        name = `${obj.userData.label || 'Shutter'} [${styleLabel}${glassLabel}]`;
+        if (obj.userData.isFlipDrawer) {
+            const tiers = obj.userData.flipTiers || currentFlipTiers;
+            const tiersLabel = tiers === 1 ? '1 Tier' : (tiers === 3 ? '3 Tiers' : '2 Tiers (Double Shoe)');
+            name = `${obj.userData.label || 'Tilt-Out Shoe Hopper'} [${tiersLabel}]`;
+        } else {
+            const styleLabel = obj.userData.shutterStyle === 'aluminum_glass' 
+                ? 'Aluminum Profile + Glass' 
+                : (obj.userData.shutterStyle === 'plywood_glass' ? '2" Ply Frame + Glass' : 'Solid Shutter');
+            const glassLabel = (obj.userData.shutterStyle !== 'solid' && obj.userData.glassType) 
+                ? ` (${obj.userData.glassType.replace('_', ' ')})` 
+                : '';
+            name = `${obj.userData.label || 'Shutter'} [${styleLabel}${glassLabel}]`;
+        }
     } else if (obj.userData.isMiterShelf) {
         thickness = obj.userData.customThickness || currentThickness;
         name = `${obj.userData.label || 'Shelf'} [45° Miter Corner]`;
@@ -1278,10 +1262,22 @@ function setShelfStyle(style, angle = currentShelfAngle) {
     if (angleWrap) {
         angleWrap.style.display = (style === 'slanted') ? 'flex' : 'none';
     }
+    const flipWrap = document.getElementById('cad-flip-shoe-wrap');
+    if (flipWrap) {
+        flipWrap.style.display = (style === 'flip') ? 'block' : 'none';
+    }
     document.querySelectorAll('.angle-pill').forEach(b => {
         b.classList.toggle('active', parseInt(b.dataset.angle) === currentShelfAngle);
     });
-    syncShelvesFromCount('base');
+
+    const shelvesInput = document.getElementById('cad-shelves-count');
+    const shutterSelect = document.getElementById('cad-shutter-select');
+    const shelvesCol = shelvesInput ? shelvesInput.closest('.dim-column') : null;
+    const shutterCol = shutterSelect ? shutterSelect.closest('.dim-column') : null;
+    if (shelvesCol) shelvesCol.style.opacity = (style === 'flip') ? '0.35' : '1';
+    if (shutterCol) shutterCol.style.opacity = (style === 'flip') ? '0.35' : '1';
+
+    syncPartitionsAndDoors();
     if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
@@ -2675,9 +2671,16 @@ function syncPartitionsAndDoors() {
     cleanupInactiveParts();
 
     if (currentKitchenMode === 'base' || currentKitchenMode === 'both') {
-        syncShelvesFromCount('base');
-        syncDividersFromCount('base');
-        syncShuttersFromSelect('base');
+        if (currentShelfStyle === 'flip') {
+            syncShelvesFromCount('base');
+            syncDividersFromCount('base');
+            buildFlipShoeDrawers();
+        } else {
+            cleanupFlipDrawers();
+            syncShelvesFromCount('base');
+            syncDividersFromCount('base');
+            syncShuttersFromSelect('base');
+        }
     }
     
     if (currentKitchenMode === 'wall' || currentKitchenMode === 'both') {
@@ -2723,6 +2726,10 @@ function syncShelvesFromCount(module) {
         cabinetGroup.remove(part);
         internalParts = internalParts.filter(p => p !== part);
     });
+
+    if (module === 'base' && currentShelfStyle === 'flip') {
+        return;
+    }
     
     if (count <= 0) {
         if (module === 'base') updateExistingDrawers();
@@ -2935,7 +2942,253 @@ function updateShutterSubtexts() {
     });
 }
 
+function cleanupFlipDrawers() {
+    const toRemove = [];
+    cabinetGroup.children.forEach(child => {
+        if (child.userData && child.userData.isFlipDrawer) {
+            toRemove.push(child);
+        }
+    });
+    toRemove.forEach(child => {
+        cabinetGroup.remove(child);
+        internalParts = internalParts.filter(p => p !== child && p.userData?.parentGroup !== child);
+        if (child.geometry) child.geometry.dispose();
+    });
+}
+
+function buildFlipShoeDrawers() {
+    cleanupFlipDrawers();
+
+    // Remove any standard shutters on base module
+    const oldShutters = [];
+    cabinetGroup.children.forEach(c => {
+        if (c.userData && c.userData.module === 'base' && c.userData.type === 'shutter') {
+            oldShutters.push(c);
+        }
+    });
+    oldShutters.forEach(c => {
+        cabinetGroup.remove(c);
+        internalParts = internalParts.filter(p => p !== c && p.userData?.parentGroup !== c);
+    });
+
+    const t = currentThickness;
+    const w = currentW;
+    const h = currentH;
+    const d = currentD;
+    const layout = calculateBayLayout('base');
+    const numFlaps = Math.max(1, currentFlipFlaps || 3);
+    const gap = 0.125;
+    const shutterD = 0.75;
+    const totalGaps = gap * (numFlaps + 1);
+    const flapH = (h - totalGaps) / numFlaps;
+
+    const baseBottom = getBaseBottomY();
+    const frontZ = (d / 2) + (shutterD / 2) + 0.05;
+    const pivotRecess = 1.35; // recessed from front surface to inside carcase
+    const pivotElev = 1.25;   // raised above flap bottom
+    const pivotZ = (d / 2) - pivotRecess;
+
+    const bracketMat = new THREE.MeshPhongMaterial({
+        color: (currentFlipBracket === 'sector_white') ? 0xf4f4f5 : 0x27272a,
+        shininess: 40
+    });
+    const shelfMat = new THREE.MeshPhongMaterial({ color: COLOR_SHELF, shininess: 12 });
+    const shelfEdgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 1.5 });
+    const flapEdgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
+    const handleMat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, shininess: 120, specular: 0xffffff });
+
+    for (let b = 0; b < layout.numBays; b++) {
+        const bayCenterX = layout.bayCenters[b];
+        const bayW = layout.pocketW - gap;
+        const innerBayW = Math.max(2, bayW - 1.2); // inside hopper width between side sector brackets
+
+        for (let r = 0; r < numFlaps; r++) {
+            const flapBottomY = baseBottom + gap + r * (flapH + gap);
+            const flapCenterY = flapBottomY + flapH / 2;
+            const pivotY = flapBottomY + pivotElev;
+
+            const flapGroup = new THREE.Group();
+            flapGroup.position.set(bayCenterX, pivotY, pivotZ);
+
+            // Relatives to pivot origin (0, 0, 0):
+            const relFlapY = flapCenterY - pivotY;
+            const relFlapZ = frontZ - pivotZ;
+
+            // 1. Front Shutter Flap Panel (Soft yellowish cream COLOR_SHUTTER)
+            const flapGeo = new THREE.BoxGeometry(bayW, flapH, shutterD);
+            const flapMesh = new THREE.Mesh(flapGeo);
+            flapMesh.userData = { isSubPart: true, w: bayW, h: flapH, d: shutterD, type: 'shutter' };
+            applyLaminateMaterials(flapMesh, 'shutter', 'single', 'all');
+            flapMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(flapGeo), flapEdgeMat));
+            flapMesh.position.set(0, relFlapY, relFlapZ);
+            flapGroup.add(flapMesh);
+
+            // Modern Finger Pull / Sleek Handle on top edge of flap
+            const handleW = Math.min(6.0, bayW * 0.35);
+            const handleGeo = new THREE.BoxGeometry(handleW, 0.4, 0.55);
+            const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+            handleMesh.position.set(0, relFlapY + (flapH / 2) - 1.2, relFlapZ + (shutterD / 2) + 0.28);
+            handleMesh.userData = { isSubPart: true };
+            flapGroup.add(handleMesh);
+
+            // 2. Left & Right Quarter-Circle Sector Brackets with curved tracks & pivot hub
+            [-innerBayW / 2 - 0.2, innerBayW / 2 + 0.2].forEach((bracketX, sIdx) => {
+                const bSideGroup = new THREE.Group();
+                bSideGroup.position.set(bracketX, 0, 0);
+
+                // Pivot Hub Pin
+                const hubGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 16);
+                hubGeo.rotateZ(Math.PI / 2);
+                const hubMesh = new THREE.Mesh(hubGeo, bracketMat);
+                bSideGroup.add(hubMesh);
+
+                // Front arm attached to flap
+                const frontArmLen = Math.min(flapH * 0.7, 10.0);
+                const armGeo = new THREE.BoxGeometry(0.15, frontArmLen, 0.6);
+                const armMesh = new THREE.Mesh(armGeo, bracketMat);
+                armMesh.position.set(0, frontArmLen / 2, relFlapZ - 0.4);
+                bSideGroup.add(armMesh);
+
+                // Bottom arm along hopper depth
+                const botArmLen = Math.min(d * 0.55, 9.5);
+                const botArmGeo = new THREE.BoxGeometry(0.15, 0.5, botArmLen);
+                const botArmMesh = new THREE.Mesh(botArmGeo, bracketMat);
+                botArmMesh.position.set(0, -0.1, -botArmLen / 2 + 0.4);
+                bSideGroup.add(botArmMesh);
+
+                // Curved quarter-circle sector stop arc
+                const arcShape = new THREE.Shape();
+                arcShape.moveTo(0, 0);
+                arcShape.lineTo(0, frontArmLen * 0.6);
+                arcShape.quadraticCurveTo(relFlapZ * 0.45, frontArmLen * 0.35, -botArmLen * 0.55, 0);
+                arcShape.closePath();
+                const arcGeo = new THREE.ExtrudeGeometry(arcShape, { depth: 0.12, bevelEnabled: false });
+                arcGeo.rotateY(sIdx === 0 ? Math.PI / 2 : -Math.PI / 2);
+                const arcMesh = new THREE.Mesh(arcGeo, bracketMat);
+                arcMesh.position.set(0, 0, 0);
+                bSideGroup.add(arcMesh);
+
+                flapGroup.add(bSideGroup);
+            });
+
+            // 3. Bottom Shoe Sole Shelf (Base resting plate)
+            const botShelfD = Math.min(d * 0.55, 8.5);
+            const botShelfGeo = new THREE.BoxGeometry(innerBayW, 0.45, botShelfD);
+            const botShelfMesh = new THREE.Mesh(botShelfGeo, shelfMat);
+            botShelfMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(botShelfGeo), shelfEdgeMat));
+            botShelfMesh.position.set(0, 0.2, -botShelfD / 2 + 0.3);
+            botShelfMesh.userData = { isSubPart: true, label: `Hopper Base Shelf` };
+            flapGroup.add(botShelfMesh);
+
+            // 4. Angular Partition Plates ("Double Shoe" central angled plate / 3-tier dividers)
+            if (currentFlipTiers === 1) {
+                // Single Tier: Rear retaining back stop rail
+                const stopGeo = new THREE.BoxGeometry(innerBayW, 2.5, 0.4);
+                const stopMesh = new THREE.Mesh(stopGeo, shelfMat);
+                stopMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(stopGeo), shelfEdgeMat));
+                stopMesh.position.set(0, 1.4, -botShelfD + 0.5);
+                stopMesh.userData = { isSubPart: true, label: `Shoe Retaining Rail` };
+                flapGroup.add(stopMesh);
+            } else if (currentFlipTiers === 2) {
+                // 2 Tiers (Double Shoe): Central Angular Plate dividing front & rear shoe rows!
+                const plateLen = Math.min(flapH * 0.72, 10.5);
+                const plateGeo = new THREE.BoxGeometry(innerBayW, plateLen, 0.45);
+                const plateMesh = new THREE.Mesh(plateGeo, shelfMat);
+                plateMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(plateGeo), shelfEdgeMat));
+                // Angled backward at ~35° from vertical
+                plateMesh.rotation.x = -Math.PI * 0.19;
+                plateMesh.position.set(0, (plateLen / 2) * Math.cos(Math.PI * 0.19) * 0.8, -botShelfD * 0.35);
+                plateMesh.userData = { isSubPart: true, label: `Double Shoe Central Angular Plate` };
+                flapGroup.add(plateMesh);
+
+                // Rear upper heel stop
+                const stopGeo = new THREE.BoxGeometry(innerBayW, 2.0, 0.4);
+                const stopMesh = new THREE.Mesh(stopGeo, shelfMat);
+                stopMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(stopGeo), shelfEdgeMat));
+                stopMesh.position.set(0, 1.2, -botShelfD + 0.5);
+                stopMesh.userData = { isSubPart: true, label: `Rear Shoe Retaining Rail` };
+                flapGroup.add(stopMesh);
+            } else if (currentFlipTiers === 3) {
+                // 3 Tiers: Two angular plates dividing into 3 tiers
+                for (let p = 0; p < 2; p++) {
+                    const plateLen = Math.min(flapH * 0.68, 9.8);
+                    const plateGeo = new THREE.BoxGeometry(innerBayW, plateLen, 0.4);
+                    const plateMesh = new THREE.Mesh(plateGeo, shelfMat);
+                    plateMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(plateGeo), shelfEdgeMat));
+                    plateMesh.rotation.x = -Math.PI * (0.16 + p * 0.08);
+                    const zOffset = -botShelfD * (0.25 + p * 0.35);
+                    plateMesh.position.set(0, (plateLen / 2) * 0.8, zOffset);
+                    plateMesh.userData = { isSubPart: true, label: `3-Tier Angular Plate ${p + 1}` };
+                    flapGroup.add(plateMesh);
+                }
+            }
+
+            // 5. Raycasting Hitbox for selection & inspection
+            const hitBoxGeo = new THREE.BoxGeometry(bayW, flapH, shutterD + 0.4);
+            const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+            const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+            hitBox.position.set(0, relFlapY, relFlapZ);
+
+            const flapLabel = layout.numBays > 1 
+                ? `[Base Bay ${b + 1}] Tilt-Out Flap ${r + 1}`
+                : `[Base] Tilt-Out Flap ${r + 1}`;
+
+            hitBox.userData = {
+                type: 'shutter',
+                isFlipDrawer: true,
+                parentGroup: flapGroup,
+                label: flapLabel,
+                module: 'base',
+                bayIndex: b,
+                tierIndex: r,
+                flipTiers: currentFlipTiers,
+                shutterW: bayW,
+                shutterH: flapH,
+                shutterD: shutterD,
+                w: bayW,
+                h: flapH,
+                d: shutterD
+            };
+            flapGroup.add(hitBox);
+
+            flapGroup.userData = {
+                type: 'shutter',
+                isFlipDrawer: true,
+                hitBox: hitBox,
+                label: flapLabel,
+                module: 'base',
+                bayIndex: b,
+                tierIndex: r,
+                flipTiers: currentFlipTiers,
+                shutterW: bayW,
+                shutterH: flapH,
+                shutterD: shutterD,
+                w: bayW,
+                h: flapH,
+                d: shutterD,
+                closedRotationX: 0,
+                openRotationX: Math.PI * 0.28
+            };
+
+            if (shuttersOpen) {
+                flapGroup.rotation.x = flapGroup.userData.openRotationX;
+                flapGroup.layers.set(1);
+            } else {
+                flapGroup.rotation.x = 0;
+                flapGroup.layers.set(0);
+            }
+
+            cabinetGroup.add(flapGroup);
+            internalParts.push(hitBox);
+        }
+    }
+}
+
 function syncShuttersFromSelect(module) {
+    if (module === 'base' && currentShelfStyle === 'flip') {
+        buildFlipShoeDrawers();
+        return;
+    }
     const selectId = (module === 'wall') ? 'cad-wall-shutter-select' : 'cad-shutter-select';
     const shutterSelect = document.getElementById(selectId);
     if (!shutterSelect) return;
@@ -3430,7 +3683,7 @@ function setupCADListeners() {
     });
 
     // ArrowUp / ArrowDown keyboard stepper on partition & return inputs
-    ['cad-shelves-count', 'cad-dividers-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count', 'cad-l-return-ft', 'cad-u-left-ft', 'cad-u-right-ft'].forEach(id => {
+    ['cad-shelves-count', 'cad-dividers-count', 'cad-flip-flaps-count', 'cad-wall-shelves-count', 'cad-wall-dividers-count', 'cad-l-return-ft', 'cad-u-left-ft', 'cad-u-right-ft'].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
             input.addEventListener('keydown', (e) => {
@@ -3456,7 +3709,7 @@ function setupCADListeners() {
         btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
     });
 
-    // Shelf Style Buttons (Straight vs Slanted Shoe Shelf)
+    // Shelf Style Buttons (Straight vs Slanted Shoe Shelf vs Flip-Down)
     document.querySelectorAll('.shelf-style-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             setShelfStyle(btn.dataset.style);
@@ -3469,6 +3722,50 @@ function setupCADListeners() {
             setShelfAngle(parseInt(btn.dataset.angle));
         });
     });
+
+    // Tilt-Out Shoe Hopper Tiers Buttons (1 Tier, 2 Tiers / Double Shoe, 3 Tiers)
+    document.querySelectorAll('.flip-tier-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tiers = parseInt(btn.dataset.tiers) || 2;
+            currentFlipTiers = tiers;
+            document.querySelectorAll('.flip-tier-btn').forEach(b => b.classList.toggle('active', b === btn));
+            const badge = document.getElementById('badge-flip-tiers');
+            if (badge) {
+                badge.textContent = tiers === 1 ? '1 TIER' : (tiers === 3 ? '3 TIERS' : '2 TIERS (DOUBLE SHOE)');
+            }
+            if (currentShelfStyle === 'flip') {
+                buildFlipShoeDrawers();
+                if (renderer && scene && camera) renderer.render(scene, camera);
+            }
+        });
+    });
+
+    // Flip Compartments Stepper
+    const flipFlapsInput = document.getElementById('cad-flip-flaps-count');
+    if (flipFlapsInput) {
+        flipFlapsInput.addEventListener('input', () => {
+            let val = parseInt(flipFlapsInput.value);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 8) val = 8;
+            currentFlipFlaps = val;
+            if (currentShelfStyle === 'flip') {
+                buildFlipShoeDrawers();
+                if (renderer && scene && camera) renderer.render(scene, camera);
+            }
+        });
+    }
+
+    // Flip Bracket Select (Matte Black Sector vs White Nylon Sector)
+    const flipBracketSelect = document.getElementById('cad-flip-bracket-select');
+    if (flipBracketSelect) {
+        flipBracketSelect.addEventListener('change', () => {
+            currentFlipBracket = flipBracketSelect.value;
+            if (currentShelfStyle === 'flip') {
+                buildFlipShoeDrawers();
+                if (renderer && scene && camera) renderer.render(scene, camera);
+            }
+        });
+    }
 
     // Shutter Style Pills (Solid Ply, 2" Ply Frame + Glass, Aluminum Profile + Glass)
     document.querySelectorAll('.shutter-type-pill').forEach(btn => {
@@ -4128,7 +4425,11 @@ function toggleShutters() {
     }
     cabinetGroup.children.forEach(child => {
         if (child.userData && child.userData.type === 'shutter') {
-            child.rotation.y = shuttersOpen ? child.userData.openRotationY : child.userData.closedRotationY;
+            if (child.userData.isFlipDrawer) {
+                child.rotation.x = shuttersOpen ? child.userData.openRotationX : child.userData.closedRotationX;
+            } else {
+                child.rotation.y = shuttersOpen ? child.userData.openRotationY : child.userData.closedRotationY;
+            }
             child.layers.set(shuttersOpen ? 1 : 0);
         }
     });
