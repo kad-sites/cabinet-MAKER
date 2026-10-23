@@ -1,3 +1,10 @@
+// Defined Carcass & Shutter Color Palette
+const COLOR_CARCASS = 0xdad5cb;       // Defined neutral warm birch/greige carcass (NOT orange)
+const COLOR_SHUTTER = 0xfcf1d8;       // Soft tone of yellowish cream
+const COLOR_SHELF = 0xefeae1;         // Defined interior shelf and divider color
+const COLOR_DRAWER = 0xf5eedb;        // Drawer box ply color
+const COLOR_EDGE_LINE = 0x78716c;     // Clean modern edge outline
+
 let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
 let cabinetGroup;
 let is3DInitialized = false;
@@ -803,7 +810,7 @@ function deleteSelectedPart() {
 }
 
 function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig) {
-    const ply = new THREE.MeshPhongMaterial({ color: 0xdeb887, shininess: 10 });
+    const ply = new THREE.MeshPhongMaterial({ color: (type === 'shutter' ? COLOR_SHUTTER : COLOR_SHELF), shininess: 12 });
     const liner = new THREE.MeshPhongMaterial({ color: 0xe5e7eb, shininess: 20 });
     const edgeBand = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
     
@@ -853,7 +860,7 @@ function createPanel(w, h, d, colorHex, isInternal, type) {
     }
 
     const edgeGeo = new THREE.EdgesGeometry(geometry);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
     const edges = new THREE.LineSegments(edgeGeo, edgeMat);
     mesh.add(edges);
 
@@ -986,7 +993,7 @@ function buildDoorMeshAssembly(w, h, d, isRightHinged, label, module, index, tot
         closedRotationY: 0
     };
 
-    const edgeLineMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const edgeLineMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
     const metalEdgeMat = new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 1.5 });
 
     if (currentShutterStyle === 'solid') {
@@ -1009,7 +1016,7 @@ function buildDoorMeshAssembly(w, h, d, isRightHinged, label, module, index, tot
         const frameW = 2.0; // 2 inches on all sides
         const innerW = Math.max(0.5, w - (2 * frameW));
         const innerH = Math.max(0.5, h - (2 * frameW));
-        const frameMat = new THREE.MeshPhongMaterial({ color: 0xdeb887, shininess: 14 });
+        const frameMat = new THREE.MeshPhongMaterial({ color: COLOR_SHUTTER, shininess: 14 });
 
         const makeFramePiece = (pw, ph, pd, px, py, pz) => {
             const geo = new THREE.BoxGeometry(pw, ph, pd);
@@ -1268,7 +1275,7 @@ function makeExtrudedShelfPanel(pts, t, colorHex, label, module) {
     const sideMat = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
     const mesh = new THREE.Mesh(geo, [faceMat, sideMat]);
     const edgeGeo = new THREE.EdgesGeometry(geo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
     mesh.add(new THREE.LineSegments(edgeGeo, edgeMat));
 
     let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
@@ -1319,7 +1326,7 @@ function buildReturnDoorMeshAssembly(doorLen, doorH, doorThickness, isHingedFar,
         closedRotationY: 0
     };
 
-    const edgeLineMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const edgeLineMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
     const metalEdgeMat = new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 1.5 });
 
     if (currentShutterStyle === 'solid') {
@@ -1343,7 +1350,7 @@ function buildReturnDoorMeshAssembly(doorLen, doorH, doorThickness, isHingedFar,
         const frameW = 2.0; // 2 inches on all sides
         const innerLen = Math.max(0.5, doorLen - (2 * frameW));
         const innerH = Math.max(0.5, doorH - (2 * frameW));
-        const frameMat = new THREE.MeshPhongMaterial({ color: 0xdeb887, shininess: 14 });
+        const frameMat = new THREE.MeshPhongMaterial({ color: COLOR_SHUTTER, shininess: 14 });
 
         const makeFramePiece = (pw, ph, pd, px, py, pz) => {
             const geo = new THREE.BoxGeometry(pw, ph, pd);
@@ -1862,7 +1869,7 @@ function updateDimensionsFromInputs() {
 function buildBoxShell(module, w, h, d, centerY, centerZ, labelPrefix) {
     const t = currentThickness;
     const innerH = h - (2 * t);
-    const shellColor = 0xcd853f; 
+    const shellColor = COLOR_CARCASS; 
 
     // Determine corner open ends for L-Kitchen & U-Kitchen so internal cavity connects with no partition
     const isCornerRight = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'right') || (currentKitchenLayout === 'u-shape');
@@ -2176,7 +2183,7 @@ function buildReturnWing(wingSide, wingLengthFt) {
     const sign = isRight ? 1 : -1;
     const wingLen = wingLengthFt * 12; // in inches
     const t = currentThickness;
-    const shellColor = 0xc89d68;
+    const shellColor = COLOR_CARCASS;
     const plinthColor = 0x27272a;
     const kickRecess = 2; // 2" recessed toe kick
     const plinthY = currentPlinth / 2;
@@ -2342,7 +2349,7 @@ function syncReturnWingPartitions(wingSide, wingLengthFt, module) {
     const innerH = (isWall ? currentWallH : currentH) - (2 * t);
     const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
     const shelfDepth = depth - 1.0;
-    const shelfColor = 0xdeb887;
+    const shelfColor = COLOR_SHELF;
 
     // 1. Shelves with 45° Miter Corner Joint
     const shelfInputId = isWall ? 'cad-wall-shelves-count' : 'cad-shelves-count';
@@ -2466,7 +2473,23 @@ function updateCameraFraming() {
     orbit.update();
 }
 
+
+function removeAllReturnWingObjects() {
+    const toRemove = [];
+    cabinetGroup.children.forEach(child => {
+        if (child.userData && child.userData.isReturnPart) {
+            toRemove.push(child);
+        }
+    });
+    toRemove.forEach(child => {
+        cabinetGroup.remove(child);
+        internalParts = internalParts.filter(p => p !== child && p.userData?.parentGroup !== child);
+        if (child.geometry) child.geometry.dispose();
+    });
+}
+
 function buildShell() {
+    if (currentKitchenLayout === 'straight') removeAllReturnWingObjects();
     deselectObject();
     
     // Remove existing shells, plinths, and decor
@@ -2593,7 +2616,7 @@ function syncShelvesFromCount(module) {
     const innerW = w - (2 * t);
     const innerH = h - (2 * t);
     const shelfDepth = d - 1.0;
-    const shelfColor = 0xdeb887;
+    const shelfColor = COLOR_SHELF;
     const prefix = isWall ? '[Wall]' : '[Base]';
 
     const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
@@ -2627,7 +2650,7 @@ function syncShelvesFromCount(module) {
                 const lipMat = new THREE.MeshPhongMaterial({ color: shelfColor, shininess: 12 });
                 const lipMesh = new THREE.Mesh(lipGeo, lipMat);
                 lipMesh.position.set(0, lipH / 2, shelfDepth / 2 - lipT / 2);
-                lipMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(lipGeo), new THREE.LineBasicMaterial({ color: 0x5c4033 })));
+                lipMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(lipGeo), new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE })));
                 lipMesh.userData = { isSubPart: true };
                 shelf.add(lipMesh);
             }
@@ -2726,7 +2749,7 @@ function syncDividersFromCount(module) {
     
     const innerH = h - (2 * t);
     const divDepth = d - 1.0;
-    const divColor = 0xdeb887;
+    const divColor = COLOR_SHELF;
     const prefix = isWall ? '[Wall]' : '[Base]';
 
     const centerY = isWall ? getWallCenterY() : getBaseCenterY();
@@ -2863,7 +2886,7 @@ function syncShuttersFromSelect(module) {
         const postGeo = new THREE.BoxGeometry(2.0, shutterH, 2.0);
         const postMat = (currentShutterStyle === 'aluminum_glass') 
             ? getAluminumMaterial(currentFrameFinish) 
-            : new THREE.MeshPhongMaterial({ color: 0xcd853f, shininess: 15 });
+            : new THREE.MeshPhongMaterial({ color: COLOR_CARCASS, shininess: 15 });
         const postMesh = new THREE.Mesh(postGeo, postMat);
         postMesh.position.set(Xv + 1.0, centerY, Zv - 1.0);
         postMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(postGeo), new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 2 })));
@@ -2884,7 +2907,7 @@ function syncShuttersFromSelect(module) {
         const postGeo = new THREE.BoxGeometry(2.0, shutterH, 2.0);
         const postMat = (currentShutterStyle === 'aluminum_glass') 
             ? getAluminumMaterial(currentFrameFinish) 
-            : new THREE.MeshPhongMaterial({ color: 0xcd853f, shininess: 15 });
+            : new THREE.MeshPhongMaterial({ color: COLOR_CARCASS, shininess: 15 });
         const postMesh = new THREE.Mesh(postGeo, postMat);
         postMesh.position.set(Xv - 1.0, centerY, Zv - 1.0);
         postMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(postGeo), new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 2 })));
@@ -2951,6 +2974,78 @@ function syncShuttersFromSelect(module) {
         }
 
         curStartX += shutterW + gap;
+    }
+}
+
+
+function updateMenuForPreset(presetKey) {
+    const layoutSec = document.getElementById('cad-kitchen-layout-section');
+    const wallDimCard = document.getElementById('cad-wall-details-card');
+    const wallAccCard = document.getElementById('cad-wall-accordion-card');
+    const dimUnitToggle = document.querySelector('.dim-unit-toggle');
+    const dimTitle = document.querySelector('#cad-dimensions-card .card-title-text');
+    const partTitle = document.querySelector('#cad-partitions-card .card-title-text');
+    const addDrawerBtn = document.getElementById('btn-add-drawer-quick');
+
+    if (presetKey === 'shoe-rack') {
+        // Shoe Rack Mode: Show ONLY Shoe Rack relevant controls!
+        if (layoutSec) layoutSec.style.display = 'none';
+        if (wallDimCard) wallDimCard.style.display = 'none';
+        if (wallAccCard) wallAccCard.style.display = 'none';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'none';
+        if (dimTitle) dimTitle.textContent = 'Shoe Rack Dimensions';
+        if (partTitle) partTitle.textContent = 'Shoe Shelves & Doors';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'none';
+    } else if (presetKey === 'kitchen-set') {
+        // Kitchen Set: Show both Base and Wall, Layout Shapes, etc.
+        if (layoutSec) layoutSec.style.display = 'block';
+        if (wallDimCard) wallDimCard.style.display = 'block';
+        if (wallAccCard) wallAccCard.style.display = 'block';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'flex';
+        if (dimTitle) dimTitle.textContent = 'Dimensions';
+        if (partTitle) partTitle.textContent = 'Partitions & Doors (Base Unit)';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'flex';
+    } else if (presetKey === 'kitchen-base') {
+        if (layoutSec) layoutSec.style.display = 'block';
+        if (wallDimCard) wallDimCard.style.display = 'none';
+        if (wallAccCard) wallAccCard.style.display = 'none';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'none';
+        if (dimTitle) dimTitle.textContent = 'Base Unit Dimensions';
+        if (partTitle) partTitle.textContent = 'Partitions & Doors (Base Unit)';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'flex';
+    } else if (presetKey === 'kitchen-wall') {
+        if (layoutSec) layoutSec.style.display = 'block';
+        if (wallDimCard) wallDimCard.style.display = 'block';
+        if (wallAccCard) wallAccCard.style.display = 'block';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'none';
+        if (dimTitle) dimTitle.textContent = 'Wall Unit Dimensions';
+        if (partTitle) partTitle.textContent = 'Partitions & Doors (Wall Unit)';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'none';
+    } else if (presetKey === 'wardrobe') {
+        if (layoutSec) layoutSec.style.display = 'none';
+        if (wallDimCard) wallDimCard.style.display = 'none';
+        if (wallAccCard) wallAccCard.style.display = 'none';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'none';
+        if (dimTitle) dimTitle.textContent = 'Wardrobe Dimensions';
+        if (partTitle) partTitle.textContent = 'Wardrobe Partitions & Doors';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'flex';
+    } else if (presetKey === 'tv-console') {
+        if (layoutSec) layoutSec.style.display = 'none';
+        if (wallDimCard) wallDimCard.style.display = 'none';
+        if (wallAccCard) wallAccCard.style.display = 'none';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'none';
+        if (dimTitle) dimTitle.textContent = 'Console Dimensions';
+        if (partTitle) partTitle.textContent = 'Console Partitions & Doors';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'flex';
+    } else {
+        // Custom
+        if (layoutSec) layoutSec.style.display = 'block';
+        if (wallDimCard) wallDimCard.style.display = 'block';
+        if (wallAccCard) wallAccCard.style.display = 'block';
+        if (dimUnitToggle) dimUnitToggle.style.display = 'flex';
+        if (dimTitle) dimTitle.textContent = 'Dimensions';
+        if (partTitle) partTitle.textContent = 'Partitions & Doors (Base Unit)';
+        if (addDrawerBtn) addDrawerBtn.style.display = 'flex';
     }
 }
 
@@ -3050,6 +3145,17 @@ function applyPreset(presetKey) {
     }
 
     setKitchenMode(preset.mode || 'both');
+    updateMenuForPreset(presetKey);
+
+    if (presetKey !== 'kitchen-set') {
+        currentKitchenLayout = 'straight';
+        removeAllReturnWingObjects();
+    }
+
+    updateDimensionsFromInputs();
+    buildShell();
+    syncPartitionsAndDoors();
+    updateCameraFraming();
 }
 
 function setupCADListeners() {
@@ -3428,10 +3534,10 @@ function createDrawerMeshGroup(drawerW, drawerH, drawerD, posX, posY, posZ, labe
     const group = new THREE.Group();
     const dInnerW = Math.max(0.5, drawerW - (2 * t));
     const dInnerD = Math.max(0.5, drawerD - (2 * t));
-    const colorHex = 0xdeb887;
+    const colorHex = COLOR_DRAWER;
 
     const material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
 
     const makeSubPanel = (w, h, d, px, py, pz, label) => {
         const geo = new THREE.BoxGeometry(w, h, d);
@@ -3550,10 +3656,10 @@ function rebuildDrawerGroup(group, drawerW, drawerH, drawerD, posX, posY, posZ, 
     const t = currentThickness;
     const dInnerW = Math.max(0.5, drawerW - (2 * t));
     const dInnerD = Math.max(0.5, drawerD - (2 * t));
-    const colorHex = 0xdeb887;
+    const colorHex = COLOR_DRAWER;
 
     const material = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 10 });
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
 
     const makeSubPanel = (w, h, d, px, py, pz, label) => {
         const geo = new THREE.BoxGeometry(w, h, d);
