@@ -1,9 +1,9 @@
 // Defined Carcass & Shutter Color Palette
-let COLOR_CARCASS = 0x2b3038;       // Contrasting dark slate/charcoal carcass (NOT orange or green)
+let COLOR_CARCASS = 0xd1d5db;       // Clean light gray interior carcass (industry standard)
 let COLOR_SHUTTER = 0x7f92a3;       // Solid pastel shade: refined Nordic dusty blue (different from carcass)
-let COLOR_SHELF = 0xd5cabb;         // Solid pastel shade: warm cashmere oatmeal for interior shelves & dividers
-let COLOR_DRAWER = 0x383e47;        // Drawer box ply color
-let COLOR_EDGE_LINE = 0x525c6a;     // Crisp modern edge outline
+let COLOR_SHELF = 0xd1d5db;         // Clean light gray interior shelves & dividers so they look like shelves
+let COLOR_DRAWER = 0xd1d5db;        // Light gray drawer box ply color
+let COLOR_EDGE_LINE = 0x64748b;     // Defined contrasting edge outline
 
 let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
 let perspectiveCamera, orthoCamera;
@@ -902,9 +902,9 @@ function deleteSelectedPart() {
 
 function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight) {
     const isShutter = (type === 'shutter' || type === 'return_shutter');
-    const ply = new THREE.MeshPhongMaterial({ color: (isShutter ? COLOR_SHUTTER : COLOR_SHELF), shininess: 14 });
-    const liner = new THREE.MeshPhongMaterial({ color: (isShutter ? COLOR_SHUTTER : 0x383e47), shininess: 15 });
-    const edgeBand = new THREE.MeshPhongMaterial({ color: 0x475569, shininess: 15 });
+    const color = isShutter ? COLOR_SHUTTER : COLOR_SHELF;
+    const ply = new THREE.MeshPhongMaterial({ color: color, shininess: 12 });
+    const edgeBand = new THREE.MeshPhongMaterial({ color: isShutter ? 0x475569 : 0x9ca3af, shininess: 15 });
     
     const materials = [
         ply.clone(), ply.clone(), ply.clone(), 
@@ -916,35 +916,34 @@ function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight)
         const faceIdx = isRight ? 1 : 0;
         const insideIdx = isRight ? 0 : 1;
         materials[faceIdx] = ply.clone();
-        materials[insideIdx] = (laminateConfig === 'double') ? ply.clone() : liner.clone();
+        materials[insideIdx] = ply.clone();
         if (edgeConfig === 'all' || edgeConfig === 'front') {
             materials[2] = edgeBand.clone();
             materials[3] = edgeBand.clone();
             materials[4] = edgeBand.clone();
             materials[5] = edgeBand.clone();
         }
-    } else {
-        if (laminateConfig === 'double') {
-            if (type === 'shelf') { materials[2] = liner.clone(); materials[3] = liner.clone(); }
-            else if (type === 'divider') { materials[0] = liner.clone(); materials[1] = liner.clone(); }
-            else if (type === 'shutter') { materials[4] = ply.clone(); materials[5] = ply.clone(); }
-        } else if (laminateConfig === 'single') {
-            if (type === 'shelf') { materials[2] = liner.clone(); }
-            else if (type === 'divider') { materials[1] = liner.clone(); }
-            else if (type === 'shutter') { materials[4] = ply.clone(); materials[5] = liner.clone(); }
-        }
-        
+    } else if (type === 'shutter') {
+        materials[4] = ply.clone(); // front face
+        materials[5] = ply.clone(); // inside face
         if (edgeConfig === 'front') {
-            if (type === 'shutter') materials[0] = edgeBand.clone();
-            else materials[4] = edgeBand.clone();
+            materials[0] = edgeBand.clone();
         } else if (edgeConfig === 'all') {
-            if (type === 'shelf') {
-                materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
-            } else if (type === 'divider') {
-                materials[2] = edgeBand.clone(); materials[3] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
-            } else if (type === 'shutter') {
-                materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[2] = edgeBand.clone(); materials[3] = edgeBand.clone();
-            }
+            materials[0] = edgeBand.clone();
+            materials[1] = edgeBand.clone();
+            materials[2] = edgeBand.clone();
+            materials[3] = edgeBand.clone();
+        }
+    } else {
+        // Shelf or Divider: uniformly light gray on all 6 faces (top, bottom, left, right, front, back)
+        materials[0] = ply.clone();
+        materials[1] = ply.clone();
+        materials[2] = ply.clone();
+        materials[3] = ply.clone();
+        materials[4] = ply.clone();
+        materials[5] = ply.clone();
+        if (edgeConfig === 'front') {
+            if (type === 'shelf') materials[4] = edgeBand.clone();
         }
     }
     
@@ -1403,6 +1402,7 @@ function setShutterColor(colorHex, badgeName) {
 
 function setCarcassColor(colorHex, badgeName) {
     COLOR_CARCASS = colorHex;
+    COLOR_SHELF = colorHex;
     document.querySelectorAll('.carcass-color-pill').forEach(b => {
         b.classList.toggle('active', parseInt(b.dataset.color, 16) === colorHex);
     });
