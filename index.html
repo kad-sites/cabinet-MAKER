@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=32">
+    <link rel="stylesheet" href="style.css?v=33">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -590,6 +590,30 @@
                                         <span class="dim-subtext">Pivoting track</span>
                                     </div>
                                 </div>
+
+                                <!-- Dedicated Tilt-Open in Circular Way Button & Arc Slider (Shoe Rack Only) -->
+                                <div class="flip-open-control-card" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.28); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span class="dim-col-label" style="margin-bottom: 0;">CIRCULAR ARC OPENING</span>
+                                        <span class="badge-gold-pill" id="badge-flip-arc-angle">0° (CLOSED)</span>
+                                    </div>
+                                    <button type="button" id="btn-flip-shoe-open-toggle" class="btn-flip-hopper-action" title="Open or close shoe rack hoppers along a circular pivot arc">
+                                        <svg class="spin-arc-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                                        </svg>
+                                        <span id="btn-flip-shoe-open-text">🔄 Tilt Open Hoppers (Circular Arc)</span>
+                                    </button>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 6px;">
+                                        <span style="font-size: 11px; color: #94a3b8; font-weight: 500;">0°</span>
+                                        <input type="range" id="cad-flip-arc-range" min="0" max="52" value="0" step="1" style="flex: 1; accent-color: #38bdf8; cursor: pointer;">
+                                        <span style="font-size: 11px; color: #94a3b8; font-weight: 500;">52°</span>
+                                    </div>
+                                    <div class="arc-quick-pills" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+                                        <button type="button" class="flip-arc-btn shelf-pill active" data-arc="0">0° Closed</button>
+                                        <button type="button" class="flip-arc-btn shelf-pill" data-arc="26">26° Half</button>
+                                        <button type="button" class="flip-arc-btn shelf-pill" data-arc="50">50° Full Arc</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -859,6 +883,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=32"></script>
+    <script src="3d.js?v=33"></script>
 </body>
 </html>

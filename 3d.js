@@ -35,6 +35,8 @@ let currentShelfAngle = 25; // 20, 25, 30 degrees
 let currentFlipTiers = 2; // 1, 2 (double shoe), 3 tiers
 let currentFlipFlaps = 3; // 2, 3, 4 tilt-out hopper rows
 let currentFlipBracket = 'sector_black'; // 'sector_black', 'sector_white'
+let currentFlipArcDeg = 0; // 0° to 52° circular arc opening angle (Shoe Rack only)
+let flipArcAnimId = null;
 
 // Shutter Door & Glass Studio State
 let currentShutterStyle = 'solid'; // 'solid', 'plywood_glass', 'aluminum_glass'
@@ -207,6 +209,8 @@ function init3D() {
     window.setViewMode = setViewMode;
     window.toggleShutters = toggleShutters;
     window.buildFlipShoeDrawers = buildFlipShoeDrawers;
+    window.setFlipHopperArc = setFlipHopperArc;
+    Object.defineProperty(window, 'currentFlipArcDeg', { get: () => currentFlipArcDeg, configurable: true });
 
     animate();
 }
@@ -1693,10 +1697,10 @@ const CABINET_PRESETS = {
         shelves: 4,
         dividers: 0,
         shutters: '2',
-        shelfStyle: 'slanted',
+        shelfStyle: 'flip',
         shelfAngle: 25,
         shutterStyle: 'plywood_glass',
-        glassType: 'frosted',
+        glassType: 'clear',
         wallHIn: 30,
         wallWFt: 3,
         wallDFt: 1,
@@ -2959,16 +2963,19 @@ function cleanupFlipDrawers() {
 function buildFlipShoeDrawers() {
     cleanupFlipDrawers();
 
-    // Remove any standard shutters on base module
-    const oldShutters = [];
+    // Remove any standard shutters and auto hinge partitions on base module
+    const oldParts = [];
     cabinetGroup.children.forEach(c => {
-        if (c.userData && c.userData.module === 'base' && c.userData.type === 'shutter') {
-            oldShutters.push(c);
+        if (c.userData && c.userData.module === 'base') {
+            if (c.userData.type === 'shutter' || c.userData.isAutoHingePartition) {
+                oldParts.push(c);
+            }
         }
     });
-    oldShutters.forEach(c => {
+    oldParts.forEach(c => {
         cabinetGroup.remove(c);
         internalParts = internalParts.filter(p => p !== c && p.userData?.parentGroup !== c);
+        if (c.geometry) c.geometry.dispose();
     });
 
     const t = currentThickness;
@@ -2995,6 +3002,7 @@ function buildFlipShoeDrawers() {
     const shelfMat = new THREE.MeshPhongMaterial({ color: COLOR_SHELF, shininess: 12 });
     const shelfEdgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 1.5 });
     const flapEdgeMat = new THREE.LineBasicMaterial({ color: COLOR_EDGE_LINE, linewidth: 2 });
+    const metalEdgeMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 1.5 });
     const handleMat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, shininess: 120, specular: 0xffffff });
 
     for (let b = 0; b < layout.numBays; b++) {
@@ -3013,106 +3021,219 @@ function buildFlipShoeDrawers() {
             // Relatives to pivot origin (0, 0, 0):
             const relFlapY = flapCenterY - pivotY;
             const relFlapZ = frontZ - pivotZ;
+            const flapInsideZ = relFlapZ - shutterD / 2;
 
-            // 1. Front Shutter Flap Panel (Soft yellowish cream COLOR_SHUTTER)
-            const flapGeo = new THREE.BoxGeometry(bayW, flapH, shutterD);
-            const flapMesh = new THREE.Mesh(flapGeo);
-            flapMesh.userData = { isSubPart: true, w: bayW, h: flapH, d: shutterD, type: 'shutter' };
-            applyLaminateMaterials(flapMesh, 'shutter', 'single', 'all');
-            flapMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(flapGeo), flapEdgeMat));
-            flapMesh.position.set(0, relFlapY, relFlapZ);
-            flapGroup.add(flapMesh);
+            // 1. Front Shutter Flap Panel: Transparent with 2" Border / Aluminum Profile / Solid
+            if (currentShutterStyle === 'plywood_glass') {
+                // 2" Plywood Perimeter Frame + Transparent Glass Pane
+                const frameW = 2.0; // 2 inches border on all 4 sides
+                const innerW = Math.max(0.5, bayW - 2 * frameW);
+                const innerH = Math.max(0.5, flapH - 2 * frameW);
+                const frameMat = new THREE.MeshPhongMaterial({ color: COLOR_SHUTTER, shininess: 14 });
 
-            // Modern Finger Pull / Sleek Handle on top edge of flap
+                const makeFramePiece = (pw, ph, pd, px, py, pz) => {
+                    const geo = new THREE.BoxGeometry(pw, ph, pd);
+                    const mesh = new THREE.Mesh(geo, frameMat);
+                    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), flapEdgeMat));
+                    mesh.position.set(px, py, pz);
+                    mesh.userData = { isSubPart: true, type: 'shutter' };
+                    flapGroup.add(mesh);
+                };
+
+                // Left stile (2" wide, full flap height)
+                makeFramePiece(frameW, flapH, shutterD, -bayW / 2 + frameW / 2, relFlapY, relFlapZ);
+                // Right stile (2" wide, full flap height)
+                makeFramePiece(frameW, flapH, shutterD, bayW / 2 - frameW / 2, relFlapY, relFlapZ);
+                // Top rail (2" high, fits between stiles)
+                makeFramePiece(innerW, frameW, shutterD, 0, relFlapY + flapH / 2 - frameW / 2, relFlapZ);
+                // Bottom rail (2" high, fits between stiles)
+                makeFramePiece(innerW, frameW, shutterD, 0, relFlapY - flapH / 2 + frameW / 2, relFlapZ);
+
+                // Center Glass Pane (Transparent so user can see inside carpentry & hardware!)
+                const glassW = innerW + 0.6;
+                const glassH = innerH + 0.6;
+                const glassD = 0.1875;
+                const glassGeo = new THREE.BoxGeometry(glassW, glassH, glassD);
+                const glassMat = getGlassMaterial(currentGlassType || 'clear');
+                const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+                glassMesh.position.set(0, relFlapY, relFlapZ - shutterD / 2 + glassD / 2 + 0.05);
+                glassMesh.userData = { isSubPart: true, isGlassPane: true, glassType: currentGlassType || 'clear' };
+                flapGroup.add(glassMesh);
+
+                // Rear Glass Retaining Brackets (metallic clips on inside frame)
+                const clipMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 80 });
+                const clipGeo = new THREE.BoxGeometry(0.5, 0.28, 0.1);
+                [
+                    [-innerW / 2 + 0.1, relFlapY + innerH / 3, relFlapZ - shutterD / 2 - 0.04],
+                    [-innerW / 2 + 0.1, relFlapY - innerH / 3, relFlapZ - shutterD / 2 - 0.04],
+                    [innerW / 2 - 0.1, relFlapY + innerH / 3, relFlapZ - shutterD / 2 - 0.04],
+                    [innerW / 2 - 0.1, relFlapY - innerH / 3, relFlapZ - shutterD / 2 - 0.04]
+                ].forEach(pos => {
+                    const clip = new THREE.Mesh(clipGeo, clipMat);
+                    clip.position.set(pos[0], pos[1], pos[2]);
+                    clip.userData = { isSubPart: true, type: 'bracket' };
+                    flapGroup.add(clip);
+                });
+
+            } else if (currentShutterStyle === 'aluminum_glass') {
+                // Slim 1.2" Aluminum Profile + Transparent Glass Pane
+                const frameW = 1.2;
+                const innerW = Math.max(0.5, bayW - 2 * frameW);
+                const innerH = Math.max(0.5, flapH - 2 * frameW);
+                const aluMat = getAluminumMaterial(currentFrameFinish);
+
+                const makeAluPiece = (pw, ph, pd, px, py, pz) => {
+                    const geo = new THREE.BoxGeometry(pw, ph, pd);
+                    const mesh = new THREE.Mesh(geo, aluMat);
+                    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), metalEdgeMat));
+                    mesh.position.set(px, py, pz);
+                    mesh.userData = { isSubPart: true, type: 'shutter' };
+                    flapGroup.add(mesh);
+                };
+
+                makeAluPiece(frameW, flapH, shutterD, -bayW / 2 + frameW / 2, relFlapY, relFlapZ);
+                makeAluPiece(frameW, flapH, shutterD, bayW / 2 - frameW / 2, relFlapY, relFlapZ);
+                makeAluPiece(innerW, frameW, shutterD, 0, relFlapY + flapH / 2 - frameW / 2, relFlapZ);
+                makeAluPiece(innerW, frameW, shutterD, 0, relFlapY - flapH / 2 + frameW / 2, relFlapZ);
+
+                const glassW = innerW + 0.4;
+                const glassH = innerH + 0.4;
+                const glassD = 0.1875;
+                const glassGeo = new THREE.BoxGeometry(glassW, glassH, glassD);
+                const glassMat = getGlassMaterial(currentGlassType || 'clear');
+                const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+                glassMesh.position.set(0, relFlapY, relFlapZ);
+                glassMesh.userData = { isSubPart: true, isGlassPane: true, glassType: currentGlassType || 'clear' };
+                flapGroup.add(glassMesh);
+
+            } else {
+                // Solid Plywood Shutter Flap Panel
+                const flapGeo = new THREE.BoxGeometry(bayW, flapH, shutterD);
+                const flapMesh = new THREE.Mesh(flapGeo);
+                flapMesh.userData = { isSubPart: true, w: bayW, h: flapH, d: shutterD, type: 'shutter' };
+                applyLaminateMaterials(flapMesh, 'shutter', 'single', 'all');
+                flapMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(flapGeo), flapEdgeMat));
+                flapMesh.position.set(0, relFlapY, relFlapZ);
+                flapGroup.add(flapMesh);
+            }
+
+            // Finger Pull / Sleek Handle on upper edge of flap
             const handleW = Math.min(6.0, bayW * 0.35);
-            const handleGeo = new THREE.BoxGeometry(handleW, 0.4, 0.55);
+            const handleGeo = new THREE.BoxGeometry(handleW, 0.38, 0.52);
             const handleMesh = new THREE.Mesh(handleGeo, handleMat);
-            handleMesh.position.set(0, relFlapY + (flapH / 2) - 1.2, relFlapZ + (shutterD / 2) + 0.28);
+            handleMesh.position.set(0, relFlapY + (flapH / 2) - 1.1, relFlapZ + (shutterD / 2) + 0.26);
             handleMesh.userData = { isSubPart: true };
             flapGroup.add(handleMesh);
 
-            // 2. Left & Right Quarter-Circle Sector Brackets with curved tracks & pivot hub
-            [-innerBayW / 2 - 0.2, innerBayW / 2 + 0.2].forEach((bracketX, sIdx) => {
+            // 2. Left & Right Angular Pivot Sector Brackets with curved tracks & pivot hub
+            // (Strictly behind inside face of flap: max Z = flapInsideZ - 0.05)
+            const botShelfD = Math.min(d * 0.55, 8.5);
+            const frontArmLen = Math.min(flapH * 0.70, 9.5);
+            const botArmLen = Math.min(d * 0.52, 7.8);
+            const frontArmZ = flapInsideZ - 0.18; // strictly behind inside flap face!
+
+            [-innerBayW / 2 + 0.15, innerBayW / 2 - 0.15].forEach((bracketX, sIdx) => {
                 const bSideGroup = new THREE.Group();
                 bSideGroup.position.set(bracketX, 0, 0);
 
-                // Pivot Hub Pin
-                const hubGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 16);
-                hubGeo.rotateZ(Math.PI / 2);
-                const hubMesh = new THREE.Mesh(hubGeo, bracketMat);
-                bSideGroup.add(hubMesh);
+                // Pivot Hub Pin (entering carcass sidewall hole)
+                const pinGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.30, 16);
+                pinGeo.rotateZ(Math.PI / 2);
+                const pinMesh = new THREE.Mesh(pinGeo, bracketMat);
+                pinMesh.position.set(sIdx === 0 ? -0.1 : 0.1, 0, 0);
+                bSideGroup.add(pinMesh);
 
-                // Front arm attached to flap
-                const frontArmLen = Math.min(flapH * 0.7, 10.0);
-                const armGeo = new THREE.BoxGeometry(0.15, frontArmLen, 0.6);
+                // Front arm attached to inside of flap
+                const armGeo = new THREE.BoxGeometry(0.12, frontArmLen, 0.32);
                 const armMesh = new THREE.Mesh(armGeo, bracketMat);
-                armMesh.position.set(0, frontArmLen / 2, relFlapZ - 0.4);
+                armMesh.position.set(0, frontArmLen / 2, frontArmZ);
                 bSideGroup.add(armMesh);
 
                 // Bottom arm along hopper depth
-                const botArmLen = Math.min(d * 0.55, 9.5);
-                const botArmGeo = new THREE.BoxGeometry(0.15, 0.5, botArmLen);
+                const botArmGeo = new THREE.BoxGeometry(0.12, 0.45, botArmLen);
                 const botArmMesh = new THREE.Mesh(botArmGeo, bracketMat);
-                botArmMesh.position.set(0, -0.1, -botArmLen / 2 + 0.4);
+                botArmMesh.position.set(0, 0.15, -botArmLen / 2 + 0.2);
                 bSideGroup.add(botArmMesh);
 
-                // Curved quarter-circle sector stop arc
-                const arcShape = new THREE.Shape();
-                arcShape.moveTo(0, 0);
-                arcShape.lineTo(0, frontArmLen * 0.6);
-                arcShape.quadraticCurveTo(relFlapZ * 0.45, frontArmLen * 0.35, -botArmLen * 0.55, 0);
-                arcShape.closePath();
-                const arcGeo = new THREE.ExtrudeGeometry(arcShape, { depth: 0.12, bevelEnabled: false });
-                arcGeo.rotateY(sIdx === 0 ? Math.PI / 2 : -Math.PI / 2);
+                // Quarter-circle sector stop arc plate (Extruded in Z-Y plane)
+                const shape = new THREE.Shape();
+                const zRear = -botArmLen + 0.4;
+                const yTop = frontArmLen * 0.85;
+
+                shape.moveTo(0, 0);
+                shape.lineTo(frontArmZ * 0.6, 0.15);
+                shape.lineTo(frontArmZ, yTop * 0.35);
+                shape.lineTo(frontArmZ, yTop);
+                // Curve strictly bowing backward into cabinet
+                shape.quadraticCurveTo((frontArmZ + zRear) * 0.35, yTop * 0.65, zRear, 0.35);
+                shape.lineTo(0, 0.1);
+                shape.closePath();
+
+                const extrudeThick = 0.10;
+                const arcGeo = new THREE.ExtrudeGeometry(shape, { depth: extrudeThick, bevelEnabled: false });
+                const pos = arcGeo.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                    const u = pos.getX(i); // u is local Z
+                    const v = pos.getY(i); // v is local Y
+                    const w = pos.getZ(i); // w is local X
+                    pos.setXYZ(i, w - extrudeThick / 2, v, u);
+                }
+                arcGeo.computeVertexNormals();
+
                 const arcMesh = new THREE.Mesh(arcGeo, bracketMat);
-                arcMesh.position.set(0, 0, 0);
                 bSideGroup.add(arcMesh);
+
+                // Guide Pin / Limit Stopper
+                const pinAccentGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.18, 12);
+                pinAccentGeo.rotateZ(Math.PI / 2);
+                const pinAccentMesh = new THREE.Mesh(pinAccentGeo, new THREE.MeshPhongMaterial({ color: 0x94a3b8, shininess: 100 }));
+                pinAccentMesh.position.set(0, yTop * 0.45, (frontArmZ + zRear) * 0.25);
+                bSideGroup.add(pinAccentMesh);
 
                 flapGroup.add(bSideGroup);
             });
 
-            // 3. Bottom Shoe Sole Shelf (Base resting plate)
-            const botShelfD = Math.min(d * 0.55, 8.5);
-            const botShelfGeo = new THREE.BoxGeometry(innerBayW, 0.45, botShelfD);
+            // 3. Bottom Shoe Sole Shelf (0.75" Commercial Plywood Plate)
+            const botShelfGeo = new THREE.BoxGeometry(innerBayW, 0.75, botShelfD);
             const botShelfMesh = new THREE.Mesh(botShelfGeo, shelfMat);
             botShelfMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(botShelfGeo), shelfEdgeMat));
-            botShelfMesh.position.set(0, 0.2, -botShelfD / 2 + 0.3);
-            botShelfMesh.userData = { isSubPart: true, label: `Hopper Base Shelf` };
+            botShelfMesh.position.set(0, 0.25, -botShelfD / 2 + 0.3);
+            botShelfMesh.userData = { isSubPart: true, label: `Hopper Bottom Plywood Shelf` };
             flapGroup.add(botShelfMesh);
 
             // 4. Angular Partition Plates ("Double Shoe" central angled plate / 3-tier dividers)
             if (currentFlipTiers === 1) {
-                // Single Tier: Rear retaining back stop rail
-                const stopGeo = new THREE.BoxGeometry(innerBayW, 2.5, 0.4);
+                // Single Tier: Rear retaining back stop rail (0.5" Plywood)
+                const stopGeo = new THREE.BoxGeometry(innerBayW, 2.5, 0.5);
                 const stopMesh = new THREE.Mesh(stopGeo, shelfMat);
                 stopMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(stopGeo), shelfEdgeMat));
                 stopMesh.position.set(0, 1.4, -botShelfD + 0.5);
                 stopMesh.userData = { isSubPart: true, label: `Shoe Retaining Rail` };
                 flapGroup.add(stopMesh);
             } else if (currentFlipTiers === 2) {
-                // 2 Tiers (Double Shoe): Central Angular Plate dividing front & rear shoe rows!
+                // 2 Tiers (Double Shoe): Central Angular Plywood Plate dividing front & rear shoe rows!
                 const plateLen = Math.min(flapH * 0.72, 10.5);
-                const plateGeo = new THREE.BoxGeometry(innerBayW, plateLen, 0.45);
+                const plateGeo = new THREE.BoxGeometry(innerBayW, plateLen, 0.5);
                 const plateMesh = new THREE.Mesh(plateGeo, shelfMat);
                 plateMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(plateGeo), shelfEdgeMat));
                 // Angled backward at ~35° from vertical
                 plateMesh.rotation.x = -Math.PI * 0.19;
                 plateMesh.position.set(0, (plateLen / 2) * Math.cos(Math.PI * 0.19) * 0.8, -botShelfD * 0.35);
-                plateMesh.userData = { isSubPart: true, label: `Double Shoe Central Angular Plate` };
+                plateMesh.userData = { isSubPart: true, label: `Double Shoe Central Angular Plywood Plate` };
                 flapGroup.add(plateMesh);
 
-                // Rear upper heel stop
-                const stopGeo = new THREE.BoxGeometry(innerBayW, 2.0, 0.4);
+                // Rear upper heel stop rail (0.5" Plywood)
+                const stopGeo = new THREE.BoxGeometry(innerBayW, 2.2, 0.5);
                 const stopMesh = new THREE.Mesh(stopGeo, shelfMat);
                 stopMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(stopGeo), shelfEdgeMat));
-                stopMesh.position.set(0, 1.2, -botShelfD + 0.5);
+                stopMesh.position.set(0, 1.3, -botShelfD + 0.5);
                 stopMesh.userData = { isSubPart: true, label: `Rear Shoe Retaining Rail` };
                 flapGroup.add(stopMesh);
             } else if (currentFlipTiers === 3) {
-                // 3 Tiers: Two angular plates dividing into 3 tiers
+                // 3 Tiers: Two angular plywood plates dividing into 3 tiers
                 for (let p = 0; p < 2; p++) {
                     const plateLen = Math.min(flapH * 0.68, 9.8);
-                    const plateGeo = new THREE.BoxGeometry(innerBayW, plateLen, 0.4);
+                    const plateGeo = new THREE.BoxGeometry(innerBayW, plateLen, 0.45);
                     const plateMesh = new THREE.Mesh(plateGeo, shelfMat);
                     plateMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(plateGeo), shelfEdgeMat));
                     plateMesh.rotation.x = -Math.PI * (0.16 + p * 0.08);
@@ -3167,21 +3288,101 @@ function buildFlipShoeDrawers() {
                 h: flapH,
                 d: shutterD,
                 closedRotationX: 0,
-                openRotationX: Math.PI * 0.28
+                openRotationX: THREE.MathUtils.degToRad(50)
             };
 
-            if (shuttersOpen) {
-                flapGroup.rotation.x = flapGroup.userData.openRotationX;
-                flapGroup.layers.set(1);
-            } else {
-                flapGroup.rotation.x = 0;
-                flapGroup.layers.set(0);
-            }
+            const initialArcRad = THREE.MathUtils.degToRad(currentFlipArcDeg);
+            flapGroup.rotation.x = initialArcRad;
+            flapGroup.layers.set(currentFlipArcDeg > 0 ? 1 : 0);
 
             cabinetGroup.add(flapGroup);
             internalParts.push(hitBox);
         }
     }
+}
+
+function applyFlipArcToMeshes(deg) {
+    const rad = THREE.MathUtils.degToRad(deg);
+    cabinetGroup.children.forEach(child => {
+        if (child.userData && child.userData.type === 'shutter' && child.userData.isFlipDrawer) {
+            child.rotation.x = rad;
+            child.layers.set(deg > 0 ? 1 : 0);
+        }
+    });
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
+}
+
+function setFlipHopperArc(targetDeg, animate = true) {
+    const clamped = Math.max(0, Math.min(52, parseFloat(targetDeg) || 0));
+    
+    // Update Shoe Rack Circular Arc opening controls
+    const rangeInput = document.getElementById('cad-flip-arc-range');
+    const badge = document.getElementById('badge-flip-arc-angle');
+    const toggleBtn = document.getElementById('btn-flip-shoe-open-toggle');
+    const toggleText = document.getElementById('btn-flip-shoe-open-text');
+
+    if (rangeInput) rangeInput.value = clamped;
+    if (badge) {
+        const rounded = Math.round(clamped);
+        badge.textContent = rounded === 0 ? '0° (CLOSED)' : (rounded >= 48 ? `${rounded}° (FULL ARC)` : `${rounded}° (OPEN)`);
+    }
+    if (toggleBtn) {
+        toggleBtn.classList.toggle('active', clamped > 5);
+    }
+    if (toggleText) {
+        toggleText.textContent = clamped > 5 ? '✕ Close Hoppers (Circular Arc)' : '🔄 Tilt Open Hoppers (Circular Arc)';
+    }
+
+    document.querySelectorAll('.flip-arc-btn').forEach(btn => {
+        const arcVal = parseFloat(btn.dataset.arc);
+        btn.classList.toggle('active', Math.abs(arcVal - clamped) < 5);
+    });
+
+    if (!animate) {
+        if (flipArcAnimId) {
+            cancelAnimationFrame(flipArcAnimId);
+            flipArcAnimId = null;
+        }
+        currentFlipArcDeg = clamped;
+        applyFlipArcToMeshes(clamped);
+        return;
+    }
+
+    if (flipArcAnimId) {
+        cancelAnimationFrame(flipArcAnimId);
+        flipArcAnimId = null;
+    }
+
+    const startDeg = currentFlipArcDeg;
+    const deltaDeg = clamped - startDeg;
+    if (Math.abs(deltaDeg) < 0.1) {
+        currentFlipArcDeg = clamped;
+        applyFlipArcToMeshes(clamped);
+        return;
+    }
+
+    const duration = 320; // 320ms smooth arc animation
+    const startTime = performance.now();
+
+    function stepArc(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1.0, elapsed / duration);
+        const ease = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+        const deg = startDeg + deltaDeg * ease;
+        currentFlipArcDeg = deg;
+        applyFlipArcToMeshes(deg);
+
+        if (progress < 1.0) {
+            flipArcAnimId = requestAnimationFrame(stepArc);
+        } else {
+            currentFlipArcDeg = clamped;
+            applyFlipArcToMeshes(clamped);
+            flipArcAnimId = null;
+        }
+    }
+    flipArcAnimId = requestAnimationFrame(stepArc);
 }
 
 function syncShuttersFromSelect(module) {
@@ -3427,6 +3628,11 @@ function updateMenuForPreset(presetKey) {
         if (dimTitle) dimTitle.textContent = 'Dimensions';
         if (partTitle) partTitle.textContent = 'Partitions & Doors (Base Unit)';
         if (addDrawerBtn) addDrawerBtn.style.display = 'flex';
+    }
+
+    const flipWrap = document.getElementById('cad-flip-shoe-wrap');
+    if (flipWrap) {
+        flipWrap.style.display = (presetKey === 'shoe-rack' && currentShelfStyle === 'flip') ? 'block' : 'none';
     }
 }
 
@@ -3766,6 +3972,29 @@ function setupCADListeners() {
             }
         });
     }
+
+    // Dedicated Circular Arc Opening Controls (Shoe Rack Only)
+    const btnFlipOpen = document.getElementById('btn-flip-shoe-open-toggle');
+    if (btnFlipOpen) {
+        btnFlipOpen.addEventListener('click', () => {
+            const nextArc = currentFlipArcDeg > 5 ? 0 : 50;
+            setFlipHopperArc(nextArc, true);
+        });
+    }
+
+    const flipArcRange = document.getElementById('cad-flip-arc-range');
+    if (flipArcRange) {
+        flipArcRange.addEventListener('input', () => {
+            setFlipHopperArc(parseFloat(flipArcRange.value), false);
+        });
+    }
+
+    document.querySelectorAll('.flip-arc-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const arc = parseFloat(btn.dataset.arc) || 0;
+            setFlipHopperArc(arc, true);
+        });
+    });
 
     // Shutter Style Pills (Solid Ply, 2" Ply Frame + Glass, Aluminum Profile + Glass)
     document.querySelectorAll('.shutter-type-pill').forEach(btn => {
@@ -4416,6 +4645,19 @@ function addDrawer(sizeType) {
 }
 
 function toggleShutters() {
+    if (currentShelfStyle === 'flip') {
+        const nextArc = currentFlipArcDeg > 5 ? 0 : 50;
+        setFlipHopperArc(nextArc, true);
+        shuttersOpen = (nextArc > 5);
+        const btn = document.getElementById('btn-toggle-shutters');
+        if (btn) {
+            btn.classList.toggle('active', shuttersOpen);
+            const span = btn.querySelector('span');
+            if (span) span.textContent = shuttersOpen ? 'Close Doors' : 'Toggle Doors';
+        }
+        return;
+    }
+
     shuttersOpen = !shuttersOpen;
     const btn = document.getElementById('btn-toggle-shutters');
     if (btn) {
