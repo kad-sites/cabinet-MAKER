@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=36">
+    <link rel="stylesheet" href="style.css?v=37">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -710,6 +710,58 @@
                                     <span class="swatch-name">Aluminum Profile + Glass</span>
                                 </button>
                             </div>
+ 
+                            <!-- Shutter Solid Pastel Shades (Visible for Solid Wood/Ply and 2" Ply Frame) -->
+                            <div id="cad-shutter-color-section" class="studio-suboptions">
+                                <div class="suboption-header">
+                                    <span class="suboption-label">OUTER SHUTTER SHADE</span>
+                                    <span id="cad-shutter-color-badge" class="badge-cyan-pill">Nordic Blue</span>
+                                </div>
+                                <div class="studio-color-grid">
+                                    <button type="button" class="color-swatch-pill shutter-color-pill active" data-color="7f92a3" title="Nordic Dusty Blue Pastel">
+                                        <span class="color-swatch-dot" style="background: #7f92a3;"></span>
+                                        <span>Nordic Blue</span>
+                                    </button>
+                                    <button type="button" class="color-swatch-pill shutter-color-pill" data-color="cfc5b4" title="Warm Cashmere Greige Pastel">
+                                        <span class="color-swatch-dot" style="background: #cfc5b4;"></span>
+                                        <span>Cashmere</span>
+                                    </button>
+                                    <button type="button" class="color-swatch-pill shutter-color-pill" data-color="9f8f96" title="Dusty Mauve Taupe Pastel">
+                                        <span class="color-swatch-dot" style="background: #9f8f96;"></span>
+                                        <span>Dusty Mauve</span>
+                                    </button>
+                                    <button type="button" class="color-swatch-pill shutter-color-pill" data-color="54606e" title="Mineral Slate Pastel">
+                                        <span class="color-swatch-dot" style="background: #54606e;"></span>
+                                        <span>Mineral Slate</span>
+                                    </button>
+                                    <button type="button" class="color-swatch-pill shutter-color-pill" data-color="ded5c6" title="Muted Sand Pastel">
+                                        <span class="color-swatch-dot" style="background: #ded5c6;"></span>
+                                        <span>Muted Sand</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Carcass Interior Color Section -->
+                            <div id="cad-carcass-color-section" class="studio-suboptions">
+                                <div class="suboption-header">
+                                    <span class="suboption-label">CARCASS INTERIOR</span>
+                                    <span id="cad-carcass-color-badge" class="badge-slate-pill">Dark Slate</span>
+                                </div>
+                                <div class="studio-color-grid">
+                                    <button type="button" class="color-swatch-pill carcass-color-pill active" data-color="2b3038" title="Deep Charcoal Slate (Contrasting Dark)">
+                                        <span class="color-swatch-dot" style="background: #2b3038;"></span>
+                                        <span>Dark Slate</span>
+                                    </button>
+                                    <button type="button" class="color-swatch-pill carcass-color-pill" data-color="38312d" title="Smoked Walnut">
+                                        <span class="color-swatch-dot" style="background: #38312d;"></span>
+                                        <span>Smoked Walnut</span>
+                                    </button>
+                                    <button type="button" class="color-swatch-pill carcass-color-pill" data-color="c8bfae" title="Cashmere Birch">
+                                        <span class="color-swatch-dot" style="background: #c8bfae;"></span>
+                                        <span>Cashmere Birch</span>
+                                    </button>
+                                </div>
+                            </div>
 
                             <!-- Glass Finish Options (Visible when Glass is active) -->
                             <div id="cad-glass-options-section" class="studio-suboptions" style="display: none;">
@@ -881,6 +933,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=36"></script>
+    <script src="3d.js?v=37"></script>
 </body>
 </html>

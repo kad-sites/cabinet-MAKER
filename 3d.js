@@ -1,9 +1,9 @@
 // Defined Carcass & Shutter Color Palette
-const COLOR_CARCASS = 0xdad5cb;       // Defined neutral warm birch/greige carcass (NOT orange)
-const COLOR_SHUTTER = 0xfcf1d8;       // Soft tone of yellowish cream
-const COLOR_SHELF = 0xefeae1;         // Defined interior shelf and divider color
-const COLOR_DRAWER = 0xf5eedb;        // Drawer box ply color
-const COLOR_EDGE_LINE = 0x78716c;     // Clean modern edge outline
+let COLOR_CARCASS = 0x2b3038;       // Contrasting dark slate/charcoal carcass (NOT orange or green)
+let COLOR_SHUTTER = 0x7f92a3;       // Solid pastel shade: refined Nordic dusty blue (different from carcass)
+let COLOR_SHELF = 0xd5cabb;         // Solid pastel shade: warm cashmere oatmeal for interior shelves & dividers
+let COLOR_DRAWER = 0x383e47;        // Drawer box ply color
+let COLOR_EDGE_LINE = 0x525c6a;     // Crisp modern edge outline
 
 let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
 let perspectiveCamera, orthoCamera;
@@ -902,9 +902,9 @@ function deleteSelectedPart() {
 
 function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight) {
     const isShutter = (type === 'shutter' || type === 'return_shutter');
-    const ply = new THREE.MeshPhongMaterial({ color: (isShutter ? COLOR_SHUTTER : COLOR_SHELF), shininess: 12 });
-    const liner = new THREE.MeshPhongMaterial({ color: 0xe5e7eb, shininess: 20 });
-    const edgeBand = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
+    const ply = new THREE.MeshPhongMaterial({ color: (isShutter ? COLOR_SHUTTER : COLOR_SHELF), shininess: 14 });
+    const liner = new THREE.MeshPhongMaterial({ color: (isShutter ? COLOR_SHUTTER : 0x383e47), shininess: 15 });
+    const edgeBand = new THREE.MeshPhongMaterial({ color: 0x475569, shininess: 15 });
     
     const materials = [
         ply.clone(), ply.clone(), ply.clone(), 
@@ -912,8 +912,9 @@ function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight)
     ];
     
     if (type === 'return_shutter') {
-        const faceIdx = isRight ? 0 : 1;
-        const insideIdx = isRight ? 1 : 0;
+        // Return wing extends along +Z. For right return, front face towards kitchen is -X (Face 1). For left return, front face is +X (Face 0).
+        const faceIdx = isRight ? 1 : 0;
+        const insideIdx = isRight ? 0 : 1;
         materials[faceIdx] = ply.clone();
         materials[insideIdx] = (laminateConfig === 'double') ? ply.clone() : liner.clone();
         if (edgeConfig === 'all' || edgeConfig === 'front') {
@@ -1105,7 +1106,7 @@ function buildDoorMeshAssembly(w, h, d, isRightHinged, label, module, index, tot
         const panelGeo = new THREE.BoxGeometry(w, h, d);
         const panelMesh = new THREE.Mesh(panelGeo);
         panelMesh.userData = { isSubPart: true, w, h, d, type: 'shutter' };
-        applyLaminateMaterials(panelMesh, 'shutter', 'single', 'all');
+        applyLaminateMaterials(panelMesh, 'shutter', 'double', 'all');
         panelMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), edgeLineMat));
         group.add(panelMesh);
 
@@ -1306,21 +1307,25 @@ function setShutterStyle(style) {
     const glassSec = document.getElementById('cad-glass-options-section');
     const aluSec = document.getElementById('cad-aluminum-finish-section');
 
+    const colorSec = document.getElementById('cad-shutter-color-section');
     if (style === 'solid') {
         if (badge) badge.textContent = 'Solid Ply';
         if (desc) desc.textContent = 'Standard Flush Door';
         if (glassSec) glassSec.style.display = 'none';
         if (aluSec) aluSec.style.display = 'none';
+        if (colorSec) colorSec.style.display = 'block';
     } else if (style === 'plywood_glass') {
         if (badge) badge.textContent = '2" Ply Frame + Glass';
         if (desc) desc.textContent = '2" Border with Rear Glass & Brackets';
         if (glassSec) glassSec.style.display = 'block';
         if (aluSec) aluSec.style.display = 'none';
+        if (colorSec) colorSec.style.display = 'block';
     } else if (style === 'aluminum_glass') {
         if (badge) badge.textContent = 'Aluminum Profile + Glass';
         if (desc) desc.textContent = 'Modern Slim Metal Profile';
         if (glassSec) glassSec.style.display = 'block';
         if (aluSec) aluSec.style.display = 'block';
+        if (colorSec) colorSec.style.display = 'none';
     }
 
     syncShuttersFromSelect('base');
@@ -1375,6 +1380,38 @@ function setFrameFinish(finish) {
         }
         if (renderer && scene && camera) renderer.render(scene, camera);
     }
+}
+
+function setShutterColor(colorHex, badgeName) {
+    COLOR_SHUTTER = colorHex;
+    document.querySelectorAll('.shutter-color-pill').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.color, 16) === colorHex);
+    });
+    const badge = document.getElementById('cad-shutter-color-badge');
+    if (badge && badgeName) badge.textContent = badgeName;
+
+    syncShuttersFromSelect('base');
+    syncShuttersFromSelect('wall');
+    if (currentShelfStyle === 'flip') {
+        buildFlipShoeDrawers();
+    }
+    if (currentKitchenLayout === 'l-shape' || currentKitchenLayout === 'u-shape') {
+        syncPartitionsAndDoors();
+    }
+    if (renderer && scene && camera) renderer.render(scene, camera);
+}
+
+function setCarcassColor(colorHex, badgeName) {
+    COLOR_CARCASS = colorHex;
+    document.querySelectorAll('.carcass-color-pill').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.color, 16) === colorHex);
+    });
+    const badge = document.getElementById('cad-carcass-color-badge');
+    if (badge && badgeName) badge.textContent = badgeName;
+
+    buildShell();
+    syncPartitionsAndDoors();
+    if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
 function makeExtrudedShelfPanel(pts, t, colorHex, label, module) {
@@ -1450,7 +1487,7 @@ function buildReturnDoorMeshAssembly(doorLen, doorH, doorThickness, isHingedFar,
         const panelGeo = new THREE.BoxGeometry(doorThickness, doorH, doorLen);
         const panelMesh = new THREE.Mesh(panelGeo);
         panelMesh.userData = { isSubPart: true, w: doorLen, h: doorH, d: doorThickness, type: 'shutter' };
-        applyLaminateMaterials(panelMesh, 'return_shutter', 'single', 'all', isRight);
+        applyLaminateMaterials(panelMesh, 'return_shutter', 'double', 'all', isRight);
         panelMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), edgeLineMat));
         group.add(panelMesh);
 
@@ -4023,6 +4060,24 @@ function setupCADListeners() {
     document.querySelectorAll('.frame-finish-pill').forEach(btn => {
         btn.addEventListener('click', () => {
             setFrameFinish(btn.dataset.finish);
+        });
+    });
+
+    // Shutter Solid Pastel Color Pills
+    document.querySelectorAll('.shutter-color-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const hex = parseInt(btn.dataset.color, 16);
+            const name = btn.querySelector('span:last-child')?.textContent.trim();
+            setShutterColor(hex, name);
+        });
+    });
+
+    // Carcass Tone Color Pills
+    document.querySelectorAll('.carcass-color-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const hex = parseInt(btn.dataset.color, 16);
+            const name = btn.querySelector('span:last-child')?.textContent.trim();
+            setCarcassColor(hex, name);
         });
     });
     
