@@ -6,6 +6,8 @@ const COLOR_DRAWER = 0xf5eedb;        // Drawer box ply color
 const COLOR_EDGE_LINE = 0x78716c;     // Clean modern edge outline
 
 let scene, camera, renderer, orbit, transformControl, raycaster, mouse;
+let perspectiveCamera, orthoCamera;
+let currentViewMode = '3d'; // '3d' or '2d'
 let cabinetGroup;
 let is3DInitialized = false;
 let selectedObject = null;
@@ -93,8 +95,21 @@ function init3D() {
 
     // Camera setup
     const aspect = container.clientWidth / container.clientHeight;
-    camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    camera.position.set(0, 50, 140);
+    perspectiveCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 2500);
+    perspectiveCamera.position.set(0, 50, 140);
+
+    const frustumH = 140;
+    orthoCamera = new THREE.OrthographicCamera(
+        -frustumH * aspect / 2,
+        frustumH * aspect / 2,
+        frustumH / 2,
+        -frustumH / 2,
+        0.1,
+        3000
+    );
+    orthoCamera.position.set(0, 40, 800);
+
+    camera = perspectiveCamera;
 
     // Renderer setup
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -184,12 +199,100 @@ function init3D() {
 
 function resize3D() {
     const container = document.getElementById('3d-container');
-    if (!container || !camera || !renderer) return;
+    if (!container || !renderer) return;
     if (container.clientWidth > 0 && container.clientHeight > 0) {
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
+        const aspect = container.clientWidth / container.clientHeight;
+        if (perspectiveCamera) {
+            perspectiveCamera.aspect = aspect;
+            perspectiveCamera.updateProjectionMatrix();
+        }
+        if (orthoCamera) {
+            const h = orthoCamera.top - orthoCamera.bottom;
+            orthoCamera.left = -h * aspect / 2;
+            orthoCamera.right = h * aspect / 2;
+            orthoCamera.updateProjectionMatrix();
+        }
         renderer.setSize(container.clientWidth, container.clientHeight);
     }
+}
+
+function setViewMode(mode) {
+    currentViewMode = mode;
+    const btn3d = document.getElementById('btn-view-3d');
+    const btn2d = document.getElementById('btn-view-2d');
+    const container = document.getElementById('3d-container');
+    if (!container || !renderer) return;
+
+    // Calculate cabinet center and bounding dimensions
+    let centerY = 20;
+    let totalW = currentW;
+    let totalH = currentH;
+    if (currentKitchenMode === 'both') {
+        totalH = currentH + currentDadoGap + currentWallH;
+        centerY = totalH / 2;
+        totalW = Math.max(currentW, currentWallW);
+    } else if (currentKitchenMode === 'wall') {
+        centerY = getWallCenterY();
+        totalH = currentWallH;
+        totalW = currentWallW;
+    } else {
+        centerY = getBaseCenterY();
+        totalH = currentH;
+        totalW = currentW;
+    }
+
+    if (currentKitchenLayout === 'l-shape') {
+        const wingLen = currentLReturnFt * 12;
+        totalW = Math.max(totalW, wingLen);
+    } else if (currentKitchenLayout === 'u-shape') {
+        const maxWing = Math.max(currentULeftFt, currentURightFt) * 12;
+        totalW = Math.max(totalW, maxWing);
+    }
+
+    const aspect = container.clientWidth / container.clientHeight;
+
+    if (mode === '2d') {
+        if (btn2d) btn2d.classList.add('active');
+        if (btn3d) btn3d.classList.remove('active');
+
+        // Fit orthographic camera tightly and flatly to cabinet front elevation
+        const fitDimension = Math.max(totalW / aspect, totalH);
+        const frustumH = fitDimension * 1.35; // 35% margin for dimension labels and padding
+
+        orthoCamera.left = -frustumH * aspect / 2;
+        orthoCamera.right = frustumH * aspect / 2;
+        orthoCamera.top = frustumH / 2;
+        orthoCamera.bottom = -frustumH / 2;
+        orthoCamera.position.set(0, centerY, 800);
+        orthoCamera.lookAt(0, centerY, 0);
+        orthoCamera.updateProjectionMatrix();
+
+        camera = orthoCamera;
+        orbit.object = orthoCamera;
+        orbit.target.set(0, centerY, 0);
+        orbit.enableRotate = false; // Strictly flat 2D elevation! No 3D tilting when dragging!
+        orbit.enablePan = true;
+        orbit.update();
+        if (transformControl) transformControl.camera = orthoCamera;
+
+    } else {
+        // 3D Perspective Mode
+        if (btn3d) btn3d.classList.add('active');
+        if (btn2d) btn2d.classList.remove('active');
+
+        const maxDim = Math.max(totalW, totalH, currentD);
+        camera = perspectiveCamera;
+        perspectiveCamera.position.set(maxDim * 0.45, centerY + (maxDim * 0.35), maxDim * 1.45);
+        orbit.object = perspectiveCamera;
+        orbit.target.set(0, centerY, 0);
+        orbit.enableRotate = true; // Freely orbit and rotate in 3D when dragging!
+        orbit.enablePan = true;
+        orbit.update();
+        if (transformControl) transformControl.camera = perspectiveCamera;
+    }
+
+    updateDimensionsOverlay();
+    if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
 function updateDimensionsOverlay() {
@@ -809,8 +912,9 @@ function deleteSelectedPart() {
     }
 }
 
-function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig) {
-    const ply = new THREE.MeshPhongMaterial({ color: (type === 'shutter' ? COLOR_SHUTTER : COLOR_SHELF), shininess: 12 });
+function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig, isRight) {
+    const isShutter = (type === 'shutter' || type === 'return_shutter');
+    const ply = new THREE.MeshPhongMaterial({ color: (isShutter ? COLOR_SHUTTER : COLOR_SHELF), shininess: 12 });
     const liner = new THREE.MeshPhongMaterial({ color: 0xe5e7eb, shininess: 20 });
     const edgeBand = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
     
@@ -819,26 +923,39 @@ function applyLaminateMaterials(mesh, type, laminateConfig, edgeConfig) {
         ply.clone(), ply.clone(), ply.clone()
     ];
     
-    if (laminateConfig === 'double') {
-        if (type === 'shelf') { materials[2] = liner.clone(); materials[3] = liner.clone(); }
-        else if (type === 'divider') { materials[0] = liner.clone(); materials[1] = liner.clone(); }
-        else if (type === 'shutter') { materials[4] = liner.clone(); materials[5] = liner.clone(); }
-    } else if (laminateConfig === 'single') {
-        if (type === 'shelf') { materials[2] = liner.clone(); }
-        else if (type === 'divider') { materials[1] = liner.clone(); }
-        else if (type === 'shutter') { materials[5] = liner.clone(); }
-    }
-    
-    if (edgeConfig === 'front') {
-        if (type === 'shutter') materials[0] = edgeBand.clone();
-        else materials[4] = edgeBand.clone();
-    } else if (edgeConfig === 'all') {
-        if (type === 'shelf') {
-            materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
-        } else if (type === 'divider') {
-            materials[2] = edgeBand.clone(); materials[3] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
-        } else if (type === 'shutter') {
-            materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[2] = edgeBand.clone(); materials[3] = edgeBand.clone();
+    if (type === 'return_shutter') {
+        const faceIdx = isRight ? 0 : 1;
+        const insideIdx = isRight ? 1 : 0;
+        materials[faceIdx] = ply.clone();
+        materials[insideIdx] = (laminateConfig === 'double') ? ply.clone() : liner.clone();
+        if (edgeConfig === 'all' || edgeConfig === 'front') {
+            materials[2] = edgeBand.clone();
+            materials[3] = edgeBand.clone();
+            materials[4] = edgeBand.clone();
+            materials[5] = edgeBand.clone();
+        }
+    } else {
+        if (laminateConfig === 'double') {
+            if (type === 'shelf') { materials[2] = liner.clone(); materials[3] = liner.clone(); }
+            else if (type === 'divider') { materials[0] = liner.clone(); materials[1] = liner.clone(); }
+            else if (type === 'shutter') { materials[4] = ply.clone(); materials[5] = ply.clone(); }
+        } else if (laminateConfig === 'single') {
+            if (type === 'shelf') { materials[2] = liner.clone(); }
+            else if (type === 'divider') { materials[1] = liner.clone(); }
+            else if (type === 'shutter') { materials[4] = ply.clone(); materials[5] = liner.clone(); }
+        }
+        
+        if (edgeConfig === 'front') {
+            if (type === 'shutter') materials[0] = edgeBand.clone();
+            else materials[4] = edgeBand.clone();
+        } else if (edgeConfig === 'all') {
+            if (type === 'shelf') {
+                materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
+            } else if (type === 'divider') {
+                materials[2] = edgeBand.clone(); materials[3] = edgeBand.clone(); materials[4] = edgeBand.clone(); materials[5] = edgeBand.clone();
+            } else if (type === 'shutter') {
+                materials[0] = edgeBand.clone(); materials[1] = edgeBand.clone(); materials[2] = edgeBand.clone(); materials[3] = edgeBand.clone();
+            }
         }
     }
     
@@ -1333,7 +1450,7 @@ function buildReturnDoorMeshAssembly(doorLen, doorH, doorThickness, isHingedFar,
         const panelGeo = new THREE.BoxGeometry(doorThickness, doorH, doorLen);
         const panelMesh = new THREE.Mesh(panelGeo);
         panelMesh.userData = { isSubPart: true, w: doorLen, h: doorH, d: doorThickness, type: 'shutter' };
-        applyLaminateMaterials(panelMesh, 'shutter', 'single', 'all');
+        applyLaminateMaterials(panelMesh, 'return_shutter', 'single', 'all', isRight);
         panelMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), edgeLineMat));
         group.add(panelMesh);
 
@@ -2442,6 +2559,11 @@ function syncReturnWingPartitions(wingSide, wingLengthFt, module) {
 }
 
 function updateCameraFraming() {
+    if (currentViewMode === '2d') {
+        setViewMode('2d');
+        return;
+    }
+
     let centerY = 0;
     let maxDim = 100;
 
@@ -2450,6 +2572,12 @@ function updateCameraFraming() {
 
     const maxW = (currentKitchenMode === 'wall') ? currentWallW : Math.max(currentW, currentWallW);
     let maxD = currentD;
+
+    if (perspectiveCamera) {
+        camera = perspectiveCamera;
+        orbit.object = perspectiveCamera;
+        orbit.enableRotate = true;
+    }
 
     if (currentKitchenLayout === 'l-shape') {
         maxD = currentD + (currentLReturnFt * 12);
@@ -2965,7 +3093,7 @@ function syncShuttersFromSelect(module) {
             const t = currentThickness;
             const innerH = h - (2 * t);
             const divDepth = d - 1.0;
-            const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
+            const divider = createPanel(t, innerH, divDepth, COLOR_SHELF, true, 'divider');
             divider.position.set(gapCenterX, centerY, isWall ? (getWallCenterZ() - 0.5) : -0.5);
             divider.userData.label = `${prefix} Auto Hinge Partition`;
             divider.userData.isAutoHingePartition = true;
@@ -3423,6 +3551,65 @@ function setupCADListeners() {
             }
         }
     });
+
+    // Wall Unit Accordion Toggle
+    const wallAccToggle = document.getElementById('btn-toggle-wall-accordion');
+    const wallAccBody = document.getElementById('wall-accordion-body');
+    if (wallAccToggle && wallAccBody) {
+        wallAccToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isCollapsed = (wallAccBody.style.display === 'none' || !wallAccBody.style.display);
+            wallAccBody.style.display = isCollapsed ? 'block' : 'none';
+            wallAccToggle.classList.toggle('expanded', isCollapsed);
+        });
+    }
+
+    // View Mode HUD Listeners (3D Perspective vs 2D Flat Elevation)
+    const btnView3d = document.getElementById('btn-view-3d');
+    if (btnView3d) {
+        btnView3d.addEventListener('click', (e) => {
+            e.preventDefault();
+            setViewMode('3d');
+        });
+    }
+
+    const btnView2d = document.getElementById('btn-view-2d');
+    if (btnView2d) {
+        btnView2d.addEventListener('click', (e) => {
+            e.preventDefault();
+            setViewMode('2d');
+        });
+    }
+
+    // Fullscreen Viewport Toggle
+    const fsBtn = document.getElementById('btn-view-fullscreen');
+    if (fsBtn) {
+        fsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const container = document.getElementById('3d-container') || document.documentElement;
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        });
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const isFs = !!document.fullscreenElement;
+        if (fsBtn) fsBtn.classList.toggle('active', isFs);
+        setTimeout(resize3D, 80);
+    });
 }
 
 function addShelf(module) {
@@ -3437,7 +3624,7 @@ function addShelf(module) {
     const centerY = isWall ? getWallCenterY() : getBaseCenterY();
     const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     
-    const shelf = createPanel(innerW, t, shelfDepth, 0xdeb887, true, 'shelf');
+    const shelf = createPanel(innerW, t, shelfDepth, COLOR_SHELF, true, 'shelf');
     shelf.position.set(0, centerY, centerZ);
     shelf.userData.label = `${prefix} Shelf ${partCounter++}`;
     shelf.userData.module = targetModule;
@@ -3458,7 +3645,7 @@ function addDivider(module) {
     const centerY = isWall ? getWallCenterY() : getBaseCenterY();
     const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     
-    const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
+    const divider = createPanel(t, innerH, divDepth, COLOR_SHELF, true, 'divider');
     divider.position.set(0, centerY, centerZ);
     divider.userData.label = `${prefix} Vertical Divider ${partCounter++}`;
     divider.userData.module = targetModule;

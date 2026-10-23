@@ -1004,6 +1004,23 @@ main {
     padding: 4px 7px;
 }
 
+.hud-fullscreen-btn.active {
+    background: var(--bg-hover);
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+#3d-container:fullscreen,
+#3d-container:-webkit-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: #121921 !important;
+}
+
 /* Dimension Overlays */
 .dimension-overlays-layer {
     position: absolute;
