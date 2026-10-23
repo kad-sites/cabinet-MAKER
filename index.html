@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=36">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -556,11 +556,11 @@
                             <div id="cad-flip-shoe-wrap" class="flip-shoe-config-bar" style="display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                     <span class="dim-col-label" style="margin-bottom: 0;">TIERS PER FLAP</span>
-                                    <span class="badge-gold-pill" id="badge-flip-tiers">2 TIERS (DOUBLE SHOE)</span>
+                                    <span class="badge-gold-pill" id="badge-flip-tiers">Double Shoe</span>
                                 </div>
-                                <div class="tier-pills-group" style="display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 4px; margin-bottom: 8px;">
+                                <div class="tier-pills-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px;">
                                     <button type="button" class="flip-tier-btn shelf-pill" data-tiers="1">1 Tier</button>
-                                    <button type="button" class="flip-tier-btn shelf-pill active" data-tiers="2">2 Tiers (Double Shoe)</button>
+                                    <button type="button" class="flip-tier-btn shelf-pill active" data-tiers="2">2 Tiers</button>
                                     <button type="button" class="flip-tier-btn shelf-pill" data-tiers="3">3 Tiers</button>
                                 </div>
                                 <div class="dim-columns-grid cols-2" style="margin-top: 6px;">
@@ -591,27 +591,25 @@
                                     </div>
                                 </div>
 
-                                <!-- Dedicated Tilt-Open in Circular Way Button & Arc Slider (Shoe Rack Only) -->
-                                <div class="flip-open-control-card" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.28); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span class="dim-col-label" style="margin-bottom: 0;">CIRCULAR ARC OPENING</span>
-                                        <span class="badge-gold-pill" id="badge-flip-arc-angle">0° (CLOSED)</span>
+                                <!-- Dedicated Tilt-Open in Circular Way Hopper Controls (Shoe Rack Only) -->
+                                <div class="hopper-arc-panel">
+                                    <div class="hopper-arc-header">
+                                        <span class="dim-col-label" style="margin-bottom: 0;">HOPPER TILT</span>
+                                        <span class="badge-gold-pill" id="badge-flip-arc-angle">Closed (0°)</span>
                                     </div>
-                                    <button type="button" id="btn-flip-shoe-open-toggle" class="btn-flip-hopper-action" title="Open or close shoe rack hoppers along a circular pivot arc">
-                                        <svg class="spin-arc-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <button type="button" id="btn-flip-shoe-open-toggle" class="btn-hopper-toggle" title="Tilt open or close all shoe rack hoppers">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                                         </svg>
-                                        <span id="btn-flip-shoe-open-text">🔄 Tilt Open Hoppers (Circular Arc)</span>
+                                        <span id="btn-flip-shoe-open-text">Tilt Open</span>
                                     </button>
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 6px;">
-                                        <span style="font-size: 11px; color: #94a3b8; font-weight: 500;">0°</span>
-                                        <input type="range" id="cad-flip-arc-range" min="0" max="52" value="0" step="1" style="flex: 1; accent-color: #38bdf8; cursor: pointer;">
-                                        <span style="font-size: 11px; color: #94a3b8; font-weight: 500;">52°</span>
+                                    <div class="hopper-presets-group">
+                                        <button type="button" class="flip-arc-btn shelf-pill active" data-arc="0">Closed</button>
+                                        <button type="button" class="flip-arc-btn shelf-pill" data-arc="26">Half</button>
+                                        <button type="button" class="flip-arc-btn shelf-pill" data-arc="50">Open</button>
                                     </div>
-                                    <div class="arc-quick-pills" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-                                        <button type="button" class="flip-arc-btn shelf-pill active" data-arc="0">0° Closed</button>
-                                        <button type="button" class="flip-arc-btn shelf-pill" data-arc="26">26° Half</button>
-                                        <button type="button" class="flip-arc-btn shelf-pill" data-arc="50">50° Full Arc</button>
+                                    <div class="hopper-slider-row">
+                                        <input type="range" id="cad-flip-arc-range" class="hopper-range-slider" min="0" max="50" value="0" step="1" title="Adjust hopper tilt angle">
                                     </div>
                                 </div>
                             </div>
@@ -883,6 +881,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=35"></script>
+    <script src="3d.js?v=36"></script>
 </body>
 </html>

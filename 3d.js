@@ -3324,7 +3324,7 @@ function applyFlipArcToMeshes(deg) {
 }
 
 function setFlipHopperArc(targetDeg, animate = true) {
-    const clamped = Math.max(0, Math.min(52, parseFloat(targetDeg) || 0));
+    const clamped = Math.max(0, Math.min(50, parseFloat(targetDeg) || 0));
     
     // Update Shoe Rack Circular Arc opening controls
     const rangeInput = document.getElementById('cad-flip-arc-range');
@@ -3335,13 +3335,13 @@ function setFlipHopperArc(targetDeg, animate = true) {
     if (rangeInput) rangeInput.value = clamped;
     if (badge) {
         const rounded = Math.round(clamped);
-        badge.textContent = rounded === 0 ? '0° (CLOSED)' : (rounded >= 48 ? `${rounded}° (FULL ARC)` : `${rounded}° (OPEN)`);
+        badge.textContent = rounded === 0 ? 'Closed (0°)' : (rounded >= 48 ? 'Open (50°)' : `${rounded}° Tilt`);
     }
     if (toggleBtn) {
         toggleBtn.classList.toggle('active', clamped > 5);
     }
     if (toggleText) {
-        toggleText.textContent = clamped > 5 ? '✕ Close Hoppers (Circular Arc)' : '🔄 Tilt Open Hoppers (Circular Arc)';
+        toggleText.textContent = clamped > 5 ? 'Close' : 'Tilt Open';
     }
 
     document.querySelectorAll('.flip-arc-btn').forEach(btn => {
@@ -3946,7 +3946,7 @@ function setupCADListeners() {
             document.querySelectorAll('.flip-tier-btn').forEach(b => b.classList.toggle('active', b === btn));
             const badge = document.getElementById('badge-flip-tiers');
             if (badge) {
-                badge.textContent = tiers === 1 ? '1 TIER' : (tiers === 3 ? '3 TIERS' : '2 TIERS (DOUBLE SHOE)');
+                badge.textContent = tiers === 1 ? 'Single Shelf' : (tiers === 3 ? 'Triple Tier' : 'Double Shoe');
             }
             if (currentShelfStyle === 'flip') {
                 buildFlipShoeDrawers();
