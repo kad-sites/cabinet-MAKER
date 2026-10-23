@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=29">
+    <link rel="stylesheet" href="style.css?v=30">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -14,9 +14,63 @@
 </head>
 <body>
     <div class="app-container">
-        <header>
-            <h1>Cabinet Optimizer <span>Pro</span></h1>
-            <div class="header-badge">3D Builder</div>
+        <!-- Top Navigation Header -->
+        <header class="top-nav-bar">
+            <!-- Left Branding -->
+            <div class="brand-group">
+                <div class="brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#deb887">
+                        <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                    </svg>
+                </div>
+                <h1 class="brand-title">Cabinet Optimizer <span class="brand-pro">Pro</span></h1>
+            </div>
+
+            <!-- Center Navigation Tabs -->
+            <nav class="center-nav-tabs">
+                <button type="button" class="nav-tab-btn active" title="3D Cabinet Design">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <span>Design</span>
+                </button>
+                <button type="button" class="nav-tab-btn" title="Material & Laminate Library">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>Materials</span>
+                </button>
+                <button type="button" class="nav-tab-btn" title="Hardware, Hinges & Channels">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                    <span>Hardware</span>
+                </button>
+                <button type="button" class="nav-tab-btn" title="Cost & Material Estimate">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Estimate</span>
+                </button>
+            </nav>
+
+            <!-- Right Action Pill -->
+            <div class="header-right-action">
+                <button type="button" class="btn-builder-pill" title="Interactive 3D Builder Workspace">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <span>3D Builder</span>
+                </button>
+            </div>
         </header>
 
         <main>
@@ -24,234 +78,451 @@
             <section id="visualizer-tab" class="tab-content active">
                 <div class="cad-workspace-row">
                     
-                    <!-- CAD Toolbox Sidebar -->
+                    <!-- Left Sidebar Panels -->
                     <div class="cad-sidebar-panel">
-                        <!-- Cabinet Name & Quantity -->
-                        <div class="cad-header-row">
-                            <div class="cad-input-block flex-1">
-                                <label class="cad-label">PROJECT / CABINET NAME</label>
-                                <input type="text" id="cab-preset-name" class="cad-input-text" value="Modular Kitchen Set">
+
+                        <!-- Card 1: Project & Quantity -->
+                        <div class="theme-card card-project">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon gold-icon" width="15" height="15" viewBox="0 0 24 24" fill="#deb887">
+                                        <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                                    </svg>
+                                    <span class="card-title-text">Project</span>
+                                </div>
+                                <span class="header-right-label">Qty</span>
                             </div>
-                            <div class="cad-input-block" style="width: 85px;">
-                                <label class="cad-label">QUANTITY</label>
-                                <div class="qty-control">
-                                    <input type="text" inputmode="numeric" id="cab-preset-qty" class="cad-input-number" value="1" autocomplete="off">
-                                    <button type="button" id="btn-duplicate-cab" class="cad-icon-btn" title="Duplicate Cabinet Set (Increases quantity)">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                    </button>
+                            <div class="project-input-row">
+                                <input type="text" id="cab-preset-name" class="theme-input text-input flex-1" value="Modular Kitchen Set" spellcheck="false">
+                                <div class="theme-stepper-wrap qty-stepper-wrap">
+                                    <input type="text" inputmode="numeric" id="cab-preset-qty" class="theme-input num-input" value="1" autocomplete="off">
+                                    <div class="theme-stepper-arrows">
+                                        <button type="button" class="theme-step-btn step-up" id="btn-duplicate-cab" title="Increase Quantity">
+                                            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                        </button>
+                                        <button type="button" class="theme-step-btn step-down" id="btn-qty-minus" title="Decrease Quantity">
+                                            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Kitchen View Toggle: Base / Both / Wall -->
-                        <div class="cad-module-toggle">
-                            <button type="button" class="module-btn" data-mode="base">🔽 Base Only</button>
-                            <button type="button" class="module-btn active" data-mode="both">🔄 Base + Wall (Set)</button>
-                            <button type="button" class="module-btn" data-mode="wall">🔼 Wall Only</button>
-                        </div>
+                        <!-- Card 2: Preset Layout (8-tile grid) -->
+                        <div class="theme-card card-presets">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                                        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                                        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                                        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                                    </svg>
+                                    <span class="card-title-text">Preset Layout</span>
+                                </div>
+                            </div>
+                            <div class="preset-tiles-grid">
+                                <!-- Tile 1: Kitchen Set -->
+                                <button type="button" class="preset-tile preset-pill active" data-preset="kitchen-set">
+                                    <div class="tile-icon-box">
+                                        <svg width="22" height="18" viewBox="0 0 24 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <rect x="3" y="2" width="18" height="6" rx="1"></rect>
+                                            <rect x="3" y="11" width="18" height="7" rx="1"></rect>
+                                            <line x1="12" y1="2" x2="12" y2="8"></line>
+                                            <line x1="12" y1="11" x2="12" y2="18"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">Kitchen Set</span>
+                                </button>
 
-                        <!-- Quick Presets -->
-                        <div class="cad-preset-section">
-                            <label class="cad-label">QUICK PRESET</label>
-                            <div class="cad-preset-pills">
-                                <button type="button" class="preset-pill active" data-preset="kitchen-set">Kitchen Set</button>
-                                <button type="button" class="preset-pill" data-preset="kitchen-base">Base Unit</button>
-                                <button type="button" class="preset-pill" data-preset="kitchen-wall">Wall Unit</button>
-                                <button type="button" class="preset-pill" data-preset="wardrobe">Wardrobe</button>
-                                <button type="button" class="preset-pill" data-preset="tv-console">TV Console</button>
-                                <button type="button" class="preset-pill" data-preset="shoe-rack">Shoe Rack</button>
+                                <!-- Tile 2: Base Unit -->
+                                <button type="button" class="preset-tile preset-pill" data-preset="kitchen-base">
+                                    <div class="tile-icon-box">
+                                        <svg width="20" height="18" viewBox="0 0 24 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <rect x="3" y="5" width="18" height="13" rx="1"></rect>
+                                            <line x1="12" y1="5" x2="12" y2="18"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">Base Unit</span>
+                                </button>
+
+                                <!-- Tile 3: Wall Unit -->
+                                <button type="button" class="preset-tile preset-pill" data-preset="kitchen-wall">
+                                    <div class="tile-icon-box">
+                                        <svg width="20" height="18" viewBox="0 0 24 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <rect x="3" y="3" width="18" height="11" rx="1"></rect>
+                                            <line x1="12" y1="3" x2="12" y2="14"></line>
+                                            <line x1="3" y1="18" x2="21" y2="18" stroke-dasharray="2 2" stroke-width="1.2"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">Wall Unit</span>
+                                </button>
+
+                                <!-- Tile 4: Wardrobe -->
+                                <button type="button" class="preset-tile preset-pill" data-preset="wardrobe">
+                                    <div class="tile-icon-box">
+                                        <svg width="18" height="20" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <rect x="3" y="2" width="14" height="20" rx="1"></rect>
+                                            <line x1="10" y1="2" x2="10" y2="22"></line>
+                                            <circle cx="8" cy="12" r="0.75" fill="currentColor"></circle>
+                                            <circle cx="12" cy="12" r="0.75" fill="currentColor"></circle>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">Wardrobe</span>
+                                </button>
+
+                                <!-- Tile 5: TV Console -->
+                                <button type="button" class="preset-tile preset-pill" data-preset="tv-console">
+                                    <div class="tile-icon-box">
+                                        <svg width="22" height="16" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <rect x="2" y="8" width="20" height="8" rx="1"></rect>
+                                            <line x1="8" y1="8" x2="8" y2="16"></line>
+                                            <line x1="16" y1="8" x2="16" y2="16"></line>
+                                            <line x1="6" y1="4" x2="18" y2="4" stroke-width="1.5"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">TV Console</span>
+                                </button>
+
+                                <!-- Tile 6: Shoe Rack -->
+                                <button type="button" class="preset-tile preset-pill" data-preset="shoe-rack">
+                                    <div class="tile-icon-box">
+                                        <svg width="20" height="18" viewBox="0 0 24 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <rect x="4" y="3" width="16" height="15" rx="1"></rect>
+                                            <line x1="4" y1="8" x2="20" y2="8"></line>
+                                            <line x1="4" y1="13" x2="20" y2="13"></line>
+                                            <line x1="12" y1="3" x2="12" y2="18"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">Shoe Rack</span>
+                                </button>
+
+                                <!-- Tile 7: Custom -->
+                                <button type="button" class="preset-tile preset-pill" data-preset="custom">
+                                    <div class="tile-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path d="M4 8V4h4"></path>
+                                            <path d="M20 8V4h-4"></path>
+                                            <path d="M4 16v4h4"></path>
+                                            <path d="M20 16v4h-4"></path>
+                                            <circle cx="12" cy="12" r="2.5"></circle>
+                                        </svg>
+                                    </div>
+                                    <span class="tile-label">Custom</span>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Kitchen Layout Shape Selector (Visible when Kitchen Set or Kitchen preset is selected) -->
-                        <div class="cad-kitchen-layout-section" id="cad-kitchen-layout-section">
-                            <div class="cad-layout-header">
-                                <label class="cad-label">KITCHEN LAYOUT SHAPE</label>
-                                <span class="badge-tag base-tag" id="cad-layout-badge">Straight</span>
+                        <!-- Card 3: Layout Shape -->
+                        <div class="theme-card card-layout-shape" id="cad-kitchen-layout-section">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="4 4 4 20 20 20"></polyline>
+                                    </svg>
+                                    <span class="card-title-text">Layout Shape</span>
+                                </div>
                             </div>
-                            <div class="cad-layout-pills">
-                                <button type="button" class="layout-pill active" data-layout="straight">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line></svg>
+                            <div class="layout-shape-pills">
+                                <button type="button" class="shape-pill layout-pill active" data-layout="straight">
+                                    <span class="shape-symbol">—</span>
                                     <span>Straight</span>
                                 </button>
-                                <button type="button" class="layout-pill" data-layout="l-shape">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 5 5 19 19 19"></polyline></svg>
-                                    <span>L-Kitchen</span>
+                                <button type="button" class="shape-pill layout-pill" data-layout="l-shape">
+                                    <span class="shape-symbol">⌊</span>
+                                    <span>L-Shape</span>
                                 </button>
-                                <button type="button" class="layout-pill" data-layout="u-shape">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 5 5 19 19 19 19 5"></polyline></svg>
-                                    <span>U-Kitchen</span>
+                                <button type="button" class="shape-pill layout-pill" data-layout="u-shape">
+                                    <span class="shape-symbol">⊔</span>
+                                    <span>U-Shape</span>
                                 </button>
                             </div>
 
-                            <!-- L-Kitchen Return Controls -->
-                            <div class="cad-layout-subcontrols" id="cad-l-controls" style="display: none;">
-                                <div class="cad-card-grid-2" style="margin-top: 0.45rem;">
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-l-return-ft">RETURN RUN (FT)</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" id="cad-l-return-ft" class="cad-num-input cad-stepper-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-l-return-ft" title="Add Length">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                            <!-- L-Kitchen Return Controls (Smooth expansion) -->
+                            <div class="theme-subcontrols" id="cad-l-controls" style="display: none;">
+                                <div class="dim-columns-grid cols-2" style="margin-top: 8px;">
+                                    <div class="dim-column">
+                                        <label class="dim-col-label" id="lbl-cad-l-return-ft">RETURN RUN (FT)</label>
+                                        <div class="theme-stepper-wrap">
+                                            <input type="text" id="cad-l-return-ft" class="theme-input num-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                            <div class="theme-stepper-arrows">
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-l-return-ft">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                                 </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-l-return-ft" title="Decrease Length">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-l-return-ft">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                                 </button>
                                             </div>
                                         </div>
-                                        <span id="cad-l-return-sub" class="cad-col-subtext">~ 84" (7 ft)</span>
+                                        <span id="cad-l-return-sub" class="dim-subtext">~ 84" (7 ft)</span>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">CORNER RETURN</label>
-                                        <div class="cad-toggle-pills" id="cad-l-corner-toggle">
-                                            <button type="button" class="corner-side-btn" data-side="left" title="Corner on Left Side">↰ Left</button>
-                                            <button type="button" class="corner-side-btn active" data-side="right" title="Corner on Right Side">Right ↱</button>
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">CORNER RETURN</label>
+                                        <div class="corner-side-group" id="cad-l-corner-toggle">
+                                            <button type="button" class="side-btn corner-side-btn" data-side="left">↰ Left</button>
+                                            <button type="button" class="side-btn corner-side-btn active" data-side="right">Right ↱</button>
                                         </div>
-                                        <span class="cad-col-subtext">Attachment Side</span>
+                                        <span class="dim-subtext">Attachment Side</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- U-Kitchen Return Controls -->
-                            <div class="cad-layout-subcontrols" id="cad-u-controls" style="display: none;">
-                                <div class="cad-card-grid-2" style="margin-top: 0.45rem;">
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-u-left-ft">LEFT RUN (FT)</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" id="cad-u-left-ft" class="cad-num-input cad-stepper-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-u-left-ft" title="Add Length">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                            <!-- U-Kitchen Return Controls (Smooth expansion) -->
+                            <div class="theme-subcontrols" id="cad-u-controls" style="display: none;">
+                                <div class="dim-columns-grid cols-2" style="margin-top: 8px;">
+                                    <div class="dim-column">
+                                        <label class="dim-col-label" id="lbl-cad-u-left-ft">LEFT RUN (FT)</label>
+                                        <div class="theme-stepper-wrap">
+                                            <input type="text" id="cad-u-left-ft" class="theme-input num-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                            <div class="theme-stepper-arrows">
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-u-left-ft">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                                 </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-u-left-ft" title="Decrease Length">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-u-left-ft">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                                 </button>
                                             </div>
                                         </div>
-                                        <span id="cad-u-left-sub" class="cad-col-subtext">~ 84" (7 ft)</span>
+                                        <span id="cad-u-left-sub" class="dim-subtext">~ 84" (7 ft)</span>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-u-right-ft">RIGHT RUN (FT)</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" id="cad-u-right-ft" class="cad-num-input cad-stepper-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-u-right-ft" title="Add Length">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                    <div class="dim-column">
+                                        <label class="dim-col-label" id="lbl-cad-u-right-ft">RIGHT RUN (FT)</label>
+                                        <div class="theme-stepper-wrap">
+                                            <input type="text" id="cad-u-right-ft" class="theme-input num-input" value="7" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                            <div class="theme-stepper-arrows">
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-u-right-ft">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                                 </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-u-right-ft" title="Decrease Length">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-u-right-ft">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                                 </button>
                                             </div>
                                         </div>
-                                        <span id="cad-u-right-sub" class="cad-col-subtext">~ 84" (7 ft)</span>
+                                        <span id="cad-u-right-sub" class="dim-subtext">~ 84" (7 ft)</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 1. Dimensions Card -->
-                        <div class="cad-card" id="cad-dimensions-card">
-                            <!-- Base Unit Dimensions -->
-                            <div class="cad-dim-section" id="cad-base-dim-section">
-                                <div class="cad-card-header">
-                                    <span class="cad-card-title">Dimensions <span class="badge-tag base-tag">(BASE)</span></span>
-                                    <span id="cad-dim-summary" class="cad-dim-badge">32" H × 132" W × 24" D</span>
-                                </div>
-                                <div class="cad-card-grid-4">
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-h-in">HEIGHT (IN)</label>
-                                        <input type="text" id="cad-h-in" class="cad-num-input" value="32" data-default-unit="in" autocomplete="off" spellcheck="false">
-                                        <span id="cad-h-sub" class="cad-col-subtext">~ 32" (2.67 ft)</span>
-                                    </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-w-ft">WIDTH (FT)</label>
-                                        <input type="text" id="cad-w-ft" class="cad-num-input" value="11" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                        <span id="cad-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
-                                    </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-d-ft">DEPTH (FT)</label>
-                                        <input type="text" id="cad-d-ft" class="cad-num-input" value="2" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                        <span id="cad-d-sub" class="cad-col-subtext">~ 24" (2 ft)</span>
-                                    </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-plinth-in">PLINTH (IN)</label>
-                                        <input type="text" id="cad-plinth-in" class="cad-num-input" value="3" data-default-unit="in" autocomplete="off" spellcheck="false">
-                                        <span id="cad-plinth-sub" class="cad-col-subtext">~ 3"</span>
-                                    </div>
+                        <!-- Card 4: Dimensions -->
+                        <div class="theme-card card-dimensions" id="cad-dimensions-card">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                    <span class="card-title-text">Dimensions</span>
                                 </div>
                             </div>
 
-                            <!-- Wall Unit Dimensions (Visible in 'both' and 'wall' modes) -->
-                            <div class="cad-dim-section" id="cad-wall-dim-section" style="margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.08);">
-                                <div class="cad-card-header">
-                                    <span class="cad-card-title">Dimensions <span class="badge-tag wall-tag">(WALL)</span></span>
-                                    <span id="cad-wall-dim-summary" class="cad-dim-badge">30" H × 132" W × 12" D</span>
+                            <!-- Dimensions Subheader: Tabs & Live Readout -->
+                            <div class="dim-subheader-row">
+                                <div class="dim-unit-toggle">
+                                    <button type="button" class="dim-unit-pill active" id="btn-toggle-base-dim">Base Unit</button>
+                                    <button type="button" class="dim-unit-pill" id="btn-toggle-wall-dim">Wall Unit</button>
                                 </div>
-                                <div class="cad-card-grid-4">
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-wall-h-in">HEIGHT (IN)</label>
-                                        <input type="text" id="cad-wall-h-in" class="cad-num-input" value="30" data-default-unit="in" autocomplete="off" spellcheck="false">
-                                        <span id="cad-wall-h-sub" class="cad-col-subtext">~ 30" (2.50 ft)</span>
+                                <span id="cad-dim-summary" class="dim-summary-readout">32" H × 132" W × 24" D</span>
+                            </div>
+
+                            <!-- 4 Column Inputs -->
+                            <div class="dim-columns-grid cols-4">
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-h-in">Height (in)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-h-in" class="theme-input num-input cad-num-input" value="32" data-default-unit="in" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-h-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-h-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-wall-w-ft">WIDTH (FT)</label>
-                                        <input type="text" id="cad-wall-w-ft" class="cad-num-input" value="11" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                        <span id="cad-wall-w-sub" class="cad-col-subtext">~ 132" (11 ft)</span>
+                                    <span id="cad-h-sub" class="dim-subtext">~ 32" (2.67 ft)</span>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-w-ft">Width (ft)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-w-ft" class="theme-input num-input cad-num-input" value="11" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-w-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-w-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-wall-d-ft">DEPTH (FT)</label>
-                                        <input type="text" id="cad-wall-d-ft" class="cad-num-input" value="1" data-default-unit="ft" autocomplete="off" spellcheck="false">
-                                        <span id="cad-wall-d-sub" class="cad-col-subtext">~ 12" (1 ft)</span>
+                                    <span id="cad-w-sub" class="dim-subtext">~ 132" (11 ft)</span>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-d-ft">Depth (ft)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-d-ft" class="theme-input num-input cad-num-input" value="2" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-d-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-d-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label" id="lbl-cad-dado-gap-in">WALL GAP (IN)</label>
-                                        <input type="text" id="cad-dado-gap-in" class="cad-num-input" value="22" data-default-unit="in" autocomplete="off" spellcheck="false">
-                                        <span id="cad-dado-gap-sub" class="cad-col-subtext">~ 22" (Dado)</span>
+                                    <span id="cad-d-sub" class="dim-subtext">~ 24" (2 ft)</span>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-plinth-in">Plinth (in)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-plinth-in" class="theme-input num-input cad-num-input" value="3" data-default-unit="in" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-plinth-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-plinth-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
                                     </div>
+                                    <span id="cad-plinth-sub" class="dim-subtext">~ 3"</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 2. Partitions & Doors Card -->
-                        <div class="cad-card" id="cad-partitions-card">
-                            <!-- Base Partitions -->
-                            <div class="cad-part-section" id="cad-base-part-section">
-                                <div class="cad-card-header">
-                                    <span class="cad-card-title">Partitions & Doors <span class="badge-tag base-tag">(BASE)</span></span>
+                        <!-- Card 5: Wall Details -->
+                        <div class="theme-card card-wall-details" id="cad-wall-details-card">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="12" rx="1"></rect>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <span class="card-title-text">Wall Details</span>
                                 </div>
-                                <div class="cad-card-grid-3">
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">SHELVES</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" inputmode="numeric" id="cad-shelves-count" class="cad-num-input cad-stepper-input" value="2" autocomplete="off">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-shelves-count" title="Add Shelf">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                                </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-shelves-count" title="Decrease Shelf">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                                </button>
-                                            </div>
+                                <span id="cad-wall-dim-summary" class="dim-summary-readout">30" H × 132" W × 12" D</span>
+                            </div>
+
+                            <!-- 4 Column Inputs -->
+                            <div class="dim-columns-grid cols-4">
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-wall-h-in">Height (in)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-wall-h-in" class="theme-input num-input cad-num-input" value="30" data-default-unit="in" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-wall-h-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-wall-h-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" inputmode="numeric" id="cad-dividers-count" class="cad-num-input cad-stepper-input" value="0" autocomplete="off">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-dividers-count" title="Add Divider">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                                </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-dividers-count" title="Decrease Divider">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                                </button>
-                                            </div>
+                                    <span id="cad-wall-h-sub" class="dim-subtext">~ 30" (2.50 ft)</span>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-wall-w-ft">Width (ft)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-wall-w-ft" class="theme-input num-input cad-num-input" value="11" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-wall-w-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-wall-w-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">SHUTTERS (DOORS)</label>
-                                        <select id="cad-shutter-select" class="cad-select-input">
+                                    <span id="cad-wall-w-sub" class="dim-subtext">~ 132" (11 ft)</span>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-wall-d-ft">Depth (ft)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-wall-d-ft" class="theme-input num-input cad-num-input" value="1" data-default-unit="ft" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-wall-d-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-wall-d-ft">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <span id="cad-wall-d-sub" class="dim-subtext">~ 12" (1 ft)</span>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label" id="lbl-cad-dado-gap-in">Wall Gap (in)</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" id="cad-dado-gap-in" class="theme-input num-input cad-num-input" value="22" data-default-unit="in" autocomplete="off" spellcheck="false">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-dado-gap-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-dado-gap-in">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <span id="cad-dado-gap-sub" class="dim-subtext">~ 22" (Dado)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 6: Partitions & Doors (Base Unit) -->
+                        <div class="theme-card card-partitions-base" id="cad-partitions-card">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                    </svg>
+                                    <span class="card-title-text">Partitions & Doors (Base Unit)</span>
+                                </div>
+                            </div>
+
+                            <div class="dim-columns-grid cols-3" style="margin-bottom: 8px;">
+                                <div class="dim-column">
+                                    <label class="dim-col-label">Shelves</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" inputmode="numeric" id="cad-shelves-count" class="theme-input num-input cad-stepper-input" value="2" autocomplete="off">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-shelves-count">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-shelves-count">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label">Vertical Dividers</label>
+                                    <div class="theme-stepper-wrap">
+                                        <input type="text" inputmode="numeric" id="cad-dividers-count" class="theme-input num-input cad-stepper-input" value="0" autocomplete="off">
+                                        <div class="theme-stepper-arrows">
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-dividers-count">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-dividers-count">
+                                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="dim-column">
+                                    <label class="dim-col-label">Shutters (Doors)</label>
+                                    <div class="theme-select-wrap">
+                                        <select id="cad-shutter-select" class="theme-select">
                                             <option value="0">None (Open)</option>
                                             <option value="1">1 Door</option>
                                             <option value="2">2 Doors</option>
@@ -263,267 +534,288 @@
                                             <option value="8">8 Doors</option>
                                             <option value="9">9 Doors</option>
                                             <option value="10">10 Doors</option>
-                                            <option value="11">11 Doors</option>
                                             <option value="12">12 Doors</option>
-                                            <option value="13">13 Doors</option>
-                                            <option value="14">14 Doors</option>
-                                            <option value="15">15 Doors</option>
-                                            <option value="16">16 Doors</option>
-                                            <option value="17">17 Doors</option>
-                                            <option value="18">18 Doors</option>
-                                            <option value="19">19 Doors</option>
-                                            <option value="20">20 Doors</option>
-                                            <option value="22">22 Doors</option>
-                                            <option value="24">24 Doors</option>
                                             <option value="custom">Custom...</option>
                                         </select>
-                                        <span id="cad-shutter-sub" class="cad-col-subtext">Each: 32.8" W</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Shelf Orientation: Straight vs Angular Slanted (Shoe Rack) -->
-                                <div class="cad-shelf-config-row" id="cad-shelf-config-row">
-                                    <div class="shelf-config-left">
-                                        <span class="cad-col-label">SHELF STYLE:</span>
-                                        <div class="cad-toggle-pills" id="cad-shelf-style-toggle">
-                                            <button type="button" class="shelf-style-btn active" data-style="straight" title="Standard Flat Shelves">━ Straight</button>
-                                            <button type="button" class="shelf-style-btn" data-style="slanted" title="Angular Slanted Shelves with Front Safety Lip (Shoe Rack)">⦦ Slanted (Shoe)</button>
-                                        </div>
-                                    </div>
-                                    <div id="cad-shelf-angle-wrap" class="shelf-config-right" style="display: none;">
-                                        <span class="cad-col-label">TILT:</span>
-                                        <div class="cad-angle-pills">
-                                            <button type="button" class="angle-pill" data-angle="20" title="20° Gentle Incline">20°</button>
-                                            <button type="button" class="angle-pill active" data-angle="25" title="25° Ergonomic Shoe Slope (Recommended)">25°</button>
-                                            <button type="button" class="angle-pill" data-angle="30" title="30° Steep Space-Saving Slope">30°</button>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Wall Partitions (Visible in 'both' and 'wall' modes) -->
-                            <div class="cad-part-section" id="cad-wall-part-section" style="margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.08);">
-                                <div class="cad-card-header">
-                                    <span class="cad-card-title">Partitions & Doors <span class="badge-tag wall-tag">(WALL)</span></span>
+                            <!-- Shelf Style Selector Row -->
+                            <div class="shelf-style-bar" id="cad-shelf-config-row">
+                                <div class="shelf-style-left">
+                                    <svg class="header-svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                                        <line x1="4" y1="18" x2="20" y2="18"></line>
+                                    </svg>
+                                    <span class="shelf-style-title">Shelf Style</span>
                                 </div>
-                                <div class="cad-card-grid-3">
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">SHELVES</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" inputmode="numeric" id="cad-wall-shelves-count" class="cad-num-input cad-stepper-input" value="2" autocomplete="off">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-wall-shelves-count" title="Add Shelf">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                <div class="shelf-style-pills" id="cad-shelf-style-toggle">
+                                    <button type="button" class="shelf-pill shelf-style-btn active" data-style="straight">
+                                        <span>━ Straight</span>
+                                    </button>
+                                    <button type="button" class="shelf-pill shelf-style-btn" data-style="slanted">
+                                        <span>Slanted (Shoe)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tilt Angle Selector (Visible when Slanted is active) -->
+                            <div id="cad-shelf-angle-wrap" class="shelf-angle-bar" style="display: none;">
+                                <span class="shelf-angle-label">Tilt Angle:</span>
+                                <div class="angle-pills-group">
+                                    <button type="button" class="angle-btn angle-pill" data-angle="20">20°</button>
+                                    <button type="button" class="angle-btn angle-pill active" data-angle="25">25°</button>
+                                    <button type="button" class="angle-btn angle-pill" data-angle="30">30°</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 7: Partitions & Doors (Wall Unit) - Accordion -->
+                        <div class="theme-card card-partitions-wall" id="cad-wall-accordion-card">
+                            <div class="card-accordion-header" id="btn-toggle-wall-accordion">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                        <line x1="12" y1="3" x2="12" y2="21"></line>
+                                    </svg>
+                                    <span class="card-title-text">Partitions & Doors (Wall Unit)</span>
+                                </div>
+                                <svg class="accordion-chevron" id="wall-accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </div>
+
+                            <div class="accordion-body" id="wall-accordion-body" style="display: none; padding-top: 8px;">
+                                <div class="dim-columns-grid cols-3">
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Shelves</label>
+                                        <div class="theme-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-wall-shelves-count" class="theme-input num-input cad-stepper-input" value="2" autocomplete="off">
+                                            <div class="theme-stepper-arrows">
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-wall-shelves-count">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                                 </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-wall-shelves-count" title="Decrease Shelf">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-wall-shelves-count">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">VERTICAL DIVIDERS</label>
-                                        <div class="cad-stepper-wrap">
-                                            <input type="text" inputmode="numeric" id="cad-wall-dividers-count" class="cad-num-input cad-stepper-input" value="0" autocomplete="off">
-                                            <div class="cad-stepper-arrows">
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-up" data-target="cad-wall-dividers-count" title="Add Divider">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Vertical Dividers</label>
+                                        <div class="theme-stepper-wrap">
+                                            <input type="text" inputmode="numeric" id="cad-wall-dividers-count" class="theme-input num-input cad-stepper-input" value="0" autocomplete="off">
+                                            <div class="theme-stepper-arrows">
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-up" data-target="cad-wall-dividers-count">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                                 </button>
-                                                <button type="button" class="cad-stepper-arrow cad-stepper-down" data-target="cad-wall-dividers-count" title="Decrease Divider">
-                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                <button type="button" class="theme-step-btn cad-stepper-arrow cad-stepper-down" data-target="cad-wall-dividers-count">
+                                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="cad-grid-col">
-                                        <label class="cad-col-label">SHUTTERS (DOORS)</label>
-                                        <select id="cad-wall-shutter-select" class="cad-select-input">
-                                            <option value="0">None (Open)</option>
-                                            <option value="1">1 Door</option>
-                                            <option value="2">2 Doors</option>
-                                            <option value="3">3 Doors</option>
-                                            <option value="4" selected>4 Doors</option>
-                                            <option value="5">5 Doors</option>
-                                            <option value="6">6 Doors</option>
-                                            <option value="7">7 Doors</option>
-                                            <option value="8">8 Doors</option>
-                                            <option value="9">9 Doors</option>
-                                            <option value="10">10 Doors</option>
-                                            <option value="11">11 Doors</option>
-                                            <option value="12">12 Doors</option>
-                                            <option value="13">13 Doors</option>
-                                            <option value="14">14 Doors</option>
-                                            <option value="15">15 Doors</option>
-                                            <option value="16">16 Doors</option>
-                                            <option value="17">17 Doors</option>
-                                            <option value="18">18 Doors</option>
-                                            <option value="19">19 Doors</option>
-                                            <option value="20">20 Doors</option>
-                                            <option value="22">22 Doors</option>
-                                            <option value="24">24 Doors</option>
-                                            <option value="custom">Custom...</option>
-                                        </select>
-                                        <span id="cad-wall-shutter-sub" class="cad-col-subtext">Each: 32.8" W</span>
+
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Shutters (Doors)</label>
+                                        <div class="theme-select-wrap">
+                                            <select id="cad-wall-shutter-select" class="theme-select">
+                                                <option value="0">None (Open)</option>
+                                                <option value="1">1 Door</option>
+                                                <option value="2">2 Doors</option>
+                                                <option value="3">3 Doors</option>
+                                                <option value="4" selected>4 Doors</option>
+                                                <option value="5">5 Doors</option>
+                                                <option value="6">6 Doors</option>
+                                                <option value="8">8 Doors</option>
+                                                <option value="custom">Custom...</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. Shutter & Glass Studio Card -->
-                        <div class="cad-card" id="cad-shutter-design-card">
-                            <div class="cad-card-header">
-                                <span class="cad-card-title">Shutter & Glass Studio <span class="badge-tag base-tag" id="cad-shutter-type-badge">Solid Ply</span></span>
-                            </div>
-                            
-                            <!-- Shutter Door Frame Type -->
-                            <div style="margin-bottom: 0.55rem;">
-                                <label class="cad-col-label" style="display: flex; justify-content: space-between;">
-                                    <span>DOOR DESIGN TYPE</span>
-                                    <span id="cad-shutter-type-desc" style="color: #94a3b8; font-weight: normal; text-transform: none; font-size: 0.68rem;">Standard Flush</span>
-                                </label>
-                                <div class="cad-shutter-type-pills">
-                                    <button type="button" class="shutter-type-pill active" data-shutter-type="solid" title="Solid Flush Plywood / Laminate Shutter">
-                                        <span class="pill-icon">🪵</span>
-                                        <span class="pill-text">Solid Wood/Ply</span>
-                                    </button>
-                                    <button type="button" class="shutter-type-pill" data-shutter-type="plywood_glass" title="2-inch Plywood Frame with Rear-Mounted Glass">
-                                        <span class="pill-icon">🖼️</span>
-                                        <span class="pill-text">2" Ply Frame + Glass</span>
-                                    </button>
-                                    <button type="button" class="shutter-type-pill" data-shutter-type="aluminum_glass" title="Modern Architectural Aluminum Profile with Glass">
-                                        <span class="pill-icon">🔲</span>
-                                        <span class="pill-text">Aluminum Profile + Glass</span>
-                                    </button>
+                        <!-- Card 8: Shutter & Glass Studio -->
+                        <div class="theme-card card-shutter-studio" id="cad-shutter-design-card">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                        <circle cx="16" cy="12" r="1.5" fill="currentColor"></circle>
+                                    </svg>
+                                    <span class="card-title-text">Shutter & Glass Studio</span>
                                 </div>
+                                <span class="badge-gold-pill" id="cad-shutter-type-badge">SOLID PLY</span>
                             </div>
 
-                            <!-- Glass Options (Visible when Ply Frame + Glass or Aluminum Profile is active) -->
-                            <div id="cad-glass-options-section" style="display: none; margin-bottom: 0.5rem; padding-top: 0.45rem; border-top: 1px dashed rgba(255,255,255,0.08);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                                    <label class="cad-col-label" style="margin: 0;">GLASS FINISH</label>
-                                    <span id="cad-glass-name-badge" class="badge-tag" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.68rem;">❄️ Frosted Glass</span>
+                            <!-- 3 Illustrated Swatch Pills -->
+                            <div class="shutter-swatch-pills">
+                                <button type="button" class="swatch-pill shutter-type-pill active" data-shutter-type="solid" title="Solid Flush Plywood Shutter">
+                                    <div class="swatch-thumbnail wood-swatch"></div>
+                                    <span class="swatch-name">Solid Wood/Ply</span>
+                                </button>
+                                <button type="button" class="swatch-pill shutter-type-pill" data-shutter-type="plywood_glass" title="2-inch Plywood Frame with Glass">
+                                    <div class="swatch-thumbnail frame-glass-swatch"></div>
+                                    <span class="swatch-name">2" Ply Frame + Glass</span>
+                                </button>
+                                <button type="button" class="swatch-pill shutter-type-pill" data-shutter-type="aluminum_glass" title="Aluminum Architectural Profile with Glass">
+                                    <div class="swatch-thumbnail aluminum-swatch"></div>
+                                    <span class="swatch-name">Aluminum Profile + Glass</span>
+                                </button>
+                            </div>
+
+                            <!-- Glass Finish Options (Visible when Glass is active) -->
+                            <div id="cad-glass-options-section" class="studio-suboptions" style="display: none;">
+                                <div class="suboption-header">
+                                    <span class="suboption-label">GLASS FINISH</span>
+                                    <span id="cad-glass-name-badge" class="badge-cyan-pill">❄️ Frosted Glass</span>
                                 </div>
-                                <div class="cad-glass-grid">
-                                    <button type="button" class="glass-pill active" data-glass="frosted" title="Translucent Frosted Ice Glass (Soft Light Diffusion)">
+                                <div class="studio-glass-grid">
+                                    <button type="button" class="glass-pill active" data-glass="frosted" title="Frosted Ice Glass">
                                         <div class="glass-swatch frosted-swatch"></div>
                                         <span>Frosted</span>
                                     </button>
-                                    <button type="button" class="glass-pill" data-glass="fluted" title="Architectural Fluted / Reeded Vertical Ribbed Glass">
+                                    <button type="button" class="glass-pill" data-glass="fluted" title="Fluted Reeded Glass">
                                         <div class="glass-swatch fluted-swatch"></div>
                                         <span>Fluted</span>
                                     </button>
-                                    <button type="button" class="glass-pill" data-glass="dark_black" title="Deep Glossy Smoked Obsidian Tinted Glass">
+                                    <button type="button" class="glass-pill" data-glass="dark_black" title="Smoked Obsidian Glass">
                                         <div class="glass-swatch black-swatch"></div>
                                         <span>Dark Black</span>
                                     </button>
-                                    <button type="button" class="glass-pill" data-glass="brown" title="Warm Amber Bronze Tinted Architectural Glass">
+                                    <button type="button" class="glass-pill" data-glass="brown" title="Warm Bronze Tinted Glass">
                                         <div class="glass-swatch brown-swatch"></div>
                                         <span>Brown Bronze</span>
                                     </button>
-                                    <button type="button" class="glass-pill" data-glass="clear" title="Crystal Clear Transparent Float Glass">
+                                    <button type="button" class="glass-pill" data-glass="clear" title="Clear Transparent Float Glass">
                                         <div class="glass-swatch clear-swatch"></div>
                                         <span>Clear White</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Aluminum Profile Finish Options (Visible when Aluminum Profile is active) -->
-                            <div id="cad-aluminum-finish-section" style="display: none; padding-top: 0.45rem; border-top: 1px dashed rgba(255,255,255,0.08);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                                    <label class="cad-col-label" style="margin: 0;">ALUMINUM PROFILE FINISH</label>
-                                    <span id="cad-frame-finish-badge" class="badge-tag" style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; font-size: 0.68rem;">Matte Black</span>
+                            <!-- Aluminum Finish Options (Visible when Aluminum is active) -->
+                            <div id="cad-aluminum-finish-section" class="studio-suboptions" style="display: none;">
+                                <div class="suboption-header">
+                                    <span class="suboption-label">ALUMINUM FINISH</span>
+                                    <span id="cad-frame-finish-badge" class="badge-slate-pill">Matte Black</span>
                                 </div>
-                                <div class="cad-frame-finish-pills">
-                                    <button type="button" class="frame-finish-pill active" data-finish="matte_black" title="Anodized Matte Black Profile">
-                                        <span class="color-dot" style="background: #18181b; border: 1px solid #52525b;"></span>
+                                <div class="studio-finish-grid">
+                                    <button type="button" class="frame-finish-pill active" data-finish="matte_black">
+                                        <span class="finish-color-dot" style="background: #18181b;"></span>
                                         <span>Matte Black</span>
                                     </button>
-                                    <button type="button" class="frame-finish-pill" data-finish="champagne_gold" title="Luxury Champagne Gold Anodized Profile">
-                                        <span class="color-dot" style="background: #c5a059; border: 1px solid #eab308;"></span>
+                                    <button type="button" class="frame-finish-pill" data-finish="champagne_gold">
+                                        <span class="finish-color-dot" style="background: #c5a059;"></span>
                                         <span>Champagne Gold</span>
                                     </button>
-                                    <button type="button" class="frame-finish-pill" data-finish="silver_chrome" title="Polished Silver Chrome Profile">
-                                        <span class="color-dot" style="background: #e2e8f0; border: 1px solid #94a3b8;"></span>
+                                    <button type="button" class="frame-finish-pill" data-finish="silver_chrome">
+                                        <span class="finish-color-dot" style="background: #e2e8f0;"></span>
                                         <span>Silver Chrome</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Quick Actions Bar -->
-                        <div class="cad-actions-row">
-                            <button type="button" id="btn-toggle-shutters" class="cad-action-btn" title="Toggle Doors Open/Close (Both Base & Wall)">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 3h18M5 21V3h14v18M15 12h2"/></svg>
+                        <!-- Quick Action Buttons -->
+                        <div class="cad-bottom-actions">
+                            <button type="button" id="btn-toggle-shutters" class="theme-action-btn" title="Toggle Doors Open / Close">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 3h18M5 21V3h14v18M15 12h2"/></svg>
                                 <span>Toggle Doors</span>
                             </button>
-                            <button type="button" id="btn-add-drawer-quick" class="cad-action-btn" title="Add a Drawer inside Base Cabinet">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
+                            <button type="button" id="btn-add-drawer-quick" class="theme-action-btn" title="Insert Drawer into Base Cabinet">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
                                 <span>+ Drawer</span>
                             </button>
-                            <button type="button" id="btn-delete-selected" class="cad-action-btn cad-btn-danger" title="Delete Selected Part">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            <button type="button" id="btn-delete-selected" class="theme-action-btn btn-danger" title="Delete Selected Part">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                 <span>Delete Part</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 3D Canvas Area -->
-                    <div id="3d-container" style="flex: 1; min-width: 0; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); background: #1a1a2e; cursor: default; position: relative;">
-                        <!-- Instructions Overlay (Transparent & Backgroundless) -->
-                        <div class="cad-canvas-notes">
-                            Single Click: View Dimensions<br>
-                            Double Click: Drag Arrows (X/Y)<br>
-                            Esc: Deselect / Cancel<br>
-                            Del Key: Delete Selected Part<br>
-                            Right Click: Pan Camera<br>
-                            Scroll: Zoom
+                    <!-- 3D Viewport Area -->
+                    <div id="3d-container" class="cad-viewport-wrapper">
+                        
+                        <!-- Floating Top-Left Instructions HUD -->
+                        <div class="viewport-hud-info">
+                            <div class="hud-info-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </div>
+                            <div class="hud-info-lines">
+                                <div class="hud-line">Drag to rotate <span class="sep">|</span> Scroll to zoom</div>
+                                <div class="hud-line">Right click to pan <span class="sep">|</span> Double click to reset</div>
+                                <div class="hud-line">Del to delete selected part</div>
+                            </div>
+                        </div>
+
+                        <!-- Floating Top-Right View Mode Toggle HUD -->
+                        <div class="viewport-hud-view">
+                            <button type="button" class="hud-view-btn active" id="btn-view-3d" title="Perspective 3D View">3D</button>
+                            <button type="button" class="hud-view-btn" id="btn-view-2d" title="Front 2D Elevation View">2D</button>
+                            <button type="button" class="hud-view-btn hud-fullscreen-btn" id="btn-view-fullscreen" title="Toggle Fullscreen">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <polyline points="9 21 3 21 3 15"></polyline>
+                                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                                </svg>
+                            </button>
                         </div>
                         
-                        <!-- 3D Dimension Overlays -->
-                        <div id="3d-overlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;"></div>
+                        <!-- 3D Dimension Overlays Layer -->
+                        <div id="3d-overlays" class="dimension-overlays-layer"></div>
                         
-                        <!-- Right Sidebar (Property Inspector) - Floating HUD -->
-                        <div id="property-inspector" style="position: absolute; right: 1rem; top: 1rem; width: 280px; background: rgba(20, 20, 35, 0.95); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); padding: 0.85rem 1rem; display: none; flex-direction: column; gap: 0.65rem; overflow-y: auto; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem;">
-                                <h4 style="margin: 0; font-size: 0.85rem; font-weight: 500; color: #f8fafc;">Property Inspector</h4>
-                                <button type="button" id="btn-close-inspector" style="background: transparent; border: none; color: #94a3b8; font-size: 1rem; cursor: pointer; padding: 0 0.2rem; line-height: 1;" title="Close">✕</button>
+                        <!-- Right Sidebar (Property Inspector) - Floating Card -->
+                        <div id="property-inspector" class="floating-inspector-card">
+                            <div class="inspector-header">
+                                <h4 class="inspector-title">Property Inspector</h4>
+                                <button type="button" id="btn-close-inspector" class="inspector-close-btn" title="Close">✕</button>
                             </div>
-                            <div id="prop-part-name" style="font-weight: 600; font-size: 0.88rem; color: #38bdf8;">Part Name</div>
+                            <div id="prop-part-name" class="inspector-part-name">Part Name</div>
                             
                             <!-- Dimensions Display Box in Inspector -->
-                            <div id="prop-dim-box" style="background: rgba(51, 65, 85, 0.5); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 0.5rem 0.6rem; font-size: 0.76rem;">
-                                <div id="prop-width-row" style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; gap: 8px;">
-                                    <span id="prop-width-label" style="color: #cbd5e1; white-space: nowrap;">Width (Breadth):</span>
-                                    <span id="prop-width-val" style="font-weight: 700; color: #facc15; font-family: monospace; white-space: nowrap;">--</span>
+                            <div id="prop-dim-box" class="inspector-dim-box">
+                                <div id="prop-width-row" class="prop-dim-row">
+                                    <span id="prop-width-label" class="prop-dim-label">Width (Breadth):</span>
+                                    <span id="prop-width-val" class="prop-dim-val gold">--</span>
                                 </div>
-                                <div id="prop-height-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; white-space: nowrap; gap: 8px;">
-                                    <span style="color: #cbd5e1; white-space: nowrap;">Height:</span>
-                                    <span id="prop-height-val" style="font-weight: 700; color: #f8fafc; font-family: monospace; white-space: nowrap;">--</span>
+                                <div id="prop-height-row" class="prop-dim-row">
+                                    <span class="prop-dim-label">Height:</span>
+                                    <span id="prop-height-val" class="prop-dim-val">--</span>
                                 </div>
-                                <div id="prop-thick-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; white-space: nowrap; gap: 8px;">
-                                    <span style="color: #cbd5e1; white-space: nowrap;">Thickness:</span>
-                                    <span id="prop-thick-val" style="font-weight: 700; color: #f8fafc; font-family: monospace; white-space: nowrap;">--</span>
+                                <div id="prop-thick-row" class="prop-dim-row">
+                                    <span class="prop-dim-label">Thickness:</span>
+                                    <span id="prop-thick-val" class="prop-dim-val">--</span>
                                 </div>
                             </div>
 
-                            <div id="prop-material-controls">
-                                <div class="form-group" style="margin-bottom: 0.2rem;">
-                                    <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Thickness Edit (inches)</label>
-                                    <input type="text" id="prop-thickness" class="cad-num-input" style="width: 100%; padding: 0.25rem 0.4rem; font-size: 0.8rem;" autocomplete="off">
+                            <div id="prop-material-controls" class="inspector-form">
+                                <div class="form-group">
+                                    <label class="form-label">Thickness Edit (inches)</label>
+                                    <input type="text" id="prop-thickness" class="theme-input num-input" autocomplete="off">
                                 </div>
 
-                                <div class="form-group" style="margin-bottom: 0.2rem;">
-                                    <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Laminate Coverage</label>
-                                    <select id="prop-laminate" class="cad-select-input" style="width: 100%; padding: 0.28rem 0.4rem; font-size: 0.78rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Laminate Coverage</label>
+                                    <select id="prop-laminate" class="theme-select">
                                         <option value="none">None</option>
                                         <option value="single">Single Side</option>
                                         <option value="double">Both Sides</option>
                                     </select>
                                 </div>
                                 
-                                <div class="form-group" style="margin-bottom: 0.2rem;">
-                                    <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Edge Banding (PVC Tape)</label>
-                                    <select id="prop-edge" class="cad-select-input" style="width: 100%; padding: 0.28rem 0.4rem; font-size: 0.78rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Edge Banding (PVC Tape)</label>
+                                    <select id="prop-edge" class="theme-select">
                                         <option value="none">None (Bare Plywood)</option>
                                         <option value="front">Front Edge Only</option>
                                         <option value="all">All 4 Edges</option>
@@ -546,6 +838,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=29"></script>
+    <script src="3d.js?v=30"></script>
 </body>
 </html>

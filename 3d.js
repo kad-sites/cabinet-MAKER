@@ -82,7 +82,7 @@ function init3D() {
 
     // Scene setup
     scene = new THREE.Scene();
-    scene.background = new THREE.Color('#1a1a2e');
+    scene.background = new THREE.Color('#121921');
 
     // Camera setup
     const aspect = container.clientWidth / container.clientHeight;
@@ -1744,10 +1744,10 @@ function updateDimensionsFromInputs() {
     const lblW = document.getElementById('lbl-cad-w-ft');
     const lblD = document.getElementById('lbl-cad-d-ft');
     const lblPlinth = document.getElementById('lbl-cad-plinth-in');
-    if (lblH) lblH.textContent = `HEIGHT (${hParsed.unit.toUpperCase()})`;
-    if (lblW) lblW.textContent = `WIDTH (${wParsed.unit.toUpperCase()})`;
-    if (lblD) lblD.textContent = `DEPTH (${dParsed.unit.toUpperCase()})`;
-    if (lblPlinth) lblPlinth.textContent = `PLINTH (${plinthParsed.unit.toUpperCase()})`;
+    if (lblH) lblH.textContent = `Height (${hParsed.unit.toLowerCase()})`;
+    if (lblW) lblW.textContent = `Width (${wParsed.unit.toLowerCase()})`;
+    if (lblD) lblD.textContent = `Depth (${dParsed.unit.toLowerCase()})`;
+    if (lblPlinth) lblPlinth.textContent = `Plinth (${plinthParsed.unit.toLowerCase()})`;
 
     // Update Base Subtext Labels
     const hSub = document.getElementById('cad-h-sub');
@@ -1794,10 +1794,10 @@ function updateDimensionsFromInputs() {
     const lblWallW = document.getElementById('lbl-cad-wall-w-ft');
     const lblWallD = document.getElementById('lbl-cad-wall-d-ft');
     const lblDadoGap = document.getElementById('lbl-cad-dado-gap-in');
-    if (lblWallH) lblWallH.textContent = `HEIGHT (${wallHParsed.unit.toUpperCase()})`;
-    if (lblWallW) lblWallW.textContent = `WIDTH (${wallWParsed.unit.toUpperCase()})`;
-    if (lblWallD) lblWallD.textContent = `DEPTH (${wallDParsed.unit.toUpperCase()})`;
-    if (lblDadoGap) lblDadoGap.textContent = `WALL GAP (${dadoGapParsed.unit.toUpperCase()})`;
+    if (lblWallH) lblWallH.textContent = `Height (${wallHParsed.unit.toLowerCase()})`;
+    if (lblWallW) lblWallW.textContent = `Width (${wallWParsed.unit.toLowerCase()})`;
+    if (lblWallD) lblWallD.textContent = `Depth (${wallDParsed.unit.toLowerCase()})`;
+    if (lblDadoGap) lblDadoGap.textContent = `Wall Gap (${dadoGapParsed.unit.toLowerCase()})`;
 
     // Update Wall Subtext Labels
     const wallHSub = document.getElementById('cad-wall-h-sub');
