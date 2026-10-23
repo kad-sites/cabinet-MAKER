@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabinet Optimizer Pro - 3D Builder</title>
-    <link rel="stylesheet" href="style.css?v=27">
+    <link rel="stylesheet" href="style.css?v=29">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         if (window.self !== window.top || new URLSearchParams(window.location.search).get('embed') === 'true') {
@@ -280,6 +280,25 @@
                                         <span id="cad-shutter-sub" class="cad-col-subtext">Each: 32.8" W</span>
                                     </div>
                                 </div>
+                                
+                                <!-- Shelf Orientation: Straight vs Angular Slanted (Shoe Rack) -->
+                                <div class="cad-shelf-config-row" id="cad-shelf-config-row">
+                                    <div class="shelf-config-left">
+                                        <span class="cad-col-label">SHELF STYLE:</span>
+                                        <div class="cad-toggle-pills" id="cad-shelf-style-toggle">
+                                            <button type="button" class="shelf-style-btn active" data-style="straight" title="Standard Flat Shelves">━ Straight</button>
+                                            <button type="button" class="shelf-style-btn" data-style="slanted" title="Angular Slanted Shelves with Front Safety Lip (Shoe Rack)">⦦ Slanted (Shoe)</button>
+                                        </div>
+                                    </div>
+                                    <div id="cad-shelf-angle-wrap" class="shelf-config-right" style="display: none;">
+                                        <span class="cad-col-label">TILT:</span>
+                                        <div class="cad-angle-pills">
+                                            <button type="button" class="angle-pill" data-angle="20" title="20° Gentle Incline">20°</button>
+                                            <button type="button" class="angle-pill active" data-angle="25" title="25° Ergonomic Shoe Slope (Recommended)">25°</button>
+                                            <button type="button" class="angle-pill" data-angle="30" title="30° Steep Space-Saving Slope">30°</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Wall Partitions (Visible in 'both' and 'wall' modes) -->
@@ -346,6 +365,87 @@
                                         </select>
                                         <span id="cad-wall-shutter-sub" class="cad-col-subtext">Each: 32.8" W</span>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Shutter & Glass Studio Card -->
+                        <div class="cad-card" id="cad-shutter-design-card">
+                            <div class="cad-card-header">
+                                <span class="cad-card-title">Shutter & Glass Studio <span class="badge-tag base-tag" id="cad-shutter-type-badge">Solid Ply</span></span>
+                            </div>
+                            
+                            <!-- Shutter Door Frame Type -->
+                            <div style="margin-bottom: 0.55rem;">
+                                <label class="cad-col-label" style="display: flex; justify-content: space-between;">
+                                    <span>DOOR DESIGN TYPE</span>
+                                    <span id="cad-shutter-type-desc" style="color: #94a3b8; font-weight: normal; text-transform: none; font-size: 0.68rem;">Standard Flush</span>
+                                </label>
+                                <div class="cad-shutter-type-pills">
+                                    <button type="button" class="shutter-type-pill active" data-shutter-type="solid" title="Solid Flush Plywood / Laminate Shutter">
+                                        <span class="pill-icon">🪵</span>
+                                        <span class="pill-text">Solid Wood/Ply</span>
+                                    </button>
+                                    <button type="button" class="shutter-type-pill" data-shutter-type="plywood_glass" title="2-inch Plywood Frame with Rear-Mounted Glass">
+                                        <span class="pill-icon">🖼️</span>
+                                        <span class="pill-text">2" Ply Frame + Glass</span>
+                                    </button>
+                                    <button type="button" class="shutter-type-pill" data-shutter-type="aluminum_glass" title="Modern Architectural Aluminum Profile with Glass">
+                                        <span class="pill-icon">🔲</span>
+                                        <span class="pill-text">Aluminum Profile + Glass</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Glass Options (Visible when Ply Frame + Glass or Aluminum Profile is active) -->
+                            <div id="cad-glass-options-section" style="display: none; margin-bottom: 0.5rem; padding-top: 0.45rem; border-top: 1px dashed rgba(255,255,255,0.08);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <label class="cad-col-label" style="margin: 0;">GLASS FINISH</label>
+                                    <span id="cad-glass-name-badge" class="badge-tag" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.68rem;">❄️ Frosted Glass</span>
+                                </div>
+                                <div class="cad-glass-grid">
+                                    <button type="button" class="glass-pill active" data-glass="frosted" title="Translucent Frosted Ice Glass (Soft Light Diffusion)">
+                                        <div class="glass-swatch frosted-swatch"></div>
+                                        <span>Frosted</span>
+                                    </button>
+                                    <button type="button" class="glass-pill" data-glass="fluted" title="Architectural Fluted / Reeded Vertical Ribbed Glass">
+                                        <div class="glass-swatch fluted-swatch"></div>
+                                        <span>Fluted</span>
+                                    </button>
+                                    <button type="button" class="glass-pill" data-glass="dark_black" title="Deep Glossy Smoked Obsidian Tinted Glass">
+                                        <div class="glass-swatch black-swatch"></div>
+                                        <span>Dark Black</span>
+                                    </button>
+                                    <button type="button" class="glass-pill" data-glass="brown" title="Warm Amber Bronze Tinted Architectural Glass">
+                                        <div class="glass-swatch brown-swatch"></div>
+                                        <span>Brown Bronze</span>
+                                    </button>
+                                    <button type="button" class="glass-pill" data-glass="clear" title="Crystal Clear Transparent Float Glass">
+                                        <div class="glass-swatch clear-swatch"></div>
+                                        <span>Clear White</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Aluminum Profile Finish Options (Visible when Aluminum Profile is active) -->
+                            <div id="cad-aluminum-finish-section" style="display: none; padding-top: 0.45rem; border-top: 1px dashed rgba(255,255,255,0.08);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <label class="cad-col-label" style="margin: 0;">ALUMINUM PROFILE FINISH</label>
+                                    <span id="cad-frame-finish-badge" class="badge-tag" style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; font-size: 0.68rem;">Matte Black</span>
+                                </div>
+                                <div class="cad-frame-finish-pills">
+                                    <button type="button" class="frame-finish-pill active" data-finish="matte_black" title="Anodized Matte Black Profile">
+                                        <span class="color-dot" style="background: #18181b; border: 1px solid #52525b;"></span>
+                                        <span>Matte Black</span>
+                                    </button>
+                                    <button type="button" class="frame-finish-pill" data-finish="champagne_gold" title="Luxury Champagne Gold Anodized Profile">
+                                        <span class="color-dot" style="background: #c5a059; border: 1px solid #eab308;"></span>
+                                        <span>Champagne Gold</span>
+                                    </button>
+                                    <button type="button" class="frame-finish-pill" data-finish="silver_chrome" title="Polished Silver Chrome Profile">
+                                        <span class="color-dot" style="background: #e2e8f0; border: 1px solid #94a3b8;"></span>
+                                        <span>Silver Chrome</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -446,6 +546,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=27"></script>
+    <script src="3d.js?v=29"></script>
 </body>
 </html>

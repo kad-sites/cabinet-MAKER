@@ -753,3 +753,271 @@ input[type=number] {
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Shoe Rack Shelf Orientation & Angle Selector
+   ───────────────────────────────────────────────────────────── */
+.cad-shelf-config-row {
+    margin-top: 0.45rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.shelf-config-left, .shelf-config-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cad-toggle-pills {
+    display: flex;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.shelf-style-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 0.22rem 0.55rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+
+.shelf-style-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.shelf-style-btn.active {
+    background: #38bdf8;
+    color: #0f172a;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(56, 189, 248, 0.35);
+}
+
+.cad-angle-pills {
+    display: flex;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.angle-pill {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.angle-pill:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.angle-pill.active {
+    background: #facc15;
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(250, 204, 21, 0.35);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Shutter & Glass Studio (Frames, Glasses & Metallic Finishes)
+   ───────────────────────────────────────────────────────────── */
+.cad-shutter-type-pills {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 0.3rem;
+}
+
+.shutter-type-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0.45rem 0.25rem;
+    font-size: 0.67rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.shutter-type-pill .pill-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.shutter-type-pill:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.shutter-type-pill.active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.28);
+}
+
+/* Glass Selector Grid */
+.cad-glass-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin-top: 0.25rem;
+}
+
+.glass-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.62rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.glass-pill span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.glass-pill:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.glass-pill.active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: #38bdf8;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+
+.glass-swatch {
+    width: 100%;
+    height: 16px;
+    border-radius: 3px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.frosted-swatch {
+    background: linear-gradient(135deg, rgba(240, 249, 255, 0.8), rgba(186, 230, 253, 0.45));
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.fluted-swatch {
+    background: repeating-linear-gradient(90deg, rgba(241, 245, 249, 0.85) 0px, rgba(241, 245, 249, 0.85) 2px, rgba(100, 116, 139, 0.35) 2px, rgba(100, 116, 139, 0.35) 5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.black-swatch {
+    background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
+    border: 1px solid #475569;
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+.brown-swatch {
+    background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+    border: 1px solid #b45309;
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+.clear-swatch {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(203, 213, 225, 0.12) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+/* Aluminum Frame Finish Selector */
+.cad-frame-finish-pills {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 0.25rem;
+}
+
+.frame-finish-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0.32rem 0.4rem;
+    font-size: 0.67rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.frame-finish-pill:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.frame-finish-pill.active {
+    background: rgba(148, 163, 184, 0.2);
+    border-color: #f8fafc;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+.color-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+

@@ -20,6 +20,15 @@ let currentLReturnSide = 'right'; // 'right' or 'left'
 let currentULeftFt = 7;
 let currentURightFt = 7;
 
+// Shoe Rack Angular Shelves State ('straight' or 'slanted')
+let currentShelfStyle = 'straight';
+let currentShelfAngle = 25; // 20, 25, 30 degrees
+
+// Shutter Door & Glass Studio State
+let currentShutterStyle = 'solid'; // 'solid', 'plywood_glass', 'aluminum_glass'
+let currentGlassType = 'frosted'; // 'frosted', 'fluted', 'dark_black', 'brown', 'clear'
+let currentFrameFinish = 'matte_black'; // 'matte_black', 'champagne_gold', 'silver_chrome'
+
 let shellObjects = [];
 let plinthObjects = [];
 let decorObjects = []; // Countertop & Backsplash
@@ -568,6 +577,24 @@ function populateInspector(obj) {
 
     if (obj.userData.type === 'shutter') {
         thickness = obj.userData.shutterD || 0.75;
+        const styleLabel = obj.userData.shutterStyle === 'aluminum_glass' 
+            ? 'Aluminum Profile + Glass' 
+            : (obj.userData.shutterStyle === 'plywood_glass' ? '2" Ply Frame + Glass' : 'Solid Shutter');
+        const glassLabel = (obj.userData.shutterStyle !== 'solid' && obj.userData.glassType) 
+            ? ` (${obj.userData.glassType.replace('_', ' ')})` 
+            : '';
+        name = `${obj.userData.label || 'Shutter'} [${styleLabel}${glassLabel}]`;
+    } else if (obj.userData.isMiterShelf) {
+        thickness = obj.userData.customThickness || currentThickness;
+        name = `${obj.userData.label || 'Shelf'} [45° Miter Corner]`;
+    } else if (obj.userData.isSlantedShelf) {
+        thickness = obj.userData.customThickness || currentThickness;
+        name = `${obj.userData.label || 'Shelf'} [Slanted Shoe Shelf ${obj.userData.shelfAngle || 25}°]`;
+    } else if (obj.userData.type === 'corner_post') {
+        thickness = 2.0;
+        partW = 2.0;
+        partH = obj.userData.h || 32;
+        name = obj.userData.label || '90° Corner Post Filler (2" × 2")';
     } else if (obj.userData.type === 'shelf') {
         thickness = obj.userData.customThickness || (obj.geometry && obj.geometry.parameters ? obj.geometry.parameters.height : currentThickness);
     } else if (obj.userData.type === 'divider') {
@@ -833,6 +860,618 @@ function createPanel(w, h, d, colorHex, isInternal, type) {
     return mesh;
 }
 
+let _flutedTextureCache = null;
+function createFlutedTexture() {
+    if (_flutedTextureCache) return _flutedTextureCache;
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 0, 64, 64);
+    const numFlutes = 8;
+    const fluteW = 64 / numFlutes;
+    for (let i = 0; i < numFlutes; i++) {
+        const grad = ctx.createLinearGradient(i * fluteW, 0, (i + 1) * fluteW, 0);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.5, '#333333');
+        grad.addColorStop(1, '#ffffff');
+        ctx.fillStyle = grad;
+        ctx.fillRect(i * fluteW, 0, fluteW, 64);
+    }
+    _flutedTextureCache = new THREE.CanvasTexture(canvas);
+    _flutedTextureCache.wrapS = THREE.RepeatWrapping;
+    _flutedTextureCache.wrapT = THREE.RepeatWrapping;
+    _flutedTextureCache.repeat.set(8, 1);
+    return _flutedTextureCache;
+}
+
+function getGlassMaterial(glassType = currentGlassType) {
+    switch (glassType) {
+        case 'fluted':
+            return new THREE.MeshPhongMaterial({
+                color: 0xf1f5f9,
+                transparent: true,
+                opacity: 0.70,
+                shininess: 95,
+                specular: 0xffffff,
+                bumpMap: createFlutedTexture(),
+                bumpScale: 0.15,
+                depthWrite: false
+            });
+        case 'dark_black':
+            return new THREE.MeshPhongMaterial({
+                color: 0x090d16,
+                transparent: true,
+                opacity: 0.84,
+                shininess: 120,
+                specular: 0x94a3b8,
+                depthWrite: false
+            });
+        case 'brown':
+            return new THREE.MeshPhongMaterial({
+                color: 0x451a03,
+                transparent: true,
+                opacity: 0.75,
+                shininess: 110,
+                specular: 0xd97706,
+                depthWrite: false
+            });
+        case 'clear':
+            return new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.28,
+                shininess: 130,
+                specular: 0xffffff,
+                depthWrite: false
+            });
+        case 'frosted':
+        default:
+            return new THREE.MeshPhongMaterial({
+                color: 0xe2e8f0,
+                transparent: true,
+                opacity: 0.58,
+                shininess: 25,
+                specular: 0xffffff,
+                depthWrite: false
+            });
+    }
+}
+
+function getAluminumMaterial(finish = currentFrameFinish) {
+    switch (finish) {
+        case 'champagne_gold':
+            return new THREE.MeshPhongMaterial({
+                color: 0xc5a059,
+                shininess: 85,
+                specular: 0xfde047
+            });
+        case 'silver_chrome':
+            return new THREE.MeshPhongMaterial({
+                color: 0xe2e8f0,
+                shininess: 120,
+                specular: 0xffffff
+            });
+        case 'matte_black':
+        default:
+            return new THREE.MeshPhongMaterial({
+                color: 0x18181b,
+                shininess: 60,
+                specular: 0x52525b
+            });
+    }
+}
+
+function buildDoorMeshAssembly(w, h, d, isRightHinged, label, module, index, totalShutters, isReturnWing = false) {
+    const group = new THREE.Group();
+    group.userData = {
+        label: label,
+        module: module,
+        type: 'shutter',
+        shutterIndex: index,
+        totalShutters: totalShutters,
+        shutterW: w,
+        shutterH: h,
+        shutterD: d,
+        w: w,
+        h: h,
+        d: d,
+        shutterStyle: currentShutterStyle,
+        glassType: currentGlassType,
+        frameFinish: currentFrameFinish,
+        lockZ: true,
+        lockX: false,
+        lockY: false,
+        closedRotationY: 0
+    };
+
+    const edgeLineMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const metalEdgeMat = new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 1.5 });
+
+    if (currentShutterStyle === 'solid') {
+        const panelGeo = new THREE.BoxGeometry(w, h, d);
+        const panelMesh = new THREE.Mesh(panelGeo);
+        panelMesh.userData = { isSubPart: true, w, h, d, type: 'shutter' };
+        applyLaminateMaterials(panelMesh, 'shutter', 'single', 'all');
+        panelMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), edgeLineMat));
+        group.add(panelMesh);
+
+        // Modern Sleek Vertical Pull Handle on opening edge
+        const handleMat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, shininess: 120, specular: 0xffffff });
+        const handleGeo = new THREE.BoxGeometry(0.35, Math.min(8.0, h * 0.3), 0.55);
+        const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+        const handleX = isRightHinged ? (-w / 2 + 1.25) : (w / 2 - 1.25);
+        handleMesh.position.set(handleX, 0, d / 2 + 0.28);
+        group.add(handleMesh);
+
+    } else if (currentShutterStyle === 'plywood_glass') {
+        const frameW = 2.0; // 2 inches on all sides
+        const innerW = Math.max(0.5, w - (2 * frameW));
+        const innerH = Math.max(0.5, h - (2 * frameW));
+        const frameMat = new THREE.MeshPhongMaterial({ color: 0xdeb887, shininess: 14 });
+
+        const makeFramePiece = (pw, ph, pd, px, py, pz) => {
+            const geo = new THREE.BoxGeometry(pw, ph, pd);
+            const mesh = new THREE.Mesh(geo, frameMat);
+            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeLineMat));
+            mesh.position.set(px, py, pz);
+            mesh.userData = { isSubPart: true };
+            group.add(mesh);
+        };
+
+        // Left stile (2" wide, full height)
+        makeFramePiece(frameW, h, d, -w / 2 + frameW / 2, 0, 0);
+        // Right stile (2" wide, full height)
+        makeFramePiece(frameW, h, d, w / 2 - frameW / 2, 0, 0);
+        // Top rail (2" high, fits between stiles)
+        makeFramePiece(innerW, frameW, d, 0, h / 2 - frameW / 2, 0);
+        // Bottom rail (2" high, fits between stiles)
+        makeFramePiece(innerW, frameW, d, 0, -h / 2 + frameW / 2, 0);
+
+        // Center Glass Pane
+        const glassW = innerW + 0.7;
+        const glassH = innerH + 0.7;
+        const glassD = 0.1875;
+        const glassGeo = new THREE.BoxGeometry(glassW, glassH, glassD);
+        const glassMat = getGlassMaterial(currentGlassType);
+        const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+        glassMesh.position.set(0, 0, -d / 2 + glassD / 2 + 0.05);
+        glassMesh.userData = { isSubPart: true, isGlassPane: true, glassType: currentGlassType };
+        group.add(glassMesh);
+
+        // Rear Glass Mounting Brackets
+        const bracketMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 80 });
+        const bracketGeo = new THREE.BoxGeometry(0.65, 0.38, 0.12);
+        const bracketPositions = [
+            [-innerW / 2 + 0.1, innerH / 3, -d / 2 - 0.04],
+            [-innerW / 2 + 0.1, -innerH / 3, -d / 2 - 0.04],
+            [innerW / 2 - 0.1, innerH / 3, -d / 2 - 0.04],
+            [innerW / 2 - 0.1, -innerH / 3, -d / 2 - 0.04],
+            [0, innerH / 2 - 0.1, -d / 2 - 0.04],
+            [0, -innerH / 2 + 0.1, -d / 2 - 0.04]
+        ];
+        bracketPositions.forEach(pos => {
+            const bMesh = new THREE.Mesh(bracketGeo, bracketMat);
+            bMesh.position.set(pos[0], pos[1], pos[2]);
+            bMesh.userData = { isSubPart: true, type: 'bracket' };
+            group.add(bMesh);
+        });
+
+        // Pull Handle on opening stile
+        const handleMat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, shininess: 120, specular: 0xffffff });
+        const handleGeo = new THREE.BoxGeometry(0.35, Math.min(8.0, h * 0.3), 0.55);
+        const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+        const handleX = isRightHinged ? (-w / 2 + frameW / 2) : (w / 2 - frameW / 2);
+        handleMesh.position.set(handleX, 0, d / 2 + 0.28);
+        group.add(handleMesh);
+
+    } else if (currentShutterStyle === 'aluminum_glass') {
+        const frameW = 1.2; // 1.2" slim modern profile
+        const innerW = Math.max(0.5, w - (2 * frameW));
+        const innerH = Math.max(0.5, h - (2 * frameW));
+        const aluMat = getAluminumMaterial(currentFrameFinish);
+
+        const makeAluPiece = (pw, ph, pd, px, py, pz) => {
+            const geo = new THREE.BoxGeometry(pw, ph, pd);
+            const mesh = new THREE.Mesh(geo, aluMat);
+            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), metalEdgeMat));
+            mesh.position.set(px, py, pz);
+            mesh.userData = { isSubPart: true };
+            group.add(mesh);
+        };
+
+        // Left aluminum profile stile
+        makeAluPiece(frameW, h, d, -w / 2 + frameW / 2, 0, 0);
+        // Right aluminum profile stile
+        makeAluPiece(frameW, h, d, w / 2 - frameW / 2, 0, 0);
+        // Top aluminum profile rail
+        makeAluPiece(innerW, frameW, d, 0, h / 2 - frameW / 2, 0);
+        // Bottom aluminum profile rail
+        makeAluPiece(innerW, frameW, d, 0, -h / 2 + frameW / 2, 0);
+
+        // Center Glass Pane
+        const glassW = innerW + 0.4;
+        const glassH = innerH + 0.4;
+        const glassD = 0.1875;
+        const glassGeo = new THREE.BoxGeometry(glassW, glassH, glassD);
+        const glassMat = getGlassMaterial(currentGlassType);
+        const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+        glassMesh.position.set(0, 0, 0);
+        glassMesh.userData = { isSubPart: true, isGlassPane: true, glassType: currentGlassType };
+        group.add(glassMesh);
+
+        // Integrated Profile Edge Pull Handle
+        const handleMat = getAluminumMaterial(currentFrameFinish);
+        const handleGeo = new THREE.BoxGeometry(0.4, Math.min(6.0, h * 0.25), 0.45);
+        const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+        const handleX = isRightHinged ? (-w / 2 + frameW / 2) : (w / 2 - frameW / 2);
+        handleMesh.position.set(handleX, 0, d / 2 + 0.22);
+        group.add(handleMesh);
+    }
+
+    // Invisible HitBox for crisp raycasting and dimension inspection
+    const hitBoxGeo = new THREE.BoxGeometry(w, h, d + 0.2);
+    const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+    const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+    hitBox.userData = {
+        type: 'shutter',
+        parentGroup: group,
+        label: label,
+        module: module,
+        shutterIndex: index,
+        totalShutters: totalShutters,
+        shutterW: w,
+        shutterH: h,
+        shutterD: d,
+        w: w,
+        h: h,
+        d: d
+    };
+    group.add(hitBox);
+
+    // Apply Hinge Pivot Offset to all children:
+    // Shifting children by pivotOffsetX moves the hinge axis to the local origin (0, 0, 0)!
+    if (!isReturnWing) {
+        const pivotOffsetX = isRightHinged ? -w / 2 : w / 2;
+        const pivotOffsetZ = -d / 2;
+        group.children.forEach(c => {
+            c.position.x += pivotOffsetX;
+            c.position.z += pivotOffsetZ;
+        });
+    }
+
+    return { group, hitBox };
+}
+
+function setShelfStyle(style, angle = currentShelfAngle) {
+    currentShelfStyle = style;
+    currentShelfAngle = angle;
+    document.querySelectorAll('.shelf-style-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.style === style);
+    });
+    const angleWrap = document.getElementById('cad-shelf-angle-wrap');
+    if (angleWrap) {
+        angleWrap.style.display = (style === 'slanted') ? 'flex' : 'none';
+    }
+    document.querySelectorAll('.angle-pill').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.angle) === currentShelfAngle);
+    });
+    syncShelvesFromCount('base');
+    if (renderer && scene && camera) renderer.render(scene, camera);
+}
+
+function setShelfAngle(angle) {
+    currentShelfAngle = angle;
+    document.querySelectorAll('.angle-pill').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.angle) === currentShelfAngle);
+    });
+    if (currentShelfStyle === 'slanted') {
+        syncShelvesFromCount('base');
+        if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+}
+
+function setShutterStyle(style) {
+    currentShutterStyle = style;
+    document.querySelectorAll('.shutter-type-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.shutterType === style);
+    });
+    const badge = document.getElementById('cad-shutter-type-badge');
+    const desc = document.getElementById('cad-shutter-type-desc');
+    const glassSec = document.getElementById('cad-glass-options-section');
+    const aluSec = document.getElementById('cad-aluminum-finish-section');
+
+    if (style === 'solid') {
+        if (badge) badge.textContent = 'Solid Ply';
+        if (desc) desc.textContent = 'Standard Flush Door';
+        if (glassSec) glassSec.style.display = 'none';
+        if (aluSec) aluSec.style.display = 'none';
+    } else if (style === 'plywood_glass') {
+        if (badge) badge.textContent = '2" Ply Frame + Glass';
+        if (desc) desc.textContent = '2" Border with Rear Glass & Brackets';
+        if (glassSec) glassSec.style.display = 'block';
+        if (aluSec) aluSec.style.display = 'none';
+    } else if (style === 'aluminum_glass') {
+        if (badge) badge.textContent = 'Aluminum Profile + Glass';
+        if (desc) desc.textContent = 'Modern Slim Metal Profile';
+        if (glassSec) glassSec.style.display = 'block';
+        if (aluSec) aluSec.style.display = 'block';
+    }
+
+    syncShuttersFromSelect('base');
+    syncShuttersFromSelect('wall');
+    if (currentKitchenLayout === 'l-shape' || currentKitchenLayout === 'u-shape') {
+        syncPartitionsAndDoors();
+    }
+    if (renderer && scene && camera) renderer.render(scene, camera);
+}
+
+function setGlassType(type) {
+    currentGlassType = type;
+    document.querySelectorAll('.glass-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.glass === type);
+    });
+    const glassBadge = document.getElementById('cad-glass-name-badge');
+    const glassLabels = {
+        frosted: '❄️ Frosted Glass',
+        fluted: '║ Fluted Glass',
+        dark_black: '⬛ Dark Black Glass',
+        brown: '🟤 Brown Bronze Glass',
+        clear: '⬜ Clear White Glass'
+    };
+    if (glassBadge) glassBadge.textContent = glassLabels[type] || type;
+
+    syncShuttersFromSelect('base');
+    syncShuttersFromSelect('wall');
+    if (currentKitchenLayout === 'l-shape' || currentKitchenLayout === 'u-shape') {
+        syncPartitionsAndDoors();
+    }
+    if (renderer && scene && camera) renderer.render(scene, camera);
+}
+
+function setFrameFinish(finish) {
+    currentFrameFinish = finish;
+    document.querySelectorAll('.frame-finish-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.finish === finish);
+    });
+    const finishBadge = document.getElementById('cad-frame-finish-badge');
+    const finishLabels = {
+        matte_black: 'Matte Black',
+        champagne_gold: 'Champagne Gold',
+        silver_chrome: 'Silver Chrome'
+    };
+    if (finishBadge) finishBadge.textContent = finishLabels[finish] || finish;
+
+    if (currentShutterStyle === 'aluminum_glass') {
+        syncShuttersFromSelect('base');
+        syncShuttersFromSelect('wall');
+        if (currentKitchenLayout === 'l-shape' || currentKitchenLayout === 'u-shape') {
+            syncPartitionsAndDoors();
+        }
+        if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+}
+
+function makeExtrudedShelfPanel(pts, t, colorHex, label, module) {
+    const shape = new THREE.Shape();
+    shape.moveTo(pts[0].x, pts[0].z);
+    for (let i = 1; i < pts.length; i++) {
+        shape.lineTo(pts[i].x, pts[i].z);
+    }
+    shape.closePath();
+
+    const geo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: t, bevelEnabled: false });
+    geo.rotateX(Math.PI / 2);
+
+    const faceMat = new THREE.MeshPhongMaterial({ color: colorHex, shininess: 12 });
+    const sideMat = new THREE.MeshPhongMaterial({ color: 0xd1d5db, shininess: 15 });
+    const mesh = new THREE.Mesh(geo, [faceMat, sideMat]);
+    const edgeGeo = new THREE.EdgesGeometry(geo);
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    mesh.add(new THREE.LineSegments(edgeGeo, edgeMat));
+
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    pts.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.z < minZ) minZ = p.z;
+        if (p.z > maxZ) maxZ = p.z;
+    });
+
+    mesh.userData = {
+        type: 'shelf',
+        module: module,
+        label: label,
+        isAutoShelf: true,
+        isMiterShelf: true,
+        w: maxX - minX,
+        h: maxZ - minZ,
+        d: t,
+        customThickness: t,
+        customLaminate: 'double',
+        customEdge: 'all'
+    };
+    internalParts.push(mesh);
+    return mesh;
+}
+
+function buildReturnDoorMeshAssembly(doorLen, doorH, doorThickness, isHingedFar, label, module, index, totalDoors, isRight) {
+    const group = new THREE.Group();
+    group.userData = {
+        label: label,
+        module: module,
+        type: 'shutter',
+        shutterIndex: index,
+        totalShutters: totalDoors,
+        shutterW: doorLen,
+        shutterH: doorH,
+        shutterD: doorThickness,
+        w: doorLen,
+        h: doorH,
+        d: doorThickness,
+        shutterStyle: currentShutterStyle,
+        glassType: currentGlassType,
+        frameFinish: currentFrameFinish,
+        lockZ: false,
+        lockX: true,
+        lockY: false,
+        closedRotationY: 0
+    };
+
+    const edgeLineMat = new THREE.LineBasicMaterial({ color: 0x5c4033, linewidth: 2 });
+    const metalEdgeMat = new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 1.5 });
+
+    if (currentShutterStyle === 'solid') {
+        const panelGeo = new THREE.BoxGeometry(doorThickness, doorH, doorLen);
+        const panelMesh = new THREE.Mesh(panelGeo);
+        panelMesh.userData = { isSubPart: true, w: doorLen, h: doorH, d: doorThickness, type: 'shutter' };
+        applyLaminateMaterials(panelMesh, 'shutter', 'single', 'all');
+        panelMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), edgeLineMat));
+        group.add(panelMesh);
+
+        // Modern Vertical Pull Handle on opening edge
+        const handleMat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, shininess: 120, specular: 0xffffff });
+        const handleGeo = new THREE.BoxGeometry(0.55, Math.min(8.0, doorH * 0.3), 0.35);
+        const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+        const handleZ = isHingedFar ? (-doorLen / 2 + 1.25) : (doorLen / 2 - 1.25);
+        const handleX = isRight ? (-doorThickness / 2 - 0.28) : (doorThickness / 2 + 0.28);
+        handleMesh.position.set(handleX, 0, handleZ);
+        group.add(handleMesh);
+
+    } else if (currentShutterStyle === 'plywood_glass') {
+        const frameW = 2.0; // 2 inches on all sides
+        const innerLen = Math.max(0.5, doorLen - (2 * frameW));
+        const innerH = Math.max(0.5, doorH - (2 * frameW));
+        const frameMat = new THREE.MeshPhongMaterial({ color: 0xdeb887, shininess: 14 });
+
+        const makeFramePiece = (pw, ph, pd, px, py, pz) => {
+            const geo = new THREE.BoxGeometry(pw, ph, pd);
+            const mesh = new THREE.Mesh(geo, frameMat);
+            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeLineMat));
+            mesh.position.set(px, py, pz);
+            mesh.userData = { isSubPart: true };
+            group.add(mesh);
+        };
+
+        // Front & Rear stiles (2" along Z, full height)
+        makeFramePiece(doorThickness, doorH, frameW, 0, 0, -doorLen / 2 + frameW / 2);
+        makeFramePiece(doorThickness, doorH, frameW, 0, 0, doorLen / 2 - frameW / 2);
+        // Top & Bottom rails (2" high, fits between stiles)
+        makeFramePiece(doorThickness, frameW, innerLen, 0, doorH / 2 - frameW / 2, 0);
+        makeFramePiece(doorThickness, frameW, innerLen, 0, -doorH / 2 + frameW / 2, 0);
+
+        // Center Glass Pane
+        const glassLen = innerLen + 0.7;
+        const glassH = innerH + 0.7;
+        const glassThick = 0.1875;
+        const glassGeo = new THREE.BoxGeometry(glassThick, glassH, glassLen);
+        const glassMat = getGlassMaterial(currentGlassType);
+        const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+        const glassX = isRight ? (doorThickness / 2 - glassThick / 2 - 0.05) : (-doorThickness / 2 + glassThick / 2 + 0.05);
+        glassMesh.position.set(glassX, 0, 0);
+        glassMesh.userData = { isSubPart: true, isGlassPane: true, glassType: currentGlassType };
+        group.add(glassMesh);
+
+        // Rear Glass Mounting Brackets (from inside)
+        const bracketMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 80 });
+        const bracketGeo = new THREE.BoxGeometry(0.12, 0.38, 0.65);
+        const bracketPositions = [
+            [glassX, innerH / 3, -innerLen / 2 + 0.1],
+            [glassX, -innerH / 3, -innerLen / 2 + 0.1],
+            [glassX, innerH / 3, innerLen / 2 - 0.1],
+            [glassX, -innerH / 3, innerLen / 2 - 0.1],
+            [glassX, innerH / 2 - 0.1, 0],
+            [glassX, -innerH / 2 + 0.1, 0]
+        ];
+        bracketPositions.forEach(pos => {
+            const bMesh = new THREE.Mesh(bracketGeo, bracketMat);
+            bMesh.position.set(pos[0], pos[1], pos[2]);
+            bMesh.userData = { isSubPart: true, type: 'bracket' };
+            group.add(bMesh);
+        });
+
+        // Pull Handle on opening stile
+        const handleMat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, shininess: 120, specular: 0xffffff });
+        const handleGeo = new THREE.BoxGeometry(0.55, Math.min(8.0, doorH * 0.3), 0.35);
+        const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+        const handleZ = isHingedFar ? (-doorLen / 2 + frameW / 2) : (doorLen / 2 - frameW / 2);
+        const handleX = isRight ? (-doorThickness / 2 - 0.28) : (doorThickness / 2 + 0.28);
+        handleMesh.position.set(handleX, 0, handleZ);
+        group.add(handleMesh);
+
+    } else if (currentShutterStyle === 'aluminum_glass') {
+        const frameW = 1.2; // 1.2" slim modern profile
+        const innerLen = Math.max(0.5, doorLen - (2 * frameW));
+        const innerH = Math.max(0.5, doorH - (2 * frameW));
+        const aluMat = getAluminumMaterial(currentFrameFinish);
+
+        const makeAluPiece = (pw, ph, pd, px, py, pz) => {
+            const geo = new THREE.BoxGeometry(pw, ph, pd);
+            const mesh = new THREE.Mesh(geo, aluMat);
+            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), metalEdgeMat));
+            mesh.position.set(px, py, pz);
+            mesh.userData = { isSubPart: true };
+            group.add(mesh);
+        };
+
+        // Front & Rear aluminum profile stiles
+        makeAluPiece(doorThickness, doorH, frameW, 0, 0, -doorLen / 2 + frameW / 2);
+        makeAluPiece(doorThickness, doorH, frameW, 0, 0, doorLen / 2 - frameW / 2);
+        // Top & Bottom aluminum profile rails
+        makeAluPiece(doorThickness, frameW, innerLen, 0, doorH / 2 - frameW / 2, 0);
+        makeAluPiece(doorThickness, frameW, innerLen, 0, -doorH / 2 + frameW / 2, 0);
+
+        // Center Glass Pane
+        const glassLen = innerLen + 0.4;
+        const glassH = innerH + 0.4;
+        const glassThick = 0.1875;
+        const glassGeo = new THREE.BoxGeometry(glassThick, glassH, glassLen);
+        const glassMat = getGlassMaterial(currentGlassType);
+        const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+        glassMesh.position.set(0, 0, 0);
+        glassMesh.userData = { isSubPart: true, isGlassPane: true, glassType: currentGlassType };
+        group.add(glassMesh);
+
+        // Integrated Profile Handle
+        const handleMat = getAluminumMaterial(currentFrameFinish);
+        const handleGeo = new THREE.BoxGeometry(0.45, Math.min(6.0, doorH * 0.25), 0.4);
+        const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+        const handleZ = isHingedFar ? (-doorLen / 2 + frameW / 2) : (doorLen / 2 - frameW / 2);
+        const handleX = isRight ? (-doorThickness / 2 - 0.22) : (doorThickness / 2 + 0.22);
+        handleMesh.position.set(handleX, 0, handleZ);
+        group.add(handleMesh);
+    }
+
+    // Invisible HitBox for crisp raycasting and dimension inspection
+    const hitBoxGeo = new THREE.BoxGeometry(doorThickness + 0.2, doorH, doorLen);
+    const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+    const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+    hitBox.userData = {
+        type: 'shutter',
+        parentGroup: group,
+        label: label,
+        module: module,
+        shutterIndex: index,
+        totalShutters: totalDoors,
+        shutterW: doorLen,
+        shutterH: doorH,
+        shutterD: doorThickness,
+        w: doorLen,
+        h: doorH,
+        d: doorThickness
+    };
+    group.add(hitBox);
+
+    // Apply Hinge Pivot Offset to all children:
+    const pivotOffsetZ = isHingedFar ? doorLen / 2 : -doorLen / 2;
+    group.children.forEach(c => {
+        c.position.z += -pivotOffsetZ;
+    });
+
+    return { group, hitBox, pivotOffsetZ };
+}
+
 const CABINET_PRESETS = {
     'kitchen-set': {
         name: 'Modular Kitchen Set',
@@ -927,13 +1566,17 @@ const CABINET_PRESETS = {
     'shoe-rack': {
         name: 'Shoe Rack Cabinet',
         mode: 'base',
-        hIn: 36,
+        hIn: 38,
         wFt: 3,
-        dFt: 1.25,
+        dFt: 1.15, // ~13.8" slim depth enabled by angular slanted shelves
         plinthIn: 2,
         shelves: 4,
         dividers: 0,
         shutters: '2',
+        shelfStyle: 'slanted',
+        shelfAngle: 25,
+        shutterStyle: 'plywood_glass',
+        glassType: 'frosted',
         wallHIn: 30,
         wallWFt: 3,
         wallDFt: 1,
@@ -1218,48 +1861,61 @@ function updateDimensionsFromInputs() {
 
 function buildBoxShell(module, w, h, d, centerY, centerZ, labelPrefix) {
     const t = currentThickness;
-    const innerW = w - (2 * t);
     const innerH = h - (2 * t);
     const shellColor = 0xcd853f; 
 
-    // Left Side
-    const left = createPanel(t, h, d, shellColor, false, 'side');
-    left.position.set(-w/2 + t/2, centerY, centerZ);
-    left.userData.label = `${labelPrefix} Left Side`;
-    left.userData.module = module;
-    left.userData.w = t; left.userData.h = h; left.userData.d = d;
-    cabinetGroup.add(left);
+    // Determine corner open ends for L-Kitchen & U-Kitchen so internal cavity connects with no partition
+    const isCornerRight = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'right') || (currentKitchenLayout === 'u-shape');
+    const isCornerLeft = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'left') || (currentKitchenLayout === 'u-shape');
 
-    // Right Side
-    const right = createPanel(t, h, d, shellColor, false, 'side');
-    right.position.set(w/2 - t/2, centerY, centerZ);
-    right.userData.label = `${labelPrefix} Right Side`;
-    right.userData.module = module;
-    right.userData.w = t; right.userData.h = h; right.userData.d = d;
-    cabinetGroup.add(right);
+    // Left Side Panel (omitted if open corner connection on the left)
+    if (!isCornerLeft) {
+        const left = createPanel(t, h, d, shellColor, false, 'side');
+        left.position.set(-w/2 + t/2, centerY, centerZ);
+        left.userData.label = `${labelPrefix} Left Side`;
+        left.userData.module = module;
+        left.userData.w = t; left.userData.h = h; left.userData.d = d;
+        cabinetGroup.add(left);
+    }
+
+    // Right Side Panel (omitted if open corner connection on the right)
+    if (!isCornerRight) {
+        const right = createPanel(t, h, d, shellColor, false, 'side');
+        right.position.set(w/2 - t/2, centerY, centerZ);
+        right.userData.label = `${labelPrefix} Right Side`;
+        right.userData.module = module;
+        right.userData.w = t; right.userData.h = h; right.userData.d = d;
+        cabinetGroup.add(right);
+    }
+
+    // Top & Bottom Panels: extend flush to the corner outer wall so the floor and ceiling are continuous
+    let leftX = isCornerLeft ? (-w/2) : (-w/2 + t);
+    let rightX = isCornerRight ? (w/2) : (w/2 - t);
+    const bottomW = rightX - leftX;
+    const bottomCenterX = (leftX + rightX) / 2;
 
     // Top
-    const top = createPanel(innerW, t, d, shellColor, false, 'top');
-    top.position.set(0, centerY + h/2 - t/2, centerZ);
+    const top = createPanel(bottomW, t, d, shellColor, false, 'top');
+    top.position.set(bottomCenterX, centerY + h/2 - t/2, centerZ);
     top.userData.label = `${labelPrefix} Top`;
     top.userData.module = module;
-    top.userData.w = innerW; top.userData.h = t; top.userData.d = d;
+    top.userData.w = bottomW; top.userData.h = t; top.userData.d = d;
     cabinetGroup.add(top);
 
     // Bottom
-    const bot = createPanel(innerW, t, d, shellColor, false, 'bottom');
-    bot.position.set(0, centerY - h/2 + t/2, centerZ);
+    const bot = createPanel(bottomW, t, d, shellColor, false, 'bottom');
+    bot.position.set(bottomCenterX, centerY - h/2 + t/2, centerZ);
     bot.userData.label = `${labelPrefix} Bottom`;
     bot.userData.module = module;
-    bot.userData.w = innerW; bot.userData.h = t; bot.userData.d = d;
+    bot.userData.w = bottomW; bot.userData.h = t; bot.userData.d = d;
     cabinetGroup.add(bot);
 
     // Back Panel
-    const back = createPanel(innerW, innerH, t, shellColor, false, 'back');
-    back.position.set(0, centerY, centerZ - d/2 + t/2);
+    const back = createPanel(bottomW, innerH, t, shellColor, false, 'back');
+    back.position.set(bottomCenterX, centerY, centerZ - d/2 + t/2);
     back.userData.label = `${labelPrefix} Back Panel`;
     back.userData.module = module;
-    back.userData.w = innerW; back.userData.h = innerH; back.userData.d = t;
+    back.userData.w = bottomW; back.userData.h = innerH; back.userData.d = t;
     cabinetGroup.add(back);
 }
 
@@ -1301,22 +1957,8 @@ function buildPlinth(w, d, plinth, labelPrefix) {
 function buildDecor() {
     if (currentKitchenMode !== 'both') return;
 
-    // 1. Sleek Countertop Slab (1.25" thick polished quartz/granite)
-    const ctThick = 1.25;
-    const ctW = currentW + 1.0;
-    const ctD = currentD + 1.0;
-    const ctY = getBaseTopY() + ctThick / 2;
-    const ctZ = 0.5;
-
-    const ctGeo = new THREE.BoxGeometry(ctW, ctThick, ctD);
-    const ctMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
-    const ctMesh = new THREE.Mesh(ctGeo, ctMat);
-    ctMesh.position.set(0, ctY, ctZ);
-    const ctEdge = new THREE.LineSegments(new THREE.EdgesGeometry(ctGeo), new THREE.LineBasicMaterial({ color: 0x475569 }));
-    ctMesh.add(ctEdge);
-    ctMesh.userData = { isDecor: true, label: "Granite/Quartz Countertop" };
-    cabinetGroup.add(ctMesh);
-    decorObjects.push(ctMesh);
+    // 1. Sleek Countertop Slab (1.25" thick polished quartz/granite with 45° Miter Joint)
+    buildCountertopWithMiterJoint();
 
     // 2. Dado Backsplash Panel
     if (currentDadoGap > 0) {
@@ -1335,6 +1977,160 @@ function buildDecor() {
         bsMesh.userData = { isDecor: true, label: "Dado Backsplash Wall" };
         cabinetGroup.add(bsMesh);
         decorObjects.push(bsMesh);
+    }
+}
+
+function buildCountertopWithMiterJoint() {
+    const ctThick = 1.25; // 1.25" polished granite/quartz slab
+    const ctMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
+    const ctEdgeMat = new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 2 });
+    const ctY = getBaseTopY() + ctThick; // Position of mesh after geo.rotateX(Math.PI/2)
+
+    const wMain = currentW;
+    const dBase = currentD;
+    const overhangFront = 1.0;
+    const overhangSide = 0.5;
+    const overhangTip = 0.5;
+
+    const zBack = -dBase / 2;
+    const zFront = dBase / 2 + overhangFront;
+    const xLeft = -wMain / 2 - overhangSide;
+    const xRight = wMain / 2 + overhangSide;
+
+    if (currentKitchenLayout === 'straight') {
+        const ctGeo = new THREE.BoxGeometry(wMain + (2 * overhangSide), ctThick, dBase + overhangFront);
+        const ctMesh = new THREE.Mesh(ctGeo, ctMat);
+        ctMesh.position.set(0, getBaseTopY() + ctThick / 2, zBack + (dBase + overhangFront) / 2);
+        ctMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(ctGeo), ctEdgeMat));
+        ctMesh.userData = { isDecor: true, label: "Granite/Quartz Countertop (Straight Slab)" };
+        cabinetGroup.add(ctMesh);
+        decorObjects.push(ctMesh);
+        return;
+    }
+
+    const makeExtrudedSlab = (pts, label) => {
+        const shape = new THREE.Shape();
+        shape.moveTo(pts[0].x, pts[0].z);
+        for (let i = 1; i < pts.length; i++) {
+            shape.lineTo(pts[i].x, pts[i].z);
+        }
+        shape.closePath();
+
+        const geo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: ctThick, bevelEnabled: false });
+        geo.rotateX(Math.PI / 2);
+
+        const mesh = new THREE.Mesh(geo, ctMat);
+        mesh.position.set(0, ctY, 0);
+        mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), ctEdgeMat));
+        mesh.userData = { isDecor: true, label: label };
+        cabinetGroup.add(mesh);
+        decorObjects.push(mesh);
+        return mesh;
+    };
+
+    if (currentKitchenLayout === 'l-shape') {
+        const isRight = (currentLReturnSide === 'right');
+        const wingLen = currentLReturnFt * 12;
+        const zTip = -dBase / 2 + wingLen + overhangTip;
+
+        if (isRight) {
+            // Right Return L-Kitchen:
+            // 45° Miter line connects inside corner (Xin, Zin) to outside corner (Xout, Zout)
+            const Xin = wMain / 2 - dBase - overhangFront;
+            const Zin = zFront;
+            const Xout = wMain / 2;
+            const Zout = zBack;
+
+            // 1. Main Run Countertop Slab (with 45° miter cut at right end)
+            const mainPts = [
+                { x: xLeft, z: zBack },
+                { x: xLeft, z: zFront },
+                { x: Xin, z: Zin },
+                { x: Xout, z: Zout }
+            ];
+            makeExtrudedSlab(mainPts, "Granite/Quartz Countertop (Main Run - 45° Miter Joint)");
+
+            // 2. Right Return Countertop Slab (with matching 45° miter cut)
+            const returnPts = [
+                { x: Xout, z: Zout },
+                { x: Xin, z: Zin },
+                { x: Xin, z: zTip },
+                { x: xRight, z: zTip },
+                { x: xRight, z: Zout }
+            ];
+            makeExtrudedSlab(returnPts, "Granite/Quartz Countertop (Right Return - 45° Miter Joint)");
+
+        } else {
+            // Left Return L-Kitchen:
+            const Xin = -wMain / 2 + dBase + overhangFront;
+            const Zin = zFront;
+            const Xout = -wMain / 2;
+            const Zout = zBack;
+
+            // 1. Main Run Countertop Slab (with 45° miter cut at left end)
+            const mainPts = [
+                { x: Xout, z: Zout },
+                { x: Xin, z: Zin },
+                { x: xRight, z: zFront },
+                { x: xRight, z: zBack }
+            ];
+            makeExtrudedSlab(mainPts, "Granite/Quartz Countertop (Main Run - 45° Miter Joint)");
+
+            // 2. Left Return Countertop Slab (with matching 45° miter cut)
+            const returnPts = [
+                { x: xLeft, z: Zout },
+                { x: xLeft, z: zTip },
+                { x: Xin, z: zTip },
+                { x: Xin, z: Zin },
+                { x: Xout, z: Zout }
+            ];
+            makeExtrudedSlab(returnPts, "Granite/Quartz Countertop (Left Return - 45° Miter Joint)");
+        }
+
+    } else if (currentKitchenLayout === 'u-shape') {
+        const leftWingLen = currentULeftFt * 12;
+        const rightWingLen = currentURightFt * 12;
+        const zTipLeft = -dBase / 2 + leftWingLen + overhangTip;
+        const zTipRight = -dBase / 2 + rightWingLen + overhangTip;
+
+        const XinR = wMain / 2 - dBase - overhangFront;
+        const ZinR = zFront;
+        const XoutR = wMain / 2;
+        const ZoutR = zBack;
+
+        const XinL = -wMain / 2 + dBase + overhangFront;
+        const ZinL = zFront;
+        const XoutL = -wMain / 2;
+        const ZoutL = zBack;
+
+        // 1. Main Run Countertop Slab (dual 45° miter cuts on both ends)
+        const mainPts = [
+            { x: XoutL, z: ZoutL },
+            { x: XinL, z: ZinL },
+            { x: XinR, z: ZinR },
+            { x: XoutR, z: ZoutR }
+        ];
+        makeExtrudedSlab(mainPts, "Granite/Quartz Countertop (Main Run - Dual 45° Miter Joints)");
+
+        // 2. Right Return Slab
+        const rightPts = [
+            { x: XoutR, z: ZoutR },
+            { x: XinR, z: ZinR },
+            { x: XinR, z: zTipRight },
+            { x: xRight, z: zTipRight },
+            { x: xRight, z: ZoutR }
+        ];
+        makeExtrudedSlab(rightPts, "Granite/Quartz Countertop (Right Return - 45° Miter Joint)");
+
+        // 3. Left Return Slab
+        const leftPts = [
+            { x: xLeft, z: ZoutL },
+            { x: xLeft, z: zTipLeft },
+            { x: XinL, z: zTipLeft },
+            { x: XinL, z: ZinL },
+            { x: XoutL, z: ZoutL }
+        ];
+        makeExtrudedSlab(leftPts, "Granite/Quartz Countertop (Left Return - 45° Miter Joint)");
     }
 }
 
@@ -1435,15 +2231,6 @@ function buildReturnWing(wingSide, wingLengthFt) {
         cabinetGroup.add(endP);
         shellObjects.push(endP);
 
-        // Corner Junction Divider (between main run and return run)
-        const cornerDiv = createPanel(dBase, currentH - 2 * t, t, shellColor, false, 'divider');
-        cornerDiv.position.set(xBaseCenter, centerY, zStart + t / 2);
-        cornerDiv.userData.label = `${prefix} Corner Divider`;
-        cornerDiv.userData.module = 'base';
-        cornerDiv.userData.w = dBase; cornerDiv.userData.h = currentH - 2 * t; cornerDiv.userData.d = t;
-        cabinetGroup.add(cornerDiv);
-        shellObjects.push(cornerDiv);
-
         // Plinth Kickboard for Return Wing
         if (currentPlinth > 0) {
             const innerPlinthX = sign * (wMain / 2 - dBase + kickRecess + t / 2);
@@ -1461,23 +2248,6 @@ function buildReturnWing(wingSide, wingLengthFt) {
             endPlinth.userData.module = 'base';
             cabinetGroup.add(endPlinth);
             plinthObjects.push(endPlinth);
-        }
-
-        // Return Countertop Slab
-        if (currentKitchenMode === 'both') {
-            const ctThick = 1.25;
-            const ctY = getBaseTopY() + ctThick / 2;
-            const ctLen = clearLenBase + 0.5; // 0.5" overhang at the tip
-            const ctWidth = dBase + 1.0;
-            const ctGeo = new THREE.BoxGeometry(ctWidth, ctThick, ctLen);
-            const ctMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
-            const ctMesh = new THREE.Mesh(ctGeo, ctMat);
-            ctMesh.position.set(sign * (wMain / 2 - dBase / 2), ctY, zStart + ctLen / 2);
-            const ctEdge = new THREE.LineSegments(new THREE.EdgesGeometry(ctGeo), new THREE.LineBasicMaterial({ color: 0x475569 }));
-            ctMesh.add(ctEdge);
-            ctMesh.userData = { isDecor: true, label: `Granite/Quartz Countertop (${isRight ? 'Right' : 'Left'} Return)` };
-            cabinetGroup.add(ctMesh);
-            decorObjects.push(ctMesh);
         }
     }
 
@@ -1555,85 +2325,111 @@ function syncReturnWingPartitions(wingSide, wingLengthFt, module) {
     const dBase = currentD;
     const dWall = currentWallD;
     const depth = isWall ? dWall : dBase;
-    const clearLen = isWall ? Math.max(12, wingLen - dWall) : Math.max(12, wingLen - dBase);
-    const zStart = isWall ? (-dBase / 2 + dWall) : (dBase / 2);
-    const zEnd = -dBase / 2 + wingLen;
-    const zCenter = (zStart + zEnd) / 2;
     const prefix = `[${isWall ? 'Wall' : 'Base'} Return ${isRight ? 'R' : 'L'}]`;
 
-    // 1. Shelves
+    // 1. Remove existing return wing partitions, shelves, and shutters for this wing and module
+    const toRemove = [];
+    cabinetGroup.children.forEach(child => {
+        if (child.userData && child.userData.module === module && child.userData.isReturnPart && child.userData.wingSide === wingSide) {
+            toRemove.push(child);
+        }
+    });
+    toRemove.forEach(child => {
+        cabinetGroup.remove(child);
+        internalParts = internalParts.filter(p => p !== child && p.userData?.parentGroup !== child);
+    });
+
+    const innerH = (isWall ? currentWallH : currentH) - (2 * t);
+    const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
+    const shelfDepth = depth - 1.0;
+    const shelfColor = 0xdeb887;
+
+    // 1. Shelves with 45° Miter Corner Joint
     const shelfInputId = isWall ? 'cad-wall-shelves-count' : 'cad-shelves-count';
     const shelfCount = parseInt(document.getElementById(shelfInputId)?.value) || 0;
     if (shelfCount > 0) {
-        const innerH = (isWall ? currentWallH : currentH) - (2 * t);
-        const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
         const spacing = innerH / (shelfCount + 1);
-        const shelfW = depth - 2 * t - 0.5;
-        const shelfLen = clearLen - 2 * t;
-        const shelfX = sign * ((isWall ? currentWallW : currentW) / 2 - depth / 2);
+        const zRear = isWall ? (getWallCenterZ() - dWall / 2 + t) : (-dBase / 2 + t);
+        const zFront = zRear + shelfDepth;
+        const zFar = -dBase / 2 + wingLen - t;
 
         for (let s = 1; s <= shelfCount; s++) {
-            const shelf = createPanel(shelfW, t, shelfLen, 0xdeb887, true, 'shelf');
-            shelf.position.set(shelfX, innerBottomY + (s * spacing), zCenter);
-            shelf.userData.label = `${prefix} Shelf ${s}`;
-            shelf.userData.isAutoShelf = true;
-            shelf.userData.module = module;
-            cabinetGroup.add(shelf);
+            const shelfY = innerBottomY + (s * spacing) + t / 2;
+            let returnPts;
+            if (isRight) {
+                const xOut = (isWall ? currentWallW : currentW) / 2 - t;
+                const xIn = xOut - shelfDepth;
+                returnPts = [
+                    { x: xOut, z: zRear },
+                    { x: xIn, z: zFront },
+                    { x: xIn, z: zFar },
+                    { x: xOut, z: zFar }
+                ];
+            } else {
+                const xOut = -(isWall ? currentWallW : currentW) / 2 + t;
+                const xIn = xOut + shelfDepth;
+                returnPts = [
+                    { x: xOut, z: zRear },
+                    { x: xIn, z: zFront },
+                    { x: xIn, z: zFar },
+                    { x: xOut, z: zFar }
+                ];
+            }
+            const returnShelf = makeExtrudedShelfPanel(returnPts, t, shelfColor, `${prefix} Shelf ${s} (45° Miter Corner)`, module);
+            returnShelf.position.set(0, shelfY, 0);
+            returnShelf.userData.isReturnPart = true;
+            returnShelf.userData.wingSide = wingSide;
+            cabinetGroup.add(returnShelf);
         }
     }
 
-    // 2. Shutters (Doors)
-    let doorCount = 2;
-    if (clearLen <= 32) doorCount = 1;
-    else if (clearLen > 68) doorCount = 3;
-
+    // 2. Shutters (Doors) Equally Divided with Corner Post Clearance
     const gap = 0.125;
-    const totalGaps = gap * (doorCount + 1);
-    const doorLen = (clearLen - totalGaps) / doorCount;
-    const doorH = (isWall ? currentWallH : currentH) - (gap * 2);
-    const doorThickness = 0.75;
+    const shutterH = (isWall ? currentWallH : currentH) - (gap * 2);
+    const shutterD = 0.75;
     const doorCenterY = isWall ? getWallCenterY() : getBaseCenterY();
-    const faceX = sign * ((isWall ? currentWallW : currentW) / 2 - depth) + (sign * -doorThickness / 2);
+    const faceX = sign * ((isWall ? currentWallW : currentW) / 2 - depth) + (sign * -shutterD / 2);
 
-    let curZ = zStart + gap + doorLen / 2;
+    const centerZ = isWall ? getWallCenterZ() : 0;
+    const frontZ = centerZ + (depth / 2) + (shutterD / 2) + 0.05;
+    const zCornerPostEdge = frontZ + 1.0 + gap; // Start clear of the 2" Corner Post
+    const zWingEnd = -dBase / 2 + wingLen - gap;
+
+    const accessibleReturnLen = Math.max(12, zWingEnd - zCornerPostEdge);
+    let doorCount = 2;
+    if (accessibleReturnLen <= 34) doorCount = 1;
+    else if (accessibleReturnLen > 66) doorCount = 3;
+
+    const totalGaps = gap * (doorCount - 1);
+    const doorLen = (accessibleReturnLen - totalGaps) / doorCount;
+
+    let curZ = zCornerPostEdge;
     for (let d = 0; d < doorCount; d++) {
-        const door = createPanel(doorThickness, doorH, doorLen, 0xdeb887, true, 'shutter');
-        door.userData.label = `${prefix} Shutter ${d + 1}`;
-        door.userData.module = module;
-        door.userData.type = 'shutter';
-        door.userData.shutterIndex = d + 1;
-        door.userData.w = doorLen;
-        door.userData.h = doorH;
-        door.userData.d = doorThickness;
-        door.userData.shutterW = doorLen;
-        door.userData.shutterH = doorH;
-        door.userData.shutterD = doorThickness;
-        door.userData.customEdge = 'all';
-        door.userData.customLaminate = 'single';
-        applyLaminateMaterials(door, 'shutter', 'single', 'all');
+        // Door nearest corner post hinges away from the corner post (far-hinged)
+        const isHingedFar = (d === 0) ? true : (d % 2 === 1);
+        const label = `${prefix} Shutter ${d + 1}`;
+        const { group, hitBox } = buildReturnDoorMeshAssembly(doorLen, shutterH, shutterD, isHingedFar, label, module, d + 1, doorCount, isRight);
 
-        const isHingedFar = (d % 2 === 1);
-        const pivotOffsetZ = isHingedFar ? doorLen / 2 : -doorLen / 2;
-        door.geometry.translate(0, 0, -pivotOffsetZ);
-        door.children.forEach(c => {
-            if (c.geometry) c.geometry.translate(0, 0, -pivotOffsetZ);
-        });
+        const hingeZ = isHingedFar ? (curZ + doorLen) : curZ;
+        group.position.set(faceX, doorCenterY, hingeZ);
 
-        door.position.set(faceX, doorCenterY, curZ + pivotOffsetZ);
-
-        door.userData.closedRotationY = 0;
+        group.userData.isReturnPart = true;
+        group.userData.wingSide = wingSide;
+        group.userData.closedRotationY = 0;
         if (isRight) {
-            door.userData.openRotationY = isHingedFar ? -Math.PI / 2 : Math.PI / 2;
+            group.userData.openRotationY = isHingedFar ? -Math.PI / 2 : Math.PI / 2;
         } else {
-            door.userData.openRotationY = isHingedFar ? Math.PI / 2 : -Math.PI / 2;
+            group.userData.openRotationY = isHingedFar ? Math.PI / 2 : -Math.PI / 2;
         }
 
         if (shuttersOpen) {
-            door.rotation.y = door.userData.openRotationY;
-            door.layers.set(1);
+            group.rotation.y = group.userData.openRotationY;
+            group.layers.set(1);
         }
 
-        cabinetGroup.add(door);
+        cabinetGroup.add(group);
+        internalParts.push(hitBox);
+
         curZ += doorLen + gap;
     }
 }
@@ -1684,7 +2480,6 @@ function buildShell() {
     if (currentKitchenMode === 'both') {
         buildBoxShell('base', currentW, currentH, currentD, getBaseCenterY(), 0, '[Base]');
         buildPlinth(currentW, currentD, currentPlinth, '[Base]');
-        buildDecor();
         buildBoxShell('wall', currentWallW, currentWallH, currentWallD, getWallCenterY(), getWallCenterZ(), '[Wall]');
     } else if (currentKitchenMode === 'base') {
         buildBoxShell('base', currentW, currentH, currentD, getBaseCenterY(), 0, '[Base]');
@@ -1699,6 +2494,11 @@ function buildShell() {
     } else if (currentKitchenLayout === 'u-shape') {
         buildReturnWing('left', currentULeftFt);
         buildReturnWing('right', currentURightFt);
+    }
+
+    // Countertop Stone & Backsplash (builds 45° miter joint slabs if L/U kitchen)
+    if (currentKitchenMode === 'both') {
+        buildDecor();
     }
 
     updateCameraFraming();
@@ -1761,10 +2561,10 @@ function syncShelvesFromCount(module) {
     if (!input) return;
     const count = parseInt(input.value) || 0;
     
-    // Remove existing auto shelves for this module
+    // Remove existing auto shelves for this module (excluding return wing parts)
     const toRemove = [];
     internalParts.forEach(part => {
-        if (part.userData && part.userData.isAutoShelf && part.userData.module === module) {
+        if (part.userData && part.userData.isAutoShelf && part.userData.module === module && !part.userData.isReturnPart) {
             toRemove.push(part);
         }
     });
@@ -1775,6 +2575,12 @@ function syncShelvesFromCount(module) {
     
     if (count <= 0) {
         if (module === 'base') updateExistingDrawers();
+        if (currentKitchenLayout === 'l-shape') {
+            syncReturnWingPartitions(currentLReturnSide || 'right', currentLReturnFt, module);
+        } else if (currentKitchenLayout === 'u-shape') {
+            syncReturnWingPartitions('left', currentULeftFt, module);
+            syncReturnWingPartitions('right', currentURightFt, module);
+        }
         return;
     }
     
@@ -1793,14 +2599,95 @@ function syncShelvesFromCount(module) {
     const innerBottomY = isWall ? (getWallBottomY() + t) : (getBaseBottomY() + t);
     const centerZ = isWall ? (getWallCenterZ() - 0.5) : -0.5;
     const spacing = innerH / (count + 1);
-    
-    for (let i = 1; i <= count; i++) {
-        const shelf = createPanel(innerW, t, shelfDepth, shelfColor, true, 'shelf');
-        shelf.position.set(0, innerBottomY + (i * spacing), centerZ);
-        shelf.userData.label = `${prefix} Shelf ${i}`;
-        shelf.userData.isAutoShelf = true;
-        shelf.userData.module = module;
-        cabinetGroup.add(shelf);
+
+    const isCornerRight = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'right') || (currentKitchenLayout === 'u-shape');
+    const isCornerLeft = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'left') || (currentKitchenLayout === 'u-shape');
+
+    if (!isCornerRight && !isCornerLeft) {
+        // Straight Kitchen Run
+        for (let i = 1; i <= count; i++) {
+            const shelf = createPanel(innerW, t, shelfDepth, shelfColor, true, 'shelf');
+            const shelfY = innerBottomY + (i * spacing);
+            shelf.position.set(0, shelfY, centerZ);
+            shelf.userData.label = `${prefix} Shelf ${i}`;
+            shelf.userData.isAutoShelf = true;
+            shelf.userData.module = module;
+
+            // Angular Slanted Shelf (Shoe Rack Mode)
+            if (currentShelfStyle === 'slanted' && module === 'base') {
+                shelf.rotation.x = THREE.MathUtils.degToRad(currentShelfAngle);
+                shelf.userData.isSlantedShelf = true;
+                shelf.userData.shelfAngle = currentShelfAngle;
+                shelf.userData.label = `${prefix} Slanted Shoe Shelf ${i} (${currentShelfAngle}°)`;
+
+                // 1.25" Front Safety Lip / Toe-Heel Stop Fence
+                const lipH = 1.25;
+                const lipT = Math.min(t, 0.5);
+                const lipGeo = new THREE.BoxGeometry(innerW, lipH, lipT);
+                const lipMat = new THREE.MeshPhongMaterial({ color: shelfColor, shininess: 12 });
+                const lipMesh = new THREE.Mesh(lipGeo, lipMat);
+                lipMesh.position.set(0, lipH / 2, shelfDepth / 2 - lipT / 2);
+                lipMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(lipGeo), new THREE.LineBasicMaterial({ color: 0x5c4033 })));
+                lipMesh.userData = { isSubPart: true };
+                shelf.add(lipMesh);
+            }
+
+            cabinetGroup.add(shelf);
+        }
+    } else {
+        // L-Kitchen & U-Kitchen Corner Miter Shelves
+        const zRear = isWall ? (getWallCenterZ() - d / 2 + t) : (-d / 2 + t);
+        const zFront = zRear + shelfDepth;
+
+        for (let i = 1; i <= count; i++) {
+            const shelfY = innerBottomY + (i * spacing) + t / 2;
+            let mainPts;
+            if (isCornerRight && !isCornerLeft) {
+                const xLeft = -w / 2 + t;
+                const xOut = w / 2 - t;
+                const xIn = xOut - shelfDepth;
+                mainPts = [
+                    { x: xLeft, z: zRear },
+                    { x: xOut, z: zRear },
+                    { x: xIn, z: zFront },
+                    { x: xLeft, z: zFront }
+                ];
+            } else if (isCornerLeft && !isCornerRight) {
+                const xRight = w / 2 - t;
+                const xOut = -w / 2 + t;
+                const xIn = xOut + shelfDepth;
+                mainPts = [
+                    { x: xIn, z: zFront },
+                    { x: xOut, z: zRear },
+                    { x: xRight, z: zRear },
+                    { x: xRight, z: zFront }
+                ];
+            } else {
+                // U-shape
+                const xOutL = -w / 2 + t;
+                const xInL = xOutL + shelfDepth;
+                const xOutR = w / 2 - t;
+                const xInR = xOutR - shelfDepth;
+                mainPts = [
+                    { x: xInL, z: zFront },
+                    { x: xOutL, z: zRear },
+                    { x: xOutR, z: zRear },
+                    { x: xInR, z: zFront }
+                ];
+            }
+
+            const shelf = makeExtrudedShelfPanel(mainPts, t, shelfColor, `${prefix} Shelf ${i} (45° Miter Corner)`, module);
+            shelf.position.set(0, shelfY, 0);
+            cabinetGroup.add(shelf);
+        }
+
+        // Re-sync matching return wing shelves
+        if (currentKitchenLayout === 'l-shape') {
+            syncReturnWingPartitions(currentLReturnSide || 'right', currentLReturnFt, module);
+        } else if (currentKitchenLayout === 'u-shape') {
+            syncReturnWingPartitions('left', currentULeftFt, module);
+            syncReturnWingPartitions('right', currentURightFt, module);
+        }
     }
 
     if (module === 'base') {
@@ -1878,9 +2765,20 @@ function updateShutterSubtexts() {
         const isWall = (mod === 'wall');
         const w = isWall ? currentWallW : currentW;
         const h = isWall ? currentWallH : currentH;
+        const d = isWall ? currentWallD : currentD;
         const gap = 0.125;
-        const totalGapSpace = gap * (count + 1);
-        const shutterW = (w - totalGapSpace) / count;
+
+        const isCornerRight = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'right') || (currentKitchenLayout === 'u-shape');
+        const isCornerLeft = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'left') || (currentKitchenLayout === 'u-shape');
+
+        let xLeftLimit = -w / 2 + gap;
+        let xRightLimit = w / 2 - gap;
+        if (isCornerRight) xRightLimit = (w / 2 - d - 0.75 / 2) - gap;
+        if (isCornerLeft) xLeftLimit = (-w / 2 + d + 0.75 / 2) + gap;
+
+        const accessibleRunW = Math.max(12, xRightLimit - xLeftLimit);
+        const totalGapSpace = gap * (count - 1);
+        const shutterW = (accessibleRunW - totalGapSpace) / count;
         const shutterH = h - (gap * 2);
         subEl.textContent = `Each: ${shutterW.toFixed(1)}" W × ${shutterH.toFixed(1)}" H`;
     });
@@ -1919,16 +2817,20 @@ function syncShuttersFromSelect(module) {
     // Update subtext indicator immediately
     updateShutterSubtexts();
 
-    // Remove existing shutters and auto-hinge partitions for this module
+    // Remove existing shutters, corner posts, and auto-hinge partitions for this module
     const toRemove = [];
     cabinetGroup.children.forEach(child => {
-        if (child.userData && child.userData.module === module && (child.userData.type === 'shutter' || child.userData.isAutoHingePartition)) {
+        if (child.userData && child.userData.module === module && (
+            child.userData.type === 'shutter' || 
+            child.userData.isAutoHingePartition || 
+            child.userData.type === 'corner_post'
+        ) && !child.userData.isReturnPart) {
             toRemove.push(child);
         }
     });
     toRemove.forEach(child => {
         cabinetGroup.remove(child);
-        internalParts = internalParts.filter(p => p !== child);
+        internalParts = internalParts.filter(p => p !== child && p.userData?.parentGroup !== child);
     });
     
     if (count <= 0) return;
@@ -1940,66 +2842,106 @@ function syncShuttersFromSelect(module) {
     const prefix = isWall ? '[Wall]' : '[Base]';
 
     const gap = 0.125; // 1/8 inch reveal
-    const totalGapSpace = gap * (count + 1);
-    const shutterW = (w - totalGapSpace) / count;
     const shutterH = h - (gap * 2);
     const shutterD = 0.75; // Standard 3/4" door
     
-    let startX = (-w / 2) + gap + (shutterW / 2);
     const centerY = isWall ? getWallCenterY() : getBaseCenterY();
     const centerZ = isWall ? getWallCenterZ() : 0;
     const frontZ = centerZ + (d / 2) + (shutterD / 2) + 0.05;
-    
-    for (let i = 0; i < count; i++) {
-        const shutter = createPanel(shutterW, shutterH, shutterD, 0xdeb887, true, 'shutter');
-        shutter.userData.label = `${prefix} Shutter ${i + 1}`;
-        shutter.userData.module = module;
-        shutter.userData.type = 'shutter';
-        shutter.userData.shutterIndex = i + 1;
-        shutter.userData.totalShutters = count;
-        shutter.userData.shutterW = shutterW;
-        shutter.userData.shutterH = shutterH;
-        shutter.userData.shutterD = shutterD;
-        shutter.userData.w = shutterW;
-        shutter.userData.h = shutterH;
-        shutter.userData.d = shutterD;
-        shutter.userData.customEdge = 'all';
-        shutter.userData.customLaminate = 'single';
-        applyLaminateMaterials(shutter, 'shutter', 'single', 'all');
-        if (!internalParts.includes(shutter)) internalParts.push(shutter);
-        
-        let isRightHinged = (i % 2 === 1);
-        if (count === 1) isRightHinged = false;
-        
-        shutter.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
-        shutter.children.forEach(c => {
-            if (c.geometry) c.geometry.translate(isRightHinged ? -shutterW/2 : shutterW/2, 0, -shutterD/2);
-        });
 
-        shutter.position.set(isRightHinged ? startX + shutterW/2 : startX - shutterW/2, centerY, frontZ + shutterD/2);
-        shutter.userData.closedRotationY = 0;
-        shutter.userData.openRotationY = isRightHinged ? Math.PI / 2 : -Math.PI / 2;
-        
-        shutter.userData.lockZ = true; 
-        shutter.userData.lockX = false;
-        shutter.userData.lockY = false;
+    // Corner flags for L-Kitchen & U-Kitchen
+    const isCornerRight = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'right') || (currentKitchenLayout === 'u-shape');
+    const isCornerLeft = (currentKitchenLayout === 'l-shape' && currentLReturnSide === 'left') || (currentKitchenLayout === 'u-shape');
+
+    let xLeftLimit = -w / 2 + gap;
+    let xRightLimit = w / 2 - gap;
+
+    // Inside 90° Corner Post Fillers (2" x 2" x shutterH)
+    if (isCornerRight) {
+        const Xv = w / 2 - d - shutterD / 2;
+        const Zv = frontZ;
+        const postGeo = new THREE.BoxGeometry(2.0, shutterH, 2.0);
+        const postMat = (currentShutterStyle === 'aluminum_glass') 
+            ? getAluminumMaterial(currentFrameFinish) 
+            : new THREE.MeshPhongMaterial({ color: 0xcd853f, shininess: 15 });
+        const postMesh = new THREE.Mesh(postGeo, postMat);
+        postMesh.position.set(Xv + 1.0, centerY, Zv - 1.0);
+        postMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(postGeo), new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 2 })));
+        postMesh.userData = {
+            type: 'corner_post',
+            label: `${prefix} 90° Inside Corner Post Filler (2" × 2")`,
+            module: module,
+            w: 2.0, h: shutterH, d: 2.0
+        };
+        cabinetGroup.add(postMesh);
+        internalParts.push(postMesh);
+        xRightLimit = Xv - gap;
+    }
+
+    if (isCornerLeft) {
+        const Xv = -w / 2 + d + shutterD / 2;
+        const Zv = frontZ;
+        const postGeo = new THREE.BoxGeometry(2.0, shutterH, 2.0);
+        const postMat = (currentShutterStyle === 'aluminum_glass') 
+            ? getAluminumMaterial(currentFrameFinish) 
+            : new THREE.MeshPhongMaterial({ color: 0xcd853f, shininess: 15 });
+        const postMesh = new THREE.Mesh(postGeo, postMat);
+        postMesh.position.set(Xv - 1.0, centerY, Zv - 1.0);
+        postMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(postGeo), new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 2 })));
+        postMesh.userData = {
+            type: 'corner_post',
+            label: `${prefix} 90° Inside Corner Post Filler (2" × 2")`,
+            module: module,
+            w: 2.0, h: shutterH, d: 2.0
+        };
+        cabinetGroup.add(postMesh);
+        internalParts.push(postMesh);
+        xLeftLimit = Xv + gap;
+    }
+
+    // Smart Equal Shutter Division across accessible run
+    const accessibleRunW = Math.max(12, xRightLimit - xLeftLimit);
+    const totalGapSpace = gap * (count - 1);
+    const shutterW = (accessibleRunW - totalGapSpace) / count;
+
+    let curStartX = xLeftLimit;
+
+    for (let i = 0; i < count; i++) {
+        let isRightHinged = (count === 1) ? false : (i % 2 === 1);
+
+        // Clearance rule: Doors nearest corner post hinge away from the post
+        if (isCornerRight && i === count - 1) {
+            isRightHinged = false; // Left hinged, swings open away from right corner post
+        }
+        if (isCornerLeft && i === 0) {
+            isRightHinged = true; // Right hinged, swings open away from left corner post
+        }
+
+        const label = `${prefix} Shutter ${i + 1}`;
+        const { group, hitBox } = buildDoorMeshAssembly(shutterW, shutterH, shutterD, isRightHinged, label, module, i + 1, count, false);
+
+        const hingeX = isRightHinged ? (curStartX + shutterW) : curStartX;
+        group.position.set(hingeX, centerY, frontZ);
+
+        group.userData.closedRotationY = 0;
+        group.userData.openRotationY = isRightHinged ? Math.PI / 2 : -Math.PI / 2;
 
         if (shuttersOpen) {
-            shutter.rotation.y = shutter.userData.openRotationY;
-            shutter.layers.set(1);
+            group.rotation.y = group.userData.openRotationY;
+            group.layers.set(1);
         }
-        
-        cabinetGroup.add(shutter);
-        
-        // Auto hinge partition between door pairs (only when manual vertical dividers are 0)
+
+        cabinetGroup.add(group);
+        internalParts.push(hitBox);
+
+        // Auto hinge partition between door pairs (only when manual vertical dividers are 0 and layout is straight)
         const divInputId = (module === 'wall') ? 'cad-wall-dividers-count' : 'cad-dividers-count';
         const manualDivCount = parseInt(document.getElementById(divInputId)?.value) || 0;
-        if (manualDivCount === 0 && i % 2 === 1 && i < count - 1) {
-            const gapCenterX = startX + (shutterW / 2) + (gap / 2);
+        if (currentKitchenLayout === 'straight' && manualDivCount === 0 && i % 2 === 1 && i < count - 1) {
+            const gapCenterX = curStartX + shutterW + (gap / 2);
             const t = currentThickness;
             const innerH = h - (2 * t);
-            const divDepth = d - 1.0; 
-            
+            const divDepth = d - 1.0;
             const divider = createPanel(t, innerH, divDepth, 0xdeb887, true, 'divider');
             divider.position.set(gapCenterX, centerY, isWall ? (getWallCenterZ() - 0.5) : -0.5);
             divider.userData.label = `${prefix} Auto Hinge Partition`;
@@ -2007,8 +2949,8 @@ function syncShuttersFromSelect(module) {
             divider.userData.module = module;
             cabinetGroup.add(divider);
         }
-        
-        startX += shutterW + gap;
+
+        curStartX += shutterW + gap;
     }
 }
 
@@ -2091,6 +3033,20 @@ function applyPreset(presetKey) {
         const uControls = document.getElementById('cad-u-controls');
         if (lControls) lControls.style.display = 'none';
         if (uControls) uControls.style.display = 'none';
+    }
+
+    if (preset.shelfStyle) {
+        setShelfStyle(preset.shelfStyle, preset.shelfAngle || 25);
+    } else {
+        setShelfStyle('straight');
+    }
+
+    if (preset.shutterStyle) {
+        setShutterStyle(preset.shutterStyle);
+        if (preset.glassType) setGlassType(preset.glassType);
+        if (preset.frameFinish) setFrameFinish(preset.frameFinish);
+    } else {
+        setShutterStyle('solid');
     }
 
     setKitchenMode(preset.mode || 'both');
@@ -2264,6 +3220,41 @@ function setupCADListeners() {
     // Preset Buttons
     document.querySelectorAll('.preset-pill').forEach(btn => {
         btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+    });
+
+    // Shelf Style Buttons (Straight vs Slanted Shoe Shelf)
+    document.querySelectorAll('.shelf-style-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setShelfStyle(btn.dataset.style);
+        });
+    });
+
+    // Angular Shelf Angle Pills (20°, 25°, 30°)
+    document.querySelectorAll('.angle-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setShelfAngle(parseInt(btn.dataset.angle));
+        });
+    });
+
+    // Shutter Style Pills (Solid Ply, 2" Ply Frame + Glass, Aluminum Profile + Glass)
+    document.querySelectorAll('.shutter-type-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setShutterStyle(btn.dataset.shutterType);
+        });
+    });
+
+    // Glass Type Pills (Frosted, Fluted, Dark Black, Brown Bronze, Clear)
+    document.querySelectorAll('.glass-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setGlassType(btn.dataset.glass);
+        });
+    });
+
+    // Aluminum Profile Finish Pills (Matte Black, Champagne Gold, Silver Chrome)
+    document.querySelectorAll('.frame-finish-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setFrameFinish(btn.dataset.finish);
+        });
     });
     
     // Duplicate Cabinet Button
