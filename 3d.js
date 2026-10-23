@@ -2414,6 +2414,9 @@ function buildReturnWing(wingSide, wingLengthFt) {
     const zEnd = -dBase / 2 + wingLen;
     const zCenter = (zStart + zEnd) / 2;
     const xBaseCenter = sign * (wMain / 2 - dBase / 2);
+    const zRearCorner = -dBase / 2;
+    const outerWallLen = wingLen;
+    const zOuterCenter = zRearCorner + wingLen / 2;
 
     // 1. BASE CABINET SHELL FOR RETURN WING
     if (currentKitchenMode === 'base' || currentKitchenMode === 'both') {
@@ -2421,11 +2424,13 @@ function buildReturnWing(wingSide, wingLengthFt) {
         const prefix = `[Base Return ${isRight ? 'R' : 'L'}]`;
 
         // Outer Back Panel along outer wall (facing perpendicular)
-        const backP = createPanel(t, currentH, clearLenBase, shellColor, false, 'side');
-        backP.position.set(sign * (wMain / 2 - t / 2), centerY, zCenter);
+        // Spans the full return wing length from the rear room wall (-dBase/2) to the tip of the wing (zEnd)
+        // This completely seals the corner rear with zero gaps or hollow voids
+        const backP = createPanel(t, currentH, outerWallLen, shellColor, false, 'side');
+        backP.position.set(sign * (wMain / 2 - t / 2), centerY, zOuterCenter);
         backP.userData.label = `${prefix} Outer Side Panel`;
         backP.userData.module = 'base';
-        backP.userData.w = t; backP.userData.h = currentH; backP.userData.d = clearLenBase;
+        backP.userData.w = t; backP.userData.h = currentH; backP.userData.d = outerWallLen;
         cabinetGroup.add(backP);
         shellObjects.push(backP);
 
@@ -2503,12 +2508,12 @@ function buildReturnWing(wingSide, wingLengthFt) {
         const wallCenterY = getWallCenterY();
         const prefix = `[Wall Return ${isRight ? 'R' : 'L'}]`;
 
-        // Outer Back Panel along outer wall
-        const backW = createPanel(t, currentWallH, clearLenWall, shellColor, false, 'side');
-        backW.position.set(sign * (currentWallW / 2 - t / 2), wallCenterY, zWallCenter);
+        // Outer Back Panel along outer wall (seals corner completely to rear room wall)
+        const backW = createPanel(t, currentWallH, outerWallLen, shellColor, false, 'side');
+        backW.position.set(sign * (currentWallW / 2 - t / 2), wallCenterY, zOuterCenter);
         backW.userData.label = `${prefix} Outer Side Panel`;
         backW.userData.module = 'wall';
-        backW.userData.w = t; backW.userData.h = currentWallH; backW.userData.d = clearLenWall;
+        backW.userData.w = t; backW.userData.h = currentWallH; backW.userData.d = outerWallLen;
         cabinetGroup.add(backW);
         shellObjects.push(backW);
 
