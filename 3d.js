@@ -2812,15 +2812,6 @@ function getCountertopMaterial(slabW, slabD) {
             specular: 0x888888,
             shininess: 75
         });
-    } else if (currentCountertopMaterial === 'granite_black') {
-        const tex = getOrCreateProceduralTexture('granite_black', 256, 256);
-        tex.repeat.set(2.0, 2.0);
-        return new THREE.MeshPhongMaterial({
-            map: tex,
-            color: 0x222226,
-            specular: 0x555555,
-            shininess: 65
-        });
     } else if (currentCountertopMaterial === 'wood_oak') {
         const tex = getOrCreateProceduralTexture('wood_oak', 512, 512);
         tex.repeat.set(1.2, 1.0);
@@ -5344,6 +5335,9 @@ function setupCADListeners() {
     if (btnView3d) {
         btnView3d.addEventListener('click', (e) => {
             e.preventDefault();
+            if (isShowroomMode) {
+                toggleShowroomMode(false);
+            }
             setViewMode('3d');
         });
     }
@@ -5422,7 +5416,6 @@ function setupCADListeners() {
                 const names = {
                     'marble_white': 'White Carrara Marble',
                     'quartz_white': 'White Quartz',
-                    'granite_black': 'Black Granite',
                     'wood_oak': 'Oak Butcher',
                     'concrete_gray': 'Concrete Gray'
                 };
