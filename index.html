@@ -820,6 +820,99 @@
                             </div>
                         </div>
 
+                        <!-- Card 9: Kitchen Finishes & Showroom Studio -->
+                        <div class="theme-card card-showroom-studio" id="cad-showroom-card">
+                            <div class="card-header-simple">
+                                <div class="header-left-title">
+                                    <svg class="header-svg-icon gold-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                    </svg>
+                                    <span class="card-title-text">Kitchen Finishes & Showroom</span>
+                                </div>
+                                <button type="button" id="btn-sidebar-toggle-showroom" class="badge-gold-pill btn-mode-pill" title="Toggle 3D Showroom Mode">
+                                    <span>🏠 Showroom Mode</span>
+                                </button>
+                            </div>
+
+                            <!-- Countertop Material Selector -->
+                            <div class="studio-suboptions">
+                                <div class="suboption-header">
+                                    <span class="suboption-label">COUNTERTOP FINISH</span>
+                                    <span id="cad-countertop-badge" class="badge-gold-pill">White Carrara Marble</span>
+                                </div>
+                                <div class="finishes-swatch-grid">
+                                    <button type="button" class="finish-swatch-btn ct-finish-btn active" data-countertop="marble_white" title="White Carrara / Calacatta Italian Marble">
+                                        <span class="finish-swatch-dot marble-dot"></span>
+                                        <span>White Marble</span>
+                                    </button>
+                                    <button type="button" class="finish-swatch-btn ct-finish-btn" data-countertop="quartz_white" title="Pure Sparkling White Engineered Quartz">
+                                        <span class="finish-swatch-dot quartz-dot"></span>
+                                        <span>White Quartz</span>
+                                    </button>
+                                    <button type="button" class="finish-swatch-btn ct-finish-btn" data-countertop="granite_black" title="Polished Jet Black Granite">
+                                        <span class="finish-swatch-dot granite-dot"></span>
+                                        <span>Black Granite</span>
+                                    </button>
+                                    <button type="button" class="finish-swatch-btn ct-finish-btn" data-countertop="wood_oak" title="Warm Natural Oak Butcher Block Wood">
+                                        <span class="finish-swatch-dot wood-dot"></span>
+                                        <span>Oak Butcher</span>
+                                    </button>
+                                    <button type="button" class="finish-swatch-btn ct-finish-btn" data-countertop="concrete_gray" title="Industrial Smooth Gray Concrete">
+                                        <span class="finish-swatch-dot concrete-dot"></span>
+                                        <span>Concrete Gray</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Backsplash / Dado Material Selector -->
+                            <div class="studio-suboptions" id="cad-backsplash-section">
+                                <div class="suboption-header">
+                                    <span class="suboption-label">BACKSPLASH (DADO)</span>
+                                    <span id="cad-backsplash-badge" class="badge-cyan-pill">Subway Tile</span>
+                                </div>
+                                <div class="finishes-swatch-grid cols-3">
+                                    <button type="button" class="finish-swatch-btn bs-finish-btn active" data-backsplash="subway_white" title="Glossy Beveled White Subway Ceramic Tiles">
+                                        <span class="finish-swatch-dot subway-dot"></span>
+                                        <span>Subway Tile</span>
+                                    </button>
+                                    <button type="button" class="finish-swatch-btn bs-finish-btn" data-backsplash="marble_slab" title="Matching Full Height White Marble Slab">
+                                        <span class="finish-swatch-dot marble-dot"></span>
+                                        <span>Marble Slab</span>
+                                    </button>
+                                    <button type="button" class="finish-swatch-btn bs-finish-btn" data-backsplash="solid_dark" title="Solid Slate Charcoal Dado">
+                                        <span class="finish-swatch-dot solid-dark-dot"></span>
+                                        <span>Slate Dark</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Room Staging Settings (Floor & LED Lighting) -->
+                            <div class="studio-suboptions">
+                                <div class="dim-columns-grid cols-2" style="margin-top: 4px;">
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Showroom Floor</label>
+                                        <div class="theme-select-wrap">
+                                            <select id="cad-showroom-floor-select" class="theme-select">
+                                                <option value="tile_white" selected>◻️ White Porcelain Tile</option>
+                                                <option value="hardwood_oak">🪵 Warm Oak Hardwood</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="dim-column">
+                                        <label class="dim-col-label">Under-Cabinet LED</label>
+                                        <div class="theme-select-wrap">
+                                            <select id="cad-showroom-led-select" class="theme-select">
+                                                <option value="warm" selected>💡 Warm Glow (3000K)</option>
+                                                <option value="neutral">⚪ Neutral Day (4000K)</option>
+                                                <option value="off">❌ Off</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Quick Action Buttons -->
                         <div class="cad-bottom-actions">
                             <button type="button" id="btn-toggle-shutters" class="theme-action-btn" title="Toggle Doors Open / Close">
@@ -860,6 +953,7 @@
                         <div class="viewport-hud-view">
                             <button type="button" class="hud-view-btn active" id="btn-view-3d" title="Perspective 3D View">3D</button>
                             <button type="button" class="hud-view-btn" id="btn-view-2d" title="Front 2D Elevation View">2D</button>
+                            <button type="button" class="hud-view-btn hud-showroom-btn" id="btn-view-showroom" title="Toggle Showroom Staging Mode">🏠 Showroom</button>
                             <button type="button" class="hud-view-btn hud-fullscreen-btn" id="btn-view-fullscreen" title="Toggle Fullscreen">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="15 3 21 3 21 9"></polyline>
@@ -937,6 +1031,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-    <script src="3d.js?v=39"></script>
+    <script src="3d.js?v=40"></script>
 </body>
 </html>

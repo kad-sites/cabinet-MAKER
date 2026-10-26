@@ -43,6 +43,15 @@ let currentShutterStyle = 'solid'; // 'solid', 'plywood_glass', 'aluminum_glass'
 let currentGlassType = 'frosted'; // 'frosted', 'fluted', 'dark_black', 'brown', 'clear'
 let currentFrameFinish = 'matte_black'; // 'matte_black', 'champagne_gold', 'silver_chrome'
 
+// Showroom Staging & Market Finishes State
+let showroomGroup = null;
+let isShowroomMode = false;
+let currentCountertopMaterial = 'marble_white'; // 'marble_white', 'quartz_white', 'granite_black', 'wood_oak', 'concrete_gray'
+let currentBacksplashMaterial = 'subway_white'; // 'subway_white', 'marble_slab', 'solid_dark'
+let currentFloorMaterial = 'tile_white';        // 'tile_white', 'hardwood_oak'
+let currentLedStripMode = 'warm';               // 'warm', 'neutral', 'off'
+let cachedProceduralTextures = {};
+
 let shellObjects = [];
 let plinthObjects = [];
 let decorObjects = []; // Countertop & Backsplash
@@ -175,6 +184,10 @@ function init3D() {
     cabinetGroup = new THREE.Group();
     scene.add(cabinetGroup);
 
+    showroomGroup = new THREE.Group();
+    showroomGroup.visible = false;
+    scene.add(showroomGroup);
+
     // Raycaster for Selection
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
@@ -210,7 +223,9 @@ function init3D() {
     window.toggleShutters = toggleShutters;
     window.buildFlipShoeDrawers = buildFlipShoeDrawers;
     window.setFlipHopperArc = setFlipHopperArc;
+    window.toggleShowroomMode = toggleShowroomMode;
     Object.defineProperty(window, 'currentFlipArcDeg', { get: () => currentFlipArcDeg, configurable: true });
+    Object.defineProperty(window, 'isShowroomMode', { get: () => isShowroomMode, configurable: true });
 
     animate();
 }
@@ -2179,14 +2194,675 @@ function buildPlinth(w, d, plinth, labelPrefix) {
     plinthObjects.push(plinthR);
 }
 
+// ========================================================
+// PROCEDURAL TEXTURE & MARKET FINISHES GENERATORS
+// ========================================================
+function getOrCreateProceduralTexture(type, width, height) {
+    const key = `${type}_${width}_${height}`;
+    if (cachedProceduralTextures[key]) return cachedProceduralTextures[key];
+
+    let canvas = null;
+    if (type === 'marble_white') {
+        canvas = createMarbleCanvas(width, height);
+    } else if (type === 'quartz_white') {
+        canvas = createQuartzCanvas(width, height);
+    } else if (type === 'granite_black') {
+        canvas = createGraniteCanvas(width, height);
+    } else if (type === 'wood_oak') {
+        canvas = createWoodCanvas(width, height);
+    } else if (type === 'subway_white') {
+        canvas = createSubwayTileCanvas(width, height);
+    } else if (type === 'tile_white') {
+        canvas = createFloorTileCanvas(width, height);
+    } else if (type === 'hardwood_oak') {
+        canvas = createHardwoodFloorCanvas(width, height);
+    } else if (type === 'shadow') {
+        canvas = createShadowCanvas(width, height);
+    }
+    if (!canvas) return null;
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    cachedProceduralTextures[key] = texture;
+    return texture;
+}
+
+// 1. Italian White Carrara / Calacatta Marble Texture
+function createMarbleCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 512;
+    canvas.height = height || 512;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    // Base luminous white/ivory gradient
+    const bg = ctx.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, '#ffffff');
+    bg.addColorStop(0.35, '#f8fafc');
+    bg.addColorStop(0.75, '#f1f5f9');
+    bg.addColorStop(1, '#ffffff');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle cloudy mineral undertones
+    for (let i = 0; i < 20; i++) {
+        const cx = Math.random() * w;
+        const cy = Math.random() * h;
+        const rad = 45 + Math.random() * 110;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+        grad.addColorStop(0, 'rgba(203, 213, 225, 0.40)');
+        grad.addColorStop(0.55, 'rgba(226, 232, 240, 0.15)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Natural Calacatta veins (broad feathered halo + crisp slate core)
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const veinCount = 4;
+    for (let v = 0; v < veinCount; v++) {
+        let x = (v / veinCount) * w + (Math.random() * 70 - 35);
+        let y = 0;
+        const pts = [{ x, y }];
+        while (y < h) {
+            y += 28 + Math.random() * 38;
+            x += (Math.random() - 0.45) * 55;
+            pts.push({ x, y });
+        }
+
+        // Soft broad vein shadow
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.32)';
+        ctx.lineWidth = 8 + Math.random() * 8;
+        for (let i = 1; i < pts.length; i++) {
+            const xc = (pts[i - 1].x + pts[i].x) / 2;
+            const yc = (pts[i - 1].y + pts[i].y) / 2;
+            ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, xc, yc);
+        }
+        ctx.stroke();
+
+        // Crisp charcoal/slate inner vein line
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        ctx.strokeStyle = 'rgba(100, 116, 139, 0.65)';
+        ctx.lineWidth = 1.6 + Math.random() * 1.4;
+        for (let i = 1; i < pts.length; i++) {
+            const xc = (pts[i - 1].x + pts[i].x) / 2;
+            const yc = (pts[i - 1].y + pts[i].y) / 2;
+            ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, xc, yc);
+
+            // Fine branch offshoots
+            if (Math.random() < 0.45) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(xc, yc);
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+                ctx.lineWidth = 0.9;
+                ctx.lineTo(xc + (Math.random() * 45 - 20), yc + (Math.random() * 35 - 15));
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+        ctx.stroke();
+    }
+    return canvas;
+}
+
+// 2. Pure Sparkling White Quartz Texture
+function createQuartzCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 256;
+    canvas.height = height || 256;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    for (let i = 0; i < 1500; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        const r = Math.random() * 1.4;
+        ctx.fillStyle = Math.random() > 0.4 ? 'rgba(203, 213, 225, 0.55)' : 'rgba(148, 163, 184, 0.35)';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    return canvas;
+}
+
+// 3. Polished Jet Black Granite Texture
+function createGraniteCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 256;
+    canvas.height = height || 256;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(0, 0, w, h);
+
+    for (let i = 0; i < 2200; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        const r = Math.random() * 1.3;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255, 255, 255, 0.40)' : 'rgba(161, 161, 170, 0.35)';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    return canvas;
+}
+
+// 4. Warm Natural Oak Butcher Block Wood
+function createWoodCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 512;
+    canvas.height = height || 512;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#c59a6f';
+    ctx.fillRect(0, 0, w, h);
+
+    const plankW = w / 4;
+    for (let p = 0; p < 4; p++) {
+        const tint = (Math.random() - 0.5) * 22;
+        ctx.fillStyle = `rgba(${Math.floor(197 + tint)}, ${Math.floor(154 + tint)}, ${Math.floor(111 + tint)}, 0.45)`;
+        ctx.fillRect(p * plankW, 0, plankW, h);
+
+        ctx.strokeStyle = 'rgba(70, 45, 25, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(p * plankW, 0);
+        ctx.lineTo(p * plankW, h);
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(115, 75, 45, 0.20)';
+    for (let g = 0; g < 75; g++) {
+        const y = Math.random() * h;
+        ctx.lineWidth = 0.5 + Math.random() * 1.6;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(w * 0.33, y + (Math.random() * 12 - 6), w * 0.66, y + (Math.random() * 12 - 6), w, y);
+        ctx.stroke();
+    }
+    return canvas;
+}
+
+// 5. White Subway Ceramic Backsplash Tile
+function createSubwayTileCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 512;
+    canvas.height = height || 512;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(0, 0, w, h);
+
+    const tileH = 42;
+    const tileW = 96;
+    const grout = 3.5;
+    const rows = Math.ceil(h / tileH) + 1;
+    const cols = Math.ceil(w / tileW) + 2;
+
+    for (let r = 0; r < rows; r++) {
+        const offsetX = (r % 2 === 0) ? 0 : -tileW / 2;
+        for (let c = 0; c < cols; c++) {
+            const x = c * tileW + offsetX + grout / 2;
+            const y = r * tileH + grout / 2;
+            const tw = tileW - grout;
+            const th = tileH - grout;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x, y, tw, th);
+
+            const grad = ctx.createLinearGradient(x, y, x, y + th);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            grad.addColorStop(0.12, 'rgba(255, 255, 255, 0)');
+            grad.addColorStop(0.88, 'rgba(0, 0, 0, 0)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0.08)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, tw, th);
+        }
+    }
+    return canvas;
+}
+
+// 6. Polished White Porcelain Floor Tiles
+function createFloorTileCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 512;
+    canvas.height = height || 512;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(0, 0, w, h);
+
+    const size = w / 2;
+    const grout = 4;
+    for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < 2; c++) {
+            const x = c * size + grout / 2;
+            const y = r * size + grout / 2;
+            const tw = size - grout;
+            const th = size - grout;
+
+            const grad = ctx.createLinearGradient(x, y, x + tw, y + th);
+            grad.addColorStop(0, '#f8fafc');
+            grad.addColorStop(0.5, '#f1f5f9');
+            grad.addColorStop(1, '#e2e8f0');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, tw, th);
+
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(x + 25, y + 15);
+            ctx.bezierCurveTo(x + tw * 0.4, y + th * 0.3, x + tw * 0.6, y + th * 0.7, x + tw - 20, y + th - 25);
+            ctx.stroke();
+        }
+    }
+    return canvas;
+}
+
+// 7. Warm Hardwood Floor Planks
+function createHardwoodFloorCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 512;
+    canvas.height = height || 512;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#261b11';
+    ctx.fillRect(0, 0, w, h);
+
+    const rows = 8;
+    const rowH = h / rows;
+    for (let r = 0; r < rows; r++) {
+        const y = r * rowH + 1.5;
+        const rh = rowH - 3;
+        const splits = [0, 160 + (r * 73) % 200, 360 + (r * 47) % 120, w];
+        for (let s = 0; s < splits.length - 1; s++) {
+            const x = splits[s] + 1.5;
+            const pw = (splits[s + 1] - splits[s]) - 3;
+            const tint = Math.sin(r * 3 + s) * 15;
+            ctx.fillStyle = `rgb(${Math.floor(185 + tint)}, ${Math.floor(140 + tint)}, ${Math.floor(95 + tint)})`;
+            ctx.fillRect(x, y, pw, rh);
+
+            ctx.strokeStyle = 'rgba(75, 45, 20, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, y + rh * 0.33);
+            ctx.lineTo(x + pw, y + rh * 0.37);
+            ctx.moveTo(x, y + rh * 0.67);
+            ctx.lineTo(x + pw, y + rh * 0.63);
+            ctx.stroke();
+        }
+    }
+    return canvas;
+}
+
+// 8. Ground Contact Shadow Canvas
+function createShadowCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 512;
+    canvas.height = height || 256;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+    const grad = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w / 2);
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0.48)');
+    grad.addColorStop(0.55, 'rgba(0, 0, 0, 0.22)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    return canvas;
+}
+
+// Material Helpers
+function getCountertopMaterial(slabW, slabD) {
+    if (currentCountertopMaterial === 'marble_white') {
+        const tex = getOrCreateProceduralTexture('marble_white', 512, 512);
+        tex.repeat.set(1.5, 1.2);
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x666666,
+            shininess: 85
+        });
+    } else if (currentCountertopMaterial === 'quartz_white') {
+        const tex = getOrCreateProceduralTexture('quartz_white', 256, 256);
+        tex.repeat.set(2.0, 2.0);
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x888888,
+            shininess: 75
+        });
+    } else if (currentCountertopMaterial === 'granite_black') {
+        const tex = getOrCreateProceduralTexture('granite_black', 256, 256);
+        tex.repeat.set(2.0, 2.0);
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0x222226,
+            specular: 0x555555,
+            shininess: 65
+        });
+    } else if (currentCountertopMaterial === 'wood_oak') {
+        const tex = getOrCreateProceduralTexture('wood_oak', 512, 512);
+        tex.repeat.set(1.2, 1.0);
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x222222,
+            shininess: 15
+        });
+    } else if (currentCountertopMaterial === 'concrete_gray') {
+        return new THREE.MeshPhongMaterial({
+            color: 0x64748b,
+            specular: 0x111111,
+            shininess: 10
+        });
+    }
+    return new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
+}
+
+function getCountertopEdgeMaterial() {
+    if (currentCountertopMaterial === 'marble_white' || currentCountertopMaterial === 'quartz_white') {
+        return new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 2 });
+    } else if (currentCountertopMaterial === 'wood_oak') {
+        return new THREE.LineBasicMaterial({ color: 0x78350f, linewidth: 2 });
+    }
+    return new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 2 });
+}
+
+function getBacksplashMaterial(bsW, bsH) {
+    if (currentBacksplashMaterial === 'subway_white') {
+        const tex = getOrCreateProceduralTexture('subway_white', 512, 512);
+        tex.repeat.set(Math.max(1, bsW / 40), Math.max(1, bsH / 20));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x555555,
+            shininess: 60
+        });
+    } else if (currentBacksplashMaterial === 'marble_slab') {
+        const tex = getOrCreateProceduralTexture('marble_white', 512, 512);
+        tex.repeat.set(Math.max(1, bsW / 48), 1);
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x666666,
+            shininess: 75
+        });
+    }
+    return new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 20 });
+}
+
+function getBacksplashEdgeMaterial() {
+    if (currentBacksplashMaterial === 'subway_white' || currentBacksplashMaterial === 'marble_slab') {
+        return new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 1.5 });
+    }
+    return new THREE.LineBasicMaterial({ color: 0x64748b, linewidth: 1.5 });
+}
+
+function getFloorMaterial(w, d) {
+    if (currentFloorMaterial === 'hardwood_oak') {
+        const tex = getOrCreateProceduralTexture('hardwood_oak', 512, 512);
+        tex.repeat.set(12, 12);
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x222222,
+            shininess: 15
+        });
+    }
+    const tex = getOrCreateProceduralTexture('tile_white', 512, 512);
+    tex.repeat.set(10, 10);
+    return new THREE.MeshPhongMaterial({
+        map: tex,
+        color: 0xffffff,
+        specular: 0x333333,
+        shininess: 30
+    });
+}
+
+function getShadowMaterial() {
+    const tex = getOrCreateProceduralTexture('shadow', 512, 256);
+    return new THREE.MeshBasicMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 0.65,
+        depthWrite: false
+    });
+}
+
+function normalizeExtrudeUVs(geo, pts) {
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    pts.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.z < minZ) minZ = p.z;
+        if (p.z > maxZ) maxZ = p.z;
+    });
+    const spanX = Math.max(1, maxX - minX);
+    const spanZ = Math.max(1, maxZ - minZ);
+    const pos = geo.attributes.position;
+    const uvs = geo.attributes.uv;
+    if (!pos || !uvs) return;
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        uvs.setXY(i, (x - minX) / spanX, (z - minZ) / spanZ);
+    }
+    uvs.needsUpdate = true;
+}
+
+// Under-Cabinet Warm LED Profile Lighting
+function buildUnderCabinetLedLighting() {
+    if (!showroomGroup || currentKitchenMode !== 'both' || currentLedStripMode === 'off') return;
+
+    const wallBottomY = getWallBottomY();
+    const wallCenterZ = getWallCenterZ();
+    const isWarm = (currentLedStripMode === 'warm');
+    const ledColor = isWarm ? 0xffdfa9 : 0xf1f5f9;
+    const diffuserColor = isWarm ? 0xfff4da : 0xffffff;
+
+    // 1. Center Main Run LED Profile
+    const profileGeo = new THREE.BoxGeometry(currentWallW - 2, 0.35, 0.85);
+    const profileMat = new THREE.MeshBasicMaterial({ color: diffuserColor });
+    const profileMesh = new THREE.Mesh(profileGeo, profileMat);
+    profileMesh.position.set(0, wallBottomY - 0.175, wallCenterZ);
+    showroomGroup.add(profileMesh);
+
+    // Downward soft warm ambient wash lights
+    const lightCount = Math.max(2, Math.round(currentWallW / 45));
+    const step = currentWallW / lightCount;
+    for (let i = 0; i < lightCount; i++) {
+        const x = -currentWallW / 2 + step * (i + 0.5);
+        const pLight = new THREE.PointLight(ledColor, 0.38, 60, 1.5);
+        pLight.position.set(x, wallBottomY - 1.2, wallCenterZ + 3.0);
+        showroomGroup.add(pLight);
+    }
+
+    // 2. Return Wing LED Profile (for L & U Kitchens)
+    if (currentKitchenLayout === 'l-shape') {
+        const isRight = (currentLReturnSide === 'right');
+        const sign = isRight ? 1 : -1;
+        const wingLen = currentLReturnFt * 12;
+        const dWall = currentWallD;
+        const clearLenWall = Math.max(12, wingLen - dWall);
+        const zWallStart = -currentD / 2 + dWall;
+        const zWallEnd = -currentD / 2 + wingLen;
+        const zWallCenter = (zWallStart + zWallEnd) / 2;
+        const xWallCenter = sign * (currentWallW / 2 - dWall / 2);
+
+        const retProfileGeo = new THREE.BoxGeometry(0.85, 0.35, clearLenWall - 2);
+        const retProfileMesh = new THREE.Mesh(retProfileGeo, profileMat);
+        retProfileMesh.position.set(xWallCenter, wallBottomY - 0.175, zWallCenter);
+        showroomGroup.add(retProfileMesh);
+
+        const retLight = new THREE.PointLight(ledColor, 0.38, 60, 1.5);
+        retLight.position.set(xWallCenter - sign * 3.0, wallBottomY - 1.2, zWallCenter);
+        showroomGroup.add(retLight);
+    }
+}
+
+// Showroom Room Environment Construction
+function buildShowroomEnvironment() {
+    if (!showroomGroup) return;
+
+    while (showroomGroup.children.length > 0) {
+        const child = showroomGroup.children[0];
+        showroomGroup.remove(child);
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+        }
+    }
+
+    if (!isShowroomMode) {
+        showroomGroup.visible = false;
+        return;
+    }
+    showroomGroup.visible = true;
+
+    let totalW = Math.max(currentW, currentWallW, 160);
+    let totalD = currentD;
+    let wingLen = 0;
+    if (currentKitchenLayout === 'l-shape') {
+        wingLen = currentLReturnFt * 12;
+        totalD = Math.max(totalD, wingLen + 30);
+    } else if (currentKitchenLayout === 'u-shape') {
+        wingLen = Math.max(currentULeftFt, currentURightFt) * 12;
+        totalD = Math.max(totalD, wingLen + 30);
+    }
+
+    const roomW = Math.max(500, totalW + 200);
+    const roomD = Math.max(500, totalD + 250);
+    const roomH = 140; // 140" ceiling height
+
+    // 1. FLOOR PLANE
+    const floorGeo = new THREE.PlaneGeometry(roomW, roomD);
+    const floorMat = getFloorMaterial(roomW, roomD);
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.position.set(0, 0, roomD / 2 - 100);
+    floorMesh.receiveShadow = true;
+    showroomGroup.add(floorMesh);
+
+    // 2. SOFT CONTACT SHADOW (Anchors cabinet base to floor)
+    const shadowGeo = new THREE.PlaneGeometry(totalW + 24, totalD + 30);
+    const shadowMat = getShadowMaterial();
+    const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+    shadowMesh.rotation.x = -Math.PI / 2;
+    shadowMesh.position.set(0, 0.08, (totalD / 2) - 10);
+    showroomGroup.add(shadowMesh);
+
+    // 3. MAIN BACK ROOM WALL
+    const zBackWall = -currentD / 2 - 0.5;
+    const backWallGeo = new THREE.PlaneGeometry(roomW, roomH);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0xf1f5f9 }); // Soft painted off-white
+    const backWallMesh = new THREE.Mesh(backWallGeo, wallMat);
+    backWallMesh.position.set(0, roomH / 2, zBackWall);
+    showroomGroup.add(backWallMesh);
+
+    // 4. MAIN WALL BASEBOARD SKIRTING (4" white wood trim)
+    const skirtGeo = new THREE.BoxGeometry(roomW, 4, 0.75);
+    const skirtMat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 25 });
+    const skirtMesh = new THREE.Mesh(skirtGeo, skirtMat);
+    skirtMesh.position.set(0, 2, zBackWall + 0.375);
+    showroomGroup.add(skirtMesh);
+
+    // 5. SIDE RETURN WALLS (for L-Shape and U-Shape)
+    if (currentKitchenLayout === 'l-shape') {
+        const isRight = (currentLReturnSide === 'right');
+        const sign = isRight ? 1 : -1;
+        const xSideWall = sign * (currentW / 2 + 0.5);
+        const sideWallGeo = new THREE.PlaneGeometry(roomD, roomH);
+        const sideWallMesh = new THREE.Mesh(sideWallGeo, wallMat);
+        sideWallMesh.rotation.y = sign * (-Math.PI / 2);
+        sideWallMesh.position.set(xSideWall, roomH / 2, zBackWall + roomD / 2);
+        showroomGroup.add(sideWallMesh);
+
+        const sideSkirtGeo = new THREE.BoxGeometry(0.75, 4, roomD);
+        const sideSkirtMesh = new THREE.Mesh(sideSkirtGeo, skirtMat);
+        sideSkirtMesh.position.set(xSideWall - sign * 0.375, 2, zBackWall + roomD / 2);
+        showroomGroup.add(sideSkirtMesh);
+    } else if (currentKitchenLayout === 'u-shape') {
+        [-1, 1].forEach(sign => {
+            const xSideWall = sign * (currentW / 2 + 0.5);
+            const sideWallGeo = new THREE.PlaneGeometry(roomD, roomH);
+            const sideWallMesh = new THREE.Mesh(sideWallGeo, wallMat);
+            sideWallMesh.rotation.y = sign * (-Math.PI / 2);
+            sideWallMesh.position.set(xSideWall, roomH / 2, zBackWall + roomD / 2);
+            showroomGroup.add(sideWallMesh);
+
+            const sideSkirtGeo = new THREE.BoxGeometry(0.75, 4, roomD);
+            const sideSkirtMesh = new THREE.Mesh(sideSkirtGeo, skirtMat);
+            sideSkirtMesh.position.set(xSideWall - sign * 0.375, 2, zBackWall + roomD / 2);
+            showroomGroup.add(sideSkirtMesh);
+        });
+    }
+
+    // 6. UNDER-CABINET LED PROFILE LIGHTING
+    if (currentKitchenMode === 'both' && currentLedStripMode !== 'off') {
+        buildUnderCabinetLedLighting();
+    }
+}
+
+// Toggle Showroom Mode
+function toggleShowroomMode(enable) {
+    if (enable === undefined) isShowroomMode = !isShowroomMode;
+    else isShowroomMode = enable;
+
+    const btnShowroom = document.getElementById('btn-view-showroom');
+    const btnSidebarShowroom = document.getElementById('btn-sidebar-toggle-showroom');
+    const overlays = document.getElementById('3d-overlays');
+
+    if (btnShowroom) btnShowroom.classList.toggle('active', isShowroomMode);
+    if (btnSidebarShowroom) {
+        btnSidebarShowroom.classList.toggle('active', isShowroomMode);
+        btnSidebarShowroom.innerHTML = isShowroomMode ? '<span>✨ Showroom Active</span>' : '<span>🏠 Showroom Mode</span>';
+    }
+
+    if (isShowroomMode) {
+        if (currentViewMode !== '3d') {
+            setViewMode('3d');
+        }
+        scene.background = new THREE.Color('#dce6f0'); // Crisp daylight architectural environment
+        if (overlays) overlays.style.display = 'none'; // Clean presentation view
+    } else {
+        scene.background = new THREE.Color('#121921'); // CAD dark viewport
+        if (overlays) overlays.style.display = '';
+    }
+
+    buildShowroomEnvironment();
+    if (renderer && scene && camera) renderer.render(scene, camera);
+}
+
+// ========================================================
+// DECOR & COUNTERTOP BUILDERS
+// ========================================================
 function buildDecor() {
-    if (currentKitchenMode !== 'both') return;
+    if (currentKitchenMode !== 'both' && currentKitchenMode !== 'base') return;
 
     // 1. Sleek Countertop Slab (1.25" thick polished quartz/granite with 45° Miter Joint)
     buildCountertopWithMiterJoint();
 
-    // 2. Dado Backsplash Panel
-    if (currentDadoGap > 0) {
+    // 2. Dado Backsplash Panel (only when wall cabinets are present)
+    if (currentKitchenMode === 'both' && currentDadoGap > 0) {
         const bsW = Math.max(currentW, currentWallW);
         const bsH = currentDadoGap;
         const bsD = 0.5;
@@ -2194,10 +2870,10 @@ function buildDecor() {
         const bsZ = (-currentD / 2) + bsD / 2;
 
         const bsGeo = new THREE.BoxGeometry(bsW, bsH, bsD);
-        const bsMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 20 });
+        const bsMat = getBacksplashMaterial(bsW, bsH);
         const bsMesh = new THREE.Mesh(bsGeo, bsMat);
         bsMesh.position.set(0, bsY, bsZ);
-        const bsEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bsGeo), new THREE.LineBasicMaterial({ color: 0x64748b }));
+        const bsEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bsGeo), getBacksplashEdgeMaterial());
         bsMesh.add(bsEdge);
         bsMesh.userData = { isDecor: true, label: "Dado Backsplash Wall" };
         cabinetGroup.add(bsMesh);
@@ -2206,9 +2882,9 @@ function buildDecor() {
 }
 
 function buildCountertopWithMiterJoint() {
-    const ctThick = 1.25; // 1.25" polished granite/quartz slab
-    const ctMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, shininess: 40 });
-    const ctEdgeMat = new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 2 });
+    const ctThick = 1.25; // 1.25" polished slab
+    const ctMat = getCountertopMaterial();
+    const ctEdgeMat = getCountertopEdgeMaterial();
     const ctY = getBaseTopY() + ctThick; // Position of mesh after geo.rotateX(Math.PI/2)
 
     const wMain = currentW;
@@ -2227,7 +2903,7 @@ function buildCountertopWithMiterJoint() {
         const ctMesh = new THREE.Mesh(ctGeo, ctMat);
         ctMesh.position.set(0, getBaseTopY() + ctThick / 2, zBack + (dBase + overhangFront) / 2);
         ctMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(ctGeo), ctEdgeMat));
-        ctMesh.userData = { isDecor: true, label: "Granite/Quartz Countertop (Straight Slab)" };
+        ctMesh.userData = { isDecor: true, label: "Countertop Slab (Straight Run)" };
         cabinetGroup.add(ctMesh);
         decorObjects.push(ctMesh);
         return;
@@ -2243,6 +2919,7 @@ function buildCountertopWithMiterJoint() {
 
         const geo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: ctThick, bevelEnabled: false });
         geo.rotateX(Math.PI / 2);
+        normalizeExtrudeUVs(geo, pts);
 
         const mesh = new THREE.Mesh(geo, ctMat);
         mesh.position.set(0, ctY, 0);
@@ -2487,10 +3164,10 @@ function buildReturnWing(wingSide, wingLengthFt) {
         const bsD = 0.5;
         const bsY = getCountertopTopY() + bsH / 2;
         const bsGeo = new THREE.BoxGeometry(bsD, bsH, wingLen);
-        const bsMat = new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 20 });
+        const bsMat = getBacksplashMaterial(wingLen, bsH);
         const bsMesh = new THREE.Mesh(bsGeo, bsMat);
         bsMesh.position.set(sign * (wMain / 2 - bsD / 2), bsY, -dBase / 2 + wingLen / 2);
-        const bsEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bsGeo), new THREE.LineBasicMaterial({ color: 0x64748b }));
+        const bsEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bsGeo), getBacksplashEdgeMaterial());
         bsMesh.add(bsEdge);
         bsMesh.userData = { isDecor: true, label: `Dado Backsplash Wall (${isRight ? 'Right' : 'Left'} Return)` };
         cabinetGroup.add(bsMesh);
@@ -2754,10 +3431,11 @@ function buildShell() {
     }
 
     // Countertop Stone & Backsplash (builds 45° miter joint slabs if L/U kitchen)
-    if (currentKitchenMode === 'both') {
+    if (currentKitchenMode === 'both' || currentKitchenMode === 'base') {
         buildDecor();
     }
 
+    buildShowroomEnvironment();
     updateCameraFraming();
 }
 
@@ -3757,6 +4435,15 @@ function updateMenuForPreset(presetKey) {
     if (flipWrap) {
         flipWrap.style.display = (presetKey === 'shoe-rack' && currentShelfStyle === 'flip') ? 'block' : 'none';
     }
+
+    const showroomCard = document.getElementById('cad-showroom-card');
+    const bsSection = document.getElementById('cad-backsplash-section');
+    if (showroomCard) {
+        showroomCard.style.display = (presetKey === 'shoe-rack') ? 'none' : 'block';
+    }
+    if (bsSection) {
+        bsSection.style.display = (currentKitchenMode === 'both') ? 'block' : 'none';
+    }
 }
 
 function applyPreset(presetKey) {
@@ -4277,6 +4964,85 @@ function setupCADListeners() {
         if (fsBtn) fsBtn.classList.toggle('active', isFs);
         setTimeout(resize3D, 80);
     });
+
+    // Showroom Staging Toggle Buttons
+    const btnViewShowroom = document.getElementById('btn-view-showroom');
+    if (btnViewShowroom) {
+        btnViewShowroom.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleShowroomMode();
+        });
+    }
+
+    const btnSidebarShowroom = document.getElementById('btn-sidebar-toggle-showroom');
+    if (btnSidebarShowroom) {
+        btnSidebarShowroom.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleShowroomMode();
+        });
+    }
+
+    // Countertop Finish Selector Pills
+    document.querySelectorAll('.ct-finish-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const matKey = btn.dataset.countertop;
+            currentCountertopMaterial = matKey;
+            document.querySelectorAll('.ct-finish-btn').forEach(b => b.classList.toggle('active', b === btn));
+            const badge = document.getElementById('cad-countertop-badge');
+            if (badge) {
+                const names = {
+                    'marble_white': 'White Carrara Marble',
+                    'quartz_white': 'White Quartz',
+                    'granite_black': 'Black Granite',
+                    'wood_oak': 'Oak Butcher',
+                    'concrete_gray': 'Concrete Gray'
+                };
+                badge.textContent = names[matKey] || matKey;
+            }
+            buildShell();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        });
+    });
+
+    // Backsplash Finish Selector Pills
+    document.querySelectorAll('.bs-finish-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const matKey = btn.dataset.backsplash;
+            currentBacksplashMaterial = matKey;
+            document.querySelectorAll('.bs-finish-btn').forEach(b => b.classList.toggle('active', b === btn));
+            const badge = document.getElementById('cad-backsplash-badge');
+            if (badge) {
+                const names = {
+                    'subway_white': 'Subway Tile',
+                    'marble_slab': 'Marble Slab',
+                    'solid_dark': 'Slate Dark'
+                };
+                badge.textContent = names[matKey] || matKey;
+            }
+            buildShell();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        });
+    });
+
+    // Floor Type Dropdown
+    const floorSelect = document.getElementById('cad-showroom-floor-select');
+    if (floorSelect) {
+        floorSelect.addEventListener('change', () => {
+            currentFloorMaterial = floorSelect.value;
+            buildShowroomEnvironment();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        });
+    }
+
+    // Under-Cabinet LED Dropdown
+    const ledSelect = document.getElementById('cad-showroom-led-select');
+    if (ledSelect) {
+        ledSelect.addEventListener('change', () => {
+            currentLedStripMode = ledSelect.value;
+            buildShowroomEnvironment();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        });
+    }
 }
 
 function addShelf(module) {

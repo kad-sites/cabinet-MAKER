@@ -1288,3 +1288,129 @@ main {
     cursor: pointer;
 }
 
+/* ========================================================
+   SHOWROOM STAGING & MARKET FINISHES STUDIO
+   ======================================================== */
+.hud-view-btn.hud-showroom-btn {
+    gap: 4px;
+    color: var(--accent-gold);
+    border: 1px solid rgba(222, 184, 135, 0.25);
+}
+
+.hud-view-btn.hud-showroom-btn:hover {
+    background: rgba(222, 184, 135, 0.12);
+    border-color: var(--accent-gold);
+}
+
+.hud-view-btn.hud-showroom-btn.active {
+    background: var(--accent-gold);
+    color: #1f160a;
+    font-weight: 600;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(222, 184, 135, 0.45);
+}
+
+.btn-mode-pill {
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.btn-mode-pill:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+}
+
+.btn-mode-pill.active {
+    background: #38bdf8;
+    color: #0f172a;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.finishes-swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    margin-top: 6px;
+}
+
+.finishes-swatch-grid.cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.finish-swatch-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 6px 7px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    text-align: left;
+}
+
+.finish-swatch-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.finish-swatch-btn.active {
+    background: rgba(222, 184, 135, 0.12);
+    border-color: var(--accent-gold);
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px var(--accent-gold);
+}
+
+.finish-swatch-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.marble-dot {
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f1f5f9 60%, #cbd5e1 100%);
+    border-color: rgba(100, 116, 139, 0.6);
+}
+
+.quartz-dot {
+    background: radial-gradient(circle at 40% 40%, #ffffff 0%, #f8fafc 70%, #e2e8f0 100%);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.7);
+}
+
+.granite-dot {
+    background: radial-gradient(circle at 30% 30%, #3f3f46 0%, #18181b 75%, #09090b 100%);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.wood-dot {
+    background: linear-gradient(135deg, #d4a373 0%, #c59a6f 50%, #9a6839 100%);
+    border-color: #78350f;
+}
+
+.concrete-dot {
+    background: #64748b;
+    border-color: #475569;
+}
+
+.subway-dot {
+    background: repeating-linear-gradient(0deg, #ffffff, #ffffff 4px, #cbd5e1 4px, #cbd5e1 6px);
+    border-color: #94a3b8;
+}
+
+.solid-dark-dot {
+    background: #334155;
+    border-color: #1e293b;
+}
+
