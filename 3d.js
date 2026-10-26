@@ -2751,7 +2751,19 @@ function buildShowroomEnvironment() {
 
     const roomW = Math.max(500, totalW + 200);
     const roomD = Math.max(500, totalD + 250);
-    const roomH = 140; // 140" ceiling height
+
+    // Dynamic Room Wall Height matching exact Kitchen Cabinet Top Height
+    let cabinetTopY = 88;
+    if (currentKitchenMode === 'both') {
+        cabinetTopY = getWallTopY();
+    } else if (currentKitchenMode === 'wall') {
+        cabinetTopY = currentWallH;
+    } else if (currentKitchenMode === 'base') {
+        cabinetTopY = getCountertopTopY();
+    } else {
+        cabinetTopY = currentPlinth + currentH;
+    }
+    const roomH = cabinetTopY; // Room wall height remains exactly the same as cabinet height!
 
     // 1. FLOOR PLANE
     const floorGeo = new THREE.PlaneGeometry(roomW, roomD);
@@ -2770,7 +2782,7 @@ function buildShowroomEnvironment() {
     shadowMesh.position.set(0, 0.08, (totalD / 2) - 10);
     showroomGroup.add(shadowMesh);
 
-    // 3. MAIN BACK ROOM WALL
+    // 3. MAIN BACK ROOM WALL (Top matches exact cabinet top)
     const zBackWall = -currentD / 2 - 0.5;
     const backWallGeo = new THREE.PlaneGeometry(roomW, roomH);
     const wallMat = new THREE.MeshLambertMaterial({ color: 0xf1f5f9 }); // Soft painted off-white
@@ -2778,14 +2790,14 @@ function buildShowroomEnvironment() {
     backWallMesh.position.set(0, roomH / 2, zBackWall);
     showroomGroup.add(backWallMesh);
 
-    // 4. MAIN WALL BASEBOARD SKIRTING (4" white wood trim)
+    // 4. MAIN WALL BASEBOARD SKIRTING (4" white wood trim at bottom)
     const skirtGeo = new THREE.BoxGeometry(roomW, 4, 0.75);
     const skirtMat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 25 });
     const skirtMesh = new THREE.Mesh(skirtGeo, skirtMat);
     skirtMesh.position.set(0, 2, zBackWall + 0.375);
     showroomGroup.add(skirtMesh);
 
-    // 5. SIDE RETURN WALLS (for L-Shape and U-Shape)
+    // 5. SIDE RETURN WALLS (for L-Shape and U-Shape matching roomH)
     if (currentKitchenLayout === 'l-shape') {
         const isRight = (currentLReturnSide === 'right');
         const sign = isRight ? 1 : -1;
