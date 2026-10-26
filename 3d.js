@@ -3069,19 +3069,8 @@ function buildShowroomEnvironment() {
     }
     showroomGroup.visible = true;
 
-    let totalW = Math.max(currentW, currentWallW, 160);
-    let totalD = currentD;
-    let wingLen = 0;
-    if (currentKitchenLayout === 'l-shape') {
-        wingLen = currentLReturnFt * 12;
-        totalD = Math.max(totalD, wingLen + 30);
-    } else if (currentKitchenLayout === 'u-shape') {
-        wingLen = Math.max(currentULeftFt, currentURightFt) * 12;
-        totalD = Math.max(totalD, wingLen + 30);
-    }
-
-    const roomW = Math.max(500, totalW + 200);
-    const roomD = Math.max(500, totalD + 250);
+    const extraMargin = 60; // Exact 5 feet (60") extra margin as requested
+    const zBackWall = -currentD / 2 - 0.5;
 
     // Dynamic Room Wall Height matching exact Kitchen Cabinet Top Height
     let cabinetTopY = 88;
@@ -3095,77 +3084,152 @@ function buildShowroomEnvironment() {
         cabinetTopY = currentPlinth + currentH;
     }
     const roomH = cabinetTopY; // Room wall height remains exactly the same as cabinet height!
-
-    // 1. FLOOR PLANE
-    const floorGeo = new THREE.PlaneGeometry(roomW, roomD);
-    const floorMat = getFloorMaterial(roomW, roomD);
-    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
-    floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.position.set(0, 0, roomD / 2 - 100);
-    floorMesh.receiveShadow = true;
-    showroomGroup.add(floorMesh);
-
-    // 2. SOFT CONTACT SHADOW (Anchors cabinet base to floor)
-    let shadowCenterZ = 0;
-    let shadowD = currentD + 16;
-    if (currentKitchenLayout === 'l-shape' || currentKitchenLayout === 'u-shape') {
-        shadowCenterZ = (-currentD / 2 + (-currentD / 2 + wingLen)) / 2;
-        shadowD = wingLen + 16;
-    }
-    const shadowGeo = new THREE.PlaneGeometry(totalW + 16, Math.max(currentD + 16, shadowD));
-    const shadowMat = getShadowMaterial();
-    const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
-    shadowMesh.rotation.x = -Math.PI / 2;
-    shadowMesh.position.set(0, 0.06, shadowCenterZ);
-    showroomGroup.add(shadowMesh);
-
-    // 3. MAIN BACK ROOM WALL (Top matches exact cabinet top)
-    const zBackWall = -currentD / 2 - 0.5;
-    const backWallGeo = new THREE.PlaneGeometry(roomW, roomH);
     const wallMat = new THREE.MeshLambertMaterial({ color: 0xf1f5f9 }); // Soft painted off-white
-    const backWallMesh = new THREE.Mesh(backWallGeo, wallMat);
-    backWallMesh.position.set(0, roomH / 2, zBackWall);
-    showroomGroup.add(backWallMesh);
-
-    // 4. MAIN WALL BASEBOARD SKIRTING (4" white wood trim at bottom)
-    const skirtGeo = new THREE.BoxGeometry(roomW, 4, 0.75);
     const skirtMat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 25 });
-    const skirtMesh = new THREE.Mesh(skirtGeo, skirtMat);
-    skirtMesh.position.set(0, 2, zBackWall + 0.375);
-    showroomGroup.add(skirtMesh);
 
-    // 5. SIDE RETURN WALLS (for L-Shape and U-Shape matching roomH)
+    let backWallW = currentW;
+    let xBackCenter = 0;
+    let floorW = currentW + (extraMargin * 2);
+    let floorD = currentD + extraMargin + 12;
+    let floorCenterX = 0;
+    let floorCenterZ = zBackWall + floorD / 2;
+    let shadowW = currentW + 12;
+    let shadowD = currentD + 12;
+    let shadowCenterX = 0;
+    let shadowCenterZ = 0;
+
     if (currentKitchenLayout === 'l-shape') {
         const isRight = (currentLReturnSide === 'right');
         const sign = isRight ? 1 : -1;
+        const wingLen = currentLReturnFt * 12;
         const xSideWall = sign * (currentW / 2 + 0.5);
-        const sideWallGeo = new THREE.PlaneGeometry(roomD, roomH);
+
+        // 1. Back Wall meets Side Wall at exact corner; extends 5 ft (60") on the open side only!
+        backWallW = currentW + extraMargin + 0.5;
+        if (isRight) {
+            // Corner on right (X = currentW/2 + 0.5), open on left (X = -currentW/2 - extraMargin)
+            xBackCenter = (-currentW / 2 - extraMargin + (currentW / 2 + 0.5)) / 2;
+        } else {
+            // Corner on left (X = -currentW/2 - 0.5), open on right (X = currentW/2 + extraMargin)
+            xBackCenter = ((-currentW / 2 - 0.5) + (currentW / 2 + extraMargin)) / 2;
+        }
+
+        // 2. Side Wall starts at the corner and runs forward past the return wing by exactly 5 ft (60")
+        const sideWallLen = wingLen + extraMargin + 0.5;
+        const zSideCenter = zBackWall + sideWallLen / 2;
+
+        const sideWallGeo = new THREE.PlaneGeometry(sideWallLen, roomH);
         const sideWallMesh = new THREE.Mesh(sideWallGeo, wallMat);
         sideWallMesh.rotation.y = sign * (-Math.PI / 2);
-        sideWallMesh.position.set(xSideWall, roomH / 2, zBackWall + roomD / 2);
+        sideWallMesh.position.set(xSideWall, roomH / 2, zSideCenter);
         showroomGroup.add(sideWallMesh);
 
-        const sideSkirtGeo = new THREE.BoxGeometry(0.75, 4, roomD);
+        const sideSkirtGeo = new THREE.BoxGeometry(0.75, 4, sideWallLen);
         const sideSkirtMesh = new THREE.Mesh(sideSkirtGeo, skirtMat);
-        sideSkirtMesh.position.set(xSideWall - sign * 0.375, 2, zBackWall + roomD / 2);
+        sideSkirtMesh.position.set(xSideWall - sign * 0.375, 2, zSideCenter);
         showroomGroup.add(sideSkirtMesh);
-    } else if (currentKitchenLayout === 'u-shape') {
-        [-1, 1].forEach(sign => {
-            const xSideWall = sign * (currentW / 2 + 0.5);
-            const sideWallGeo = new THREE.PlaneGeometry(roomD, roomH);
-            const sideWallMesh = new THREE.Mesh(sideWallGeo, wallMat);
-            sideWallMesh.rotation.y = sign * (-Math.PI / 2);
-            sideWallMesh.position.set(xSideWall, roomH / 2, zBackWall + roomD / 2);
-            showroomGroup.add(sideWallMesh);
 
-            const sideSkirtGeo = new THREE.BoxGeometry(0.75, 4, roomD);
-            const sideSkirtMesh = new THREE.Mesh(sideSkirtGeo, skirtMat);
-            sideSkirtMesh.position.set(xSideWall - sign * 0.375, 2, zBackWall + roomD / 2);
-            showroomGroup.add(sideSkirtMesh);
-        });
+        // 3. Proportional Floor & Shadow (covers room and 5 ft margin in front of kitchen)
+        floorW = backWallW + 4;
+        floorCenterX = xBackCenter;
+        floorD = wingLen + extraMargin + 4;
+        floorCenterZ = zBackWall + floorD / 2;
+
+        shadowW = currentW + 12;
+        shadowD = wingLen + 12;
+        shadowCenterX = isRight ? (extraMargin * 0.1) : (-extraMargin * 0.1);
+        shadowCenterZ = (-currentD / 2 + (-currentD / 2 + wingLen)) / 2;
+
+    } else if (currentKitchenLayout === 'u-shape') {
+        const leftWingLen = currentULeftFt * 12;
+        const rightWingLen = currentURightFt * 12;
+        const maxWing = Math.max(leftWingLen, rightWingLen);
+
+        // 1. Back Wall is bounded between the two corners!
+        backWallW = currentW + 1.0;
+        xBackCenter = 0;
+
+        // 2. Left Side Wall
+        const sideWallLenLeft = leftWingLen + extraMargin + 0.5;
+        const zSideCenterLeft = zBackWall + sideWallLenLeft / 2;
+        const sideWallGeoLeft = new THREE.PlaneGeometry(sideWallLenLeft, roomH);
+        const sideWallMeshLeft = new THREE.Mesh(sideWallGeoLeft, wallMat);
+        sideWallMeshLeft.rotation.y = Math.PI / 2;
+        sideWallMeshLeft.position.set(-currentW / 2 - 0.5, roomH / 2, zSideCenterLeft);
+        showroomGroup.add(sideWallMeshLeft);
+
+        const sideSkirtMeshLeft = new THREE.Mesh(new THREE.BoxGeometry(0.75, 4, sideWallLenLeft), skirtMat);
+        sideSkirtMeshLeft.position.set(-currentW / 2 - 0.125, 2, zSideCenterLeft);
+        showroomGroup.add(sideSkirtMeshLeft);
+
+        // 3. Right Side Wall
+        const sideWallLenRight = rightWingLen + extraMargin + 0.5;
+        const zSideCenterRight = zBackWall + sideWallLenRight / 2;
+        const sideWallGeoRight = new THREE.PlaneGeometry(sideWallLenRight, roomH);
+        const sideWallMeshRight = new THREE.Mesh(sideWallGeoRight, wallMat);
+        sideWallMeshRight.rotation.y = -Math.PI / 2;
+        sideWallMeshRight.position.set(currentW / 2 + 0.5, roomH / 2, zSideCenterRight);
+        showroomGroup.add(sideWallMeshRight);
+
+        const sideSkirtMeshRight = new THREE.Mesh(new THREE.BoxGeometry(0.75, 4, sideWallLenRight), skirtMat);
+        sideSkirtMeshRight.position.set(currentW / 2 + 0.125, 2, zSideCenterRight);
+        showroomGroup.add(sideSkirtMeshRight);
+
+        // Floor & Shadow
+        floorW = currentW + 4;
+        floorCenterX = 0;
+        floorD = maxWing + extraMargin + 4;
+        floorCenterZ = zBackWall + floorD / 2;
+
+        shadowW = currentW + 12;
+        shadowD = maxWing + 12;
+        shadowCenterX = 0;
+        shadowCenterZ = (-currentD / 2 + (-currentD / 2 + maxWing)) / 2;
+
+    } else {
+        // Straight Kitchen: exactly 5 ft (60") extra wall on both sides!
+        backWallW = currentW + (extraMargin * 2);
+        xBackCenter = 0;
+        floorW = backWallW;
+        floorCenterX = 0;
+        floorD = currentD + extraMargin + 12;
+        floorCenterZ = zBackWall + floorD / 2;
+        shadowW = currentW + 12;
+        shadowD = currentD + 12;
+        shadowCenterX = 0;
+        shadowCenterZ = 0;
     }
 
-    // 6. UNDER-CABINET LED PROFILE LIGHTING
+    // 1. FLOOR PLANE (Tightly proportioned, perfectly framing the kitchen)
+    const floorGeo = new THREE.PlaneGeometry(floorW, floorD);
+    const floorMat = getFloorMaterial(floorW, floorD);
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.position.set(floorCenterX, 0, floorCenterZ);
+    floorMesh.receiveShadow = true;
+    showroomGroup.add(floorMesh);
+
+    // 2. SOFT CONTACT SHADOW (Directly under the cabinet base)
+    const shadowGeo = new THREE.PlaneGeometry(shadowW, shadowD);
+    const shadowMat = getShadowMaterial();
+    const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+    shadowMesh.rotation.x = -Math.PI / 2;
+    shadowMesh.position.set(shadowCenterX, 0.06, shadowCenterZ);
+    showroomGroup.add(shadowMesh);
+
+    // 3. MAIN BACK ROOM WALL
+    const backWallGeo = new THREE.PlaneGeometry(backWallW, roomH);
+    const backWallMesh = new THREE.Mesh(backWallGeo, wallMat);
+    backWallMesh.position.set(xBackCenter, roomH / 2, zBackWall);
+    showroomGroup.add(backWallMesh);
+
+    // 4. MAIN WALL BASEBOARD SKIRTING (4" white trim)
+    const skirtGeo = new THREE.BoxGeometry(backWallW, 4, 0.75);
+    const skirtMesh = new THREE.Mesh(skirtGeo, skirtMat);
+    skirtMesh.position.set(xBackCenter, 2, zBackWall + 0.375);
+    showroomGroup.add(skirtMesh);
+
+    // 5. UNDER-CABINET LED PROFILE LIGHTING
     if (currentKitchenMode === 'both' && currentLedStripMode !== 'off') {
         buildUnderCabinetLedLighting();
     }
