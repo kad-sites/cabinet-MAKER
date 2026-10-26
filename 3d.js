@@ -48,7 +48,7 @@ let showroomGroup = null;
 let isShowroomMode = false;
 let currentCountertopMaterial = 'marble_white'; // 'marble_white', 'quartz_white', 'granite_black', 'wood_oak', 'concrete_gray'
 let currentBacksplashMaterial = 'subway_white'; // 'subway_white', 'marble_slab', 'solid_dark'
-let currentFloorMaterial = 'tile_white';        // 'tile_white', 'hardwood_oak'
+let currentFloorMaterial = 'hardwood_oak';        // 'hardwood_oak', 'herringbone_oak', 'slate_dark', 'tile_white'
 let currentLedStripMode = 'warm';               // 'warm', 'neutral', 'off'
 let cachedProceduralTextures = {};
 
@@ -126,9 +126,12 @@ function init3D() {
     camera = perspectiveCamera;
 
     // Renderer setup
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     container.appendChild(renderer.domElement);
 
     // Orbit Controls
@@ -2216,12 +2219,19 @@ function getOrCreateProceduralTexture(type, width, height) {
         canvas = createFloorTileCanvas(width, height);
     } else if (type === 'hardwood_oak') {
         canvas = createHardwoodFloorCanvas(width, height);
+    } else if (type === 'hardwood_walnut') {
+        canvas = createWalnutFloorCanvas(width, height);
+    } else if (type === 'chevron_oak' || type === 'herringbone_oak') {
+        canvas = createChevronFloorCanvas(width, height);
+    } else if (type === 'slate_dark') {
+        canvas = createSlateFloorCanvas(width, height);
     } else if (type === 'shadow') {
         canvas = createShadowCanvas(width, height);
     }
     if (!canvas) return null;
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.encoding = THREE.sRGBEncoding;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     cachedProceduralTextures[key] = texture;
@@ -2404,7 +2414,7 @@ function createSubwayTileCanvas(width, height) {
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
 
-    ctx.fillStyle = '#cbd5e1';
+    ctx.fillStyle = '#8e9eb2'; // Defined clean architectural grout
     ctx.fillRect(0, 0, w, h);
 
     const tileH = 42;
@@ -2421,14 +2431,14 @@ function createSubwayTileCanvas(width, height) {
             const tw = tileW - grout;
             const th = tileH - grout;
 
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#f8fafc';
             ctx.fillRect(x, y, tw, th);
 
             const grad = ctx.createLinearGradient(x, y, x, y + th);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-            grad.addColorStop(0.12, 'rgba(255, 255, 255, 0)');
-            grad.addColorStop(0.88, 'rgba(0, 0, 0, 0)');
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0.08)');
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            grad.addColorStop(0.15, 'rgba(255, 255, 255, 0)');
+            grad.addColorStop(0.85, 'rgba(0, 0, 0, 0)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0.06)');
             ctx.fillStyle = grad;
             ctx.fillRect(x, y, tw, th);
         }
@@ -2436,19 +2446,293 @@ function createSubwayTileCanvas(width, height) {
     return canvas;
 }
 
-// 6. Polished White Porcelain Floor Tiles
+// 6. Luxury Calacatta Porcelain Floor Tiles
 function createFloorTileCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#d6cec4'; // Warm neutral grout
+    ctx.fillRect(0, 0, w, h);
+
+    const size = w / 4;
+    const grout = 3.0;
+    for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+            const x = c * size + grout / 2;
+            const y = r * size + grout / 2;
+            const tw = size - grout;
+            const th = size - grout;
+
+            const grad = ctx.createLinearGradient(x, y, x + tw, y + th);
+            grad.addColorStop(0, '#fdfcf9');
+            grad.addColorStop(0.5, '#f7f4ed');
+            grad.addColorStop(1, '#f1ede3');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, tw, th);
+
+            // Subtle warm gray mineral veining
+            ctx.strokeStyle = 'rgba(175, 160, 145, 0.18)';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(x + 15, y + 20);
+            ctx.bezierCurveTo(x + tw * 0.4, y + th * 0.25, x + tw * 0.55, y + th * 0.75, x + tw - 15, y + th - 20);
+            ctx.stroke();
+
+            // Edge bevel sheen
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.fillRect(x, y, tw, 1.5);
+            ctx.fillRect(x, y, 1.5, th);
+        }
+    }
+    return canvas;
+}
+
+// 7. Warm Hardwood Oak Floor Planks (Scandinavian / European Honey Oak)
+function createHardwoodFloorCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    // Dark micro-gap underlayment (simulates shadow line between planks)
+    ctx.fillStyle = '#1e140d';
+    ctx.fillRect(0, 0, w, h);
+
+    const rows = 10;
+    const rowH = h / rows;
+    const gap = 2.0;
+
+    // Organic European Oak Tones (Warm Golden Amber & Honey Oak)
+    const oakTones = [
+        { r: 188, g: 138, b: 88 },  // warm honey oak
+        { r: 174, g: 124, b: 76 },  // rich amber oak
+        { r: 202, g: 154, b: 104 }, // natural golden oak
+        { r: 165, g: 116, b: 68 },  // toasted caramel oak
+        { r: 194, g: 146, b: 96 },  // soft blonde honey oak
+        { r: 156, g: 108, b: 60 }   // deep autumn oak
+    ];
+
+    let seed = 73;
+    function pseudoRand() {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    }
+
+    for (let r = 0; r < rows; r++) {
+        const y = r * rowH + gap / 2;
+        const rh = rowH - gap;
+
+        // Staggered plank joints across rows
+        const splits = [0];
+        let curX = ((r * 280) % 320) + 100;
+        splits.push(curX);
+        while (curX < w - 180) {
+            curX += 260 + (pseudoRand() * 200);
+            if (curX < w - 60) splits.push(curX);
+        }
+        splits.push(w);
+
+        for (let s = 0; s < splits.length - 1; s++) {
+            const x = splits[s] + gap / 2;
+            const pw = (splits[s + 1] - splits[s]) - gap;
+            if (pw <= 1) continue;
+
+            const toneIdx = Math.floor(pseudoRand() * oakTones.length);
+            const base = oakTones[toneIdx];
+            const jitter = (pseudoRand() - 0.5) * 14;
+
+            // Plank base gradient (subtle satin depth)
+            const pGrad = ctx.createLinearGradient(x, y, x, y + rh);
+            pGrad.addColorStop(0, `rgb(${Math.floor(base.r + jitter + 6)}, ${Math.floor(base.g + jitter + 5)}, ${Math.floor(base.b + jitter + 4)})`);
+            pGrad.addColorStop(0.5, `rgb(${Math.floor(base.r + jitter)}, ${Math.floor(base.g + jitter)}, ${Math.floor(base.b + jitter)})`);
+            pGrad.addColorStop(1, `rgb(${Math.floor(base.r + jitter - 8)}, ${Math.floor(base.g + jitter - 7)}, ${Math.floor(base.b + jitter - 6)})`);
+            ctx.fillStyle = pGrad;
+            ctx.fillRect(x, y, pw, rh);
+
+            // Longitudinal wood grain lines
+            const grainCount = 14 + Math.floor(pseudoRand() * 6);
+            for (let g = 0; g < grainCount; g++) {
+                const gy = y + (rh * (g + 0.5) / grainCount) + (pseudoRand() - 0.5) * 3;
+                const isDark = pseudoRand() > 0.35;
+                const alpha = isDark ? (0.04 + pseudoRand() * 0.08) : (0.02 + pseudoRand() * 0.04);
+                ctx.strokeStyle = isDark ? `rgba(65, 38, 16, ${alpha})` : `rgba(255, 235, 205, ${alpha})`;
+                ctx.lineWidth = 0.8 + pseudoRand() * 0.7;
+
+                ctx.beginPath();
+                ctx.moveTo(x, gy);
+                const cp1x = x + pw * 0.33;
+                const cp1y = gy + (pseudoRand() - 0.5) * 2.5;
+                const cp2x = x + pw * 0.67;
+                const cp2y = gy + (pseudoRand() - 0.5) * 2.5;
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x + pw, gy);
+                ctx.stroke();
+            }
+
+            // Cathedral grain loop on ~30% of planks
+            if (pseudoRand() > 0.7) {
+                const loopCx = x + pw * (0.3 + pseudoRand() * 0.4);
+                const loopCy = y + rh * (0.35 + pseudoRand() * 0.3);
+                ctx.strokeStyle = 'rgba(70, 40, 18, 0.07)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.ellipse(loopCx, loopCy, pw * 0.16, rh * 0.28, (pseudoRand() - 0.5) * 0.1, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Top micro-bevel highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
+            ctx.fillRect(x, y, pw, 1.2);
+            // Left micro-bevel highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+            ctx.fillRect(x, y, 1.2, rh);
+        }
+    }
+    return canvas;
+}
+
+// 8. Rich American Walnut Hardwood Planks
+function createWalnutFloorCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#100a06';
+    ctx.fillRect(0, 0, w, h);
+
+    const rows = 10;
+    const rowH = h / rows;
+    const gap = 2.0;
+
+    const walnutTones = [
+        { r: 76, g: 52, b: 38 },
+        { r: 88, g: 62, b: 46 },
+        { r: 68, g: 46, b: 34 },
+        { r: 96, g: 70, b: 52 },
+        { r: 82, g: 56, b: 40 },
+        { r: 64, g: 42, b: 30 }
+    ];
+
+    let seed = 89;
+    function pseudoRand() {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    }
+
+    for (let r = 0; r < rows; r++) {
+        const y = r * rowH + gap / 2;
+        const rh = rowH - gap;
+
+        const splits = [0];
+        let curX = ((r * 280) % 320) + 100;
+        splits.push(curX);
+        while (curX < w - 180) {
+            curX += 260 + (pseudoRand() * 200);
+            if (curX < w - 60) splits.push(curX);
+        }
+        splits.push(w);
+
+        for (let s = 0; s < splits.length - 1; s++) {
+            const x = splits[s] + gap / 2;
+            const pw = (splits[s + 1] - splits[s]) - gap;
+            if (pw <= 1) continue;
+
+            const toneIdx = Math.floor(pseudoRand() * walnutTones.length);
+            const base = walnutTones[toneIdx];
+            const jitter = (pseudoRand() - 0.5) * 10;
+
+            const pGrad = ctx.createLinearGradient(x, y, x, y + rh);
+            pGrad.addColorStop(0, `rgb(${Math.floor(base.r + jitter + 4)}, ${Math.floor(base.g + jitter + 3)}, ${Math.floor(base.b + jitter + 2)})`);
+            pGrad.addColorStop(0.5, `rgb(${Math.floor(base.r + jitter)}, ${Math.floor(base.g + jitter)}, ${Math.floor(base.b + jitter)})`);
+            pGrad.addColorStop(1, `rgb(${Math.floor(base.r + jitter - 5)}, ${Math.floor(base.g + jitter - 4)}, ${Math.floor(base.b + jitter - 3)})`);
+            ctx.fillStyle = pGrad;
+            ctx.fillRect(x, y, pw, rh);
+
+            // Fine walnut grain
+            const grainCount = 16 + Math.floor(pseudoRand() * 6);
+            for (let g = 0; g < grainCount; g++) {
+                const gy = y + (rh * (g + 0.5) / grainCount) + (pseudoRand() - 0.5) * 3;
+                const alpha = 0.05 + pseudoRand() * 0.08;
+                ctx.strokeStyle = `rgba(20, 12, 8, ${alpha})`;
+                ctx.lineWidth = 0.8 + pseudoRand() * 0.7;
+                ctx.beginPath();
+                ctx.moveTo(x, gy);
+                ctx.bezierCurveTo(x + pw * 0.33, gy + (pseudoRand() - 0.5) * 2, x + pw * 0.67, gy + (pseudoRand() - 0.5) * 2, x + pw, gy);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fillRect(x, y, pw, 1.0);
+        }
+    }
+    return canvas;
+}
+
+// 8b. Seamless French Chevron Oak Parquet
+function createChevronFloorCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#140c06';
+    ctx.fillRect(0, 0, w, h);
+
+    const bandW = 128;
+    const plankH = 48;
+    const cols = Math.ceil(w / bandW) + 1;
+    const rows = Math.ceil(h / plankH) + 4;
+
+    for (let c = 0; c < cols; c++) {
+        const colX = c * bandW;
+        const isUp = (c % 2 === 0);
+        for (let r = -2; r < rows; r++) {
+            const y = r * plankH;
+            const tone = 175 + ((c * 17 + r * 11) % 32);
+            ctx.fillStyle = `rgb(${tone}, ${Math.floor(tone * 0.74)}, ${Math.floor(tone * 0.52)})`;
+
+            ctx.beginPath();
+            if (isUp) {
+                ctx.moveTo(colX, y);
+                ctx.lineTo(colX + bandW, y - bandW * 0.45);
+                ctx.lineTo(colX + bandW, y - bandW * 0.45 + plankH - 2);
+                ctx.lineTo(colX, y + plankH - 2);
+            } else {
+                ctx.moveTo(colX, y - bandW * 0.45);
+                ctx.lineTo(colX + bandW, y);
+                ctx.lineTo(colX + bandW, y + plankH - 2);
+                ctx.lineTo(colX, y - bandW * 0.45 + plankH - 2);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(40, 22, 10, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+    return canvas;
+}
+
+// 9. Modern Architectural Charcoal Slate Tile
+function createSlateFloorCanvas(width, height) {
     const canvas = document.createElement('canvas');
     canvas.width = width || 512;
     canvas.height = height || 512;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
 
-    ctx.fillStyle = '#cbd5e1';
+    ctx.fillStyle = '#181b20';
     ctx.fillRect(0, 0, w, h);
 
     const size = w / 2;
-    const grout = 4;
+    const grout = 3.0;
     for (let r = 0; r < 2; r++) {
         for (let c = 0; c < 2; c++) {
             const x = c * size + grout / 2;
@@ -2457,61 +2741,27 @@ function createFloorTileCanvas(width, height) {
             const th = size - grout;
 
             const grad = ctx.createLinearGradient(x, y, x + tw, y + th);
-            grad.addColorStop(0, '#f8fafc');
-            grad.addColorStop(0.5, '#f1f5f9');
-            grad.addColorStop(1, '#e2e8f0');
+            grad.addColorStop(0, '#33383f');
+            grad.addColorStop(0.5, '#282c33');
+            grad.addColorStop(1, '#202328');
             ctx.fillStyle = grad;
             ctx.fillRect(x, y, tw, th);
 
-            ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.moveTo(x + 25, y + 15);
-            ctx.bezierCurveTo(x + tw * 0.4, y + th * 0.3, x + tw * 0.6, y + th * 0.7, x + tw - 20, y + th - 25);
-            ctx.stroke();
+            // Slate stone texture cleft lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + th * (0.2 * i + 0.1));
+                ctx.lineTo(x + tw, y + th * (0.2 * i + 0.15));
+                ctx.stroke();
+            }
         }
     }
     return canvas;
 }
 
-// 7. Warm Hardwood Floor Planks
-function createHardwoodFloorCanvas(width, height) {
-    const canvas = document.createElement('canvas');
-    canvas.width = width || 512;
-    canvas.height = height || 512;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width, h = canvas.height;
-
-    ctx.fillStyle = '#261b11';
-    ctx.fillRect(0, 0, w, h);
-
-    const rows = 8;
-    const rowH = h / rows;
-    for (let r = 0; r < rows; r++) {
-        const y = r * rowH + 1.5;
-        const rh = rowH - 3;
-        const splits = [0, 160 + (r * 73) % 200, 360 + (r * 47) % 120, w];
-        for (let s = 0; s < splits.length - 1; s++) {
-            const x = splits[s] + 1.5;
-            const pw = (splits[s + 1] - splits[s]) - 3;
-            const tint = Math.sin(r * 3 + s) * 15;
-            ctx.fillStyle = `rgb(${Math.floor(185 + tint)}, ${Math.floor(140 + tint)}, ${Math.floor(95 + tint)})`;
-            ctx.fillRect(x, y, pw, rh);
-
-            ctx.strokeStyle = 'rgba(75, 45, 20, 0.15)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x, y + rh * 0.33);
-            ctx.lineTo(x + pw, y + rh * 0.37);
-            ctx.moveTo(x, y + rh * 0.67);
-            ctx.lineTo(x + pw, y + rh * 0.63);
-            ctx.stroke();
-        }
-    }
-    return canvas;
-}
-
-// 8. Ground Contact Shadow Canvas
+// 10. Soft Ambient Contact Ground Shadow (Linear feathering along plinth)
 function createShadowCanvas(width, height) {
     const canvas = document.createElement('canvas');
     canvas.width = width || 512;
@@ -2520,12 +2770,22 @@ function createShadowCanvas(width, height) {
     const w = canvas.width, h = canvas.height;
 
     ctx.clearRect(0, 0, w, h);
-    const grad = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w / 2);
-    grad.addColorStop(0, 'rgba(0, 0, 0, 0.48)');
-    grad.addColorStop(0.55, 'rgba(0, 0, 0, 0.22)');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
+    const padX = w * 0.08;
+    const padY = h * 0.12;
+    const innerW = w - padX * 2;
+    const innerH = h - padY * 2;
+
+    for (let layer = 0; layer < 14; layer++) {
+        const spread = layer * 4;
+        const alpha = Math.max(0, 0.04 - layer * 0.0025);
+        ctx.fillStyle = `rgba(10, 8, 5, ${alpha})`;
+        ctx.beginPath();
+        const rx = padX - spread;
+        const ry = padY - spread;
+        const rw = innerW + spread * 2;
+        const rh = innerH + spread * 2;
+        ctx.fillRect(rx, ry, rw, rh);
+    }
     return canvas;
 }
 
@@ -2593,8 +2853,8 @@ function getBacksplashMaterial(bsW, bsH) {
         return new THREE.MeshPhongMaterial({
             map: tex,
             color: 0xffffff,
-            specular: 0x555555,
-            shininess: 60
+            specular: 0x181818,
+            shininess: 20
         });
     } else if (currentBacksplashMaterial === 'marble_slab') {
         const tex = getOrCreateProceduralTexture('marble_white', 512, 512);
@@ -2602,11 +2862,11 @@ function getBacksplashMaterial(bsW, bsH) {
         return new THREE.MeshPhongMaterial({
             map: tex,
             color: 0xffffff,
-            specular: 0x666666,
-            shininess: 75
+            specular: 0x333333,
+            shininess: 50
         });
     }
-    return new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 20 });
+    return new THREE.MeshPhongMaterial({ color: 0x334155, shininess: 15 });
 }
 
 function getBacksplashEdgeMaterial() {
@@ -2618,22 +2878,49 @@ function getBacksplashEdgeMaterial() {
 
 function getFloorMaterial(w, d) {
     if (currentFloorMaterial === 'hardwood_oak') {
-        const tex = getOrCreateProceduralTexture('hardwood_oak', 512, 512);
-        tex.repeat.set(12, 12);
+        const tex = getOrCreateProceduralTexture('hardwood_oak', 1024, 1024);
+        tex.repeat.set(Math.max(2, Math.round(w / 55)), Math.max(2, Math.round(d / 55)));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x141414,
+            shininess: 12
+        });
+    } else if (currentFloorMaterial === 'hardwood_walnut') {
+        const tex = getOrCreateProceduralTexture('hardwood_walnut', 1024, 1024);
+        tex.repeat.set(Math.max(2, Math.round(w / 55)), Math.max(2, Math.round(d / 55)));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x141414,
+            shininess: 12
+        });
+    } else if (currentFloorMaterial === 'chevron_oak' || currentFloorMaterial === 'herringbone_oak') {
+        const tex = getOrCreateProceduralTexture('chevron_oak', 1024, 1024);
+        tex.repeat.set(Math.max(1, Math.round(w / 65)), Math.max(1, Math.round(d / 65)));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x141414,
+            shininess: 12
+        });
+    } else if (currentFloorMaterial === 'slate_dark') {
+        const tex = getOrCreateProceduralTexture('slate_dark', 512, 512);
+        tex.repeat.set(Math.max(2, Math.round(w / 36)), Math.max(2, Math.round(d / 36)));
         return new THREE.MeshPhongMaterial({
             map: tex,
             color: 0xffffff,
             specular: 0x222222,
-            shininess: 15
+            shininess: 18
         });
     }
-    const tex = getOrCreateProceduralTexture('tile_white', 512, 512);
-    tex.repeat.set(10, 10);
+    const tex = getOrCreateProceduralTexture('tile_white', 1024, 1024);
+    tex.repeat.set(Math.max(2, Math.round(w / 40)), Math.max(2, Math.round(d / 40)));
     return new THREE.MeshPhongMaterial({
         map: tex,
         color: 0xffffff,
-        specular: 0x333333,
-        shininess: 30
+        specular: 0x252525,
+        shininess: 25
     });
 }
 
@@ -2642,7 +2929,7 @@ function getShadowMaterial() {
     return new THREE.MeshBasicMaterial({
         map: tex,
         transparent: true,
-        opacity: 0.65,
+        opacity: 0.38,
         depthWrite: false
     });
 }
@@ -2675,31 +2962,63 @@ function buildUnderCabinetLedLighting() {
     const wallBottomY = getWallBottomY();
     const wallCenterZ = getWallCenterZ();
     const isWarm = (currentLedStripMode === 'warm');
-    const ledColor = isWarm ? 0xffdfa9 : 0xf1f5f9;
-    const diffuserColor = isWarm ? 0xfff4da : 0xffffff;
+    const ledColor = isWarm ? 0xffe2b8 : 0xf1f5f9;
+    const countertopY = getCountertopTopY();
 
-    // 1. Center Main Run LED Profile
-    const profileGeo = new THREE.BoxGeometry(currentWallW - 2, 0.35, 0.85);
-    const profileMat = new THREE.MeshBasicMaterial({ color: diffuserColor });
-    const profileMesh = new THREE.Mesh(profileGeo, profileMat);
-    profileMesh.position.set(0, wallBottomY - 0.175, wallCenterZ);
-    showroomGroup.add(profileMesh);
+    // 1. Center Main Run LED Profile Fixture
+    // Matte architectural dark profile channel housing
+    const channelGeo = new THREE.BoxGeometry(currentWallW - 2, 0.4, 0.95);
+    const channelMat = new THREE.MeshPhongMaterial({ color: 0x1e242b, shininess: 25 });
+    const channelMesh = new THREE.Mesh(channelGeo, channelMat);
+    channelMesh.position.set(0, wallBottomY - 0.2, wallCenterZ);
+    showroomGroup.add(channelMesh);
 
-    // Downward soft warm ambient wash lights
+    // Warm frosted acrylic diffuser lens (Physical translucent look, NO pure white glare)
+    const diffuserGeo = new THREE.BoxGeometry(currentWallW - 2.5, 0.12, 0.7);
+    const diffuserMat = new THREE.MeshPhongMaterial({
+        color: isWarm ? 0xffeed8 : 0xf8fafc,
+        emissive: isWarm ? 0xd97706 : 0x475569,
+        emissiveIntensity: isWarm ? 0.24 : 0.18,
+        shininess: 12
+    });
+    const diffuserMesh = new THREE.Mesh(diffuserGeo, diffuserMat);
+    diffuserMesh.position.set(0, wallBottomY - 0.38, wallCenterZ);
+    showroomGroup.add(diffuserMesh);
+
+    // Downward Task Spotlights directed down onto countertop prep surface
+    // (Angle and penumbra are tuned so light washes the countertop without blasting backwards into the backsplash)
     const lightCount = Math.max(2, Math.round(currentWallW / 45));
     const step = currentWallW / lightCount;
     for (let i = 0; i < lightCount; i++) {
         const x = -currentWallW / 2 + step * (i + 0.5);
-        const pLight = new THREE.PointLight(ledColor, 0.38, 60, 1.5);
-        pLight.position.set(x, wallBottomY - 1.2, wallCenterZ + 3.0);
-        showroomGroup.add(pLight);
+        const spot = new THREE.SpotLight(ledColor, isWarm ? 0.24 : 0.18, 45, Math.PI / 3.4, 0.88, 1.2);
+        spot.position.set(x, wallBottomY - 0.45, wallCenterZ);
+
+        const target = new THREE.Object3D();
+        target.position.set(x, countertopY, wallCenterZ + 3.0);
+        showroomGroup.add(target);
+        spot.target = target;
+        showroomGroup.add(spot);
     }
 
-    // 2. Return Wing LED Profile (for L & U Kitchens)
+    // Gentle ambient task wash (positioned forward so subway tile stays clear with ZERO white blowout)
+    const fillLight = new THREE.PointLight(ledColor, 0.08, 35, 2.0);
+    fillLight.position.set(0, wallBottomY - 4.0, wallCenterZ + 4.5);
+    showroomGroup.add(fillLight);
+
+    // 2. Return Wings LED Profile (for L & U Kitchens)
+    const returnSides = [];
     if (currentKitchenLayout === 'l-shape') {
-        const isRight = (currentLReturnSide === 'right');
+        returnSides.push({ side: currentLReturnSide, ft: currentLReturnFt });
+    } else if (currentKitchenLayout === 'u-shape') {
+        returnSides.push({ side: 'left', ft: currentULeftFt });
+        returnSides.push({ side: 'right', ft: currentURightFt });
+    }
+
+    returnSides.forEach(ret => {
+        const isRight = (ret.side === 'right');
         const sign = isRight ? 1 : -1;
-        const wingLen = currentLReturnFt * 12;
+        const wingLen = ret.ft * 12;
         const dWall = currentWallD;
         const clearLenWall = Math.max(12, wingLen - dWall);
         const zWallStart = -currentD / 2 + dWall;
@@ -2707,15 +3026,27 @@ function buildUnderCabinetLedLighting() {
         const zWallCenter = (zWallStart + zWallEnd) / 2;
         const xWallCenter = sign * (currentWallW / 2 - dWall / 2);
 
-        const retProfileGeo = new THREE.BoxGeometry(0.85, 0.35, clearLenWall - 2);
-        const retProfileMesh = new THREE.Mesh(retProfileGeo, profileMat);
-        retProfileMesh.position.set(xWallCenter, wallBottomY - 0.175, zWallCenter);
-        showroomGroup.add(retProfileMesh);
+        // Wing Channel Housing
+        const retChanGeo = new THREE.BoxGeometry(0.95, 0.4, clearLenWall - 2);
+        const retChanMesh = new THREE.Mesh(retChanGeo, channelMat);
+        retChanMesh.position.set(xWallCenter, wallBottomY - 0.2, zWallCenter);
+        showroomGroup.add(retChanMesh);
 
-        const retLight = new THREE.PointLight(ledColor, 0.38, 60, 1.5);
-        retLight.position.set(xWallCenter - sign * 3.0, wallBottomY - 1.2, zWallCenter);
-        showroomGroup.add(retLight);
-    }
+        // Wing Frosted Diffuser Lens
+        const retDiffGeo = new THREE.BoxGeometry(0.7, 0.12, clearLenWall - 2.5);
+        const retDiffMesh = new THREE.Mesh(retDiffGeo, diffuserMat);
+        retDiffMesh.position.set(xWallCenter, wallBottomY - 0.38, zWallCenter);
+        showroomGroup.add(retDiffMesh);
+
+        // Wing Downward Task Spotlight
+        const retSpot = new THREE.SpotLight(ledColor, isWarm ? 0.24 : 0.18, 45, Math.PI / 3.4, 0.88, 1.2);
+        retSpot.position.set(xWallCenter, wallBottomY - 0.45, zWallCenter);
+        const retTarget = new THREE.Object3D();
+        retTarget.position.set(xWallCenter - sign * 3.0, countertopY, zWallCenter);
+        showroomGroup.add(retTarget);
+        retSpot.target = retTarget;
+        showroomGroup.add(retSpot);
+    });
 }
 
 // Showroom Room Environment Construction
@@ -2775,11 +3106,17 @@ function buildShowroomEnvironment() {
     showroomGroup.add(floorMesh);
 
     // 2. SOFT CONTACT SHADOW (Anchors cabinet base to floor)
-    const shadowGeo = new THREE.PlaneGeometry(totalW + 24, totalD + 30);
+    let shadowCenterZ = 0;
+    let shadowD = currentD + 16;
+    if (currentKitchenLayout === 'l-shape' || currentKitchenLayout === 'u-shape') {
+        shadowCenterZ = (-currentD / 2 + (-currentD / 2 + wingLen)) / 2;
+        shadowD = wingLen + 16;
+    }
+    const shadowGeo = new THREE.PlaneGeometry(totalW + 16, Math.max(currentD + 16, shadowD));
     const shadowMat = getShadowMaterial();
     const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
     shadowMesh.rotation.x = -Math.PI / 2;
-    shadowMesh.position.set(0, 0.08, (totalD / 2) - 10);
+    shadowMesh.position.set(0, 0.06, shadowCenterZ);
     showroomGroup.add(shadowMesh);
 
     // 3. MAIN BACK ROOM WALL (Top matches exact cabinet top)
