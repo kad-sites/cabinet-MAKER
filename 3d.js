@@ -288,6 +288,9 @@ function setViewMode(mode) {
     const aspect = container.clientWidth / container.clientHeight;
 
     if (mode === '2d') {
+        if (isShowroomMode) {
+            toggleShowroomMode(false);
+        }
         if (btn2d) btn2d.classList.add('active');
         if (btn3d) btn3d.classList.remove('active');
 
@@ -3244,6 +3247,9 @@ function toggleShowroomMode(enable) {
     const btnSidebarShowroom = document.getElementById('btn-sidebar-toggle-showroom');
     const overlays = document.getElementById('3d-overlays');
 
+    // Convert sidebar menu to Showroom Studio (hides CAD technical cards, elevates finishes)
+    document.body.classList.toggle('showroom-active', isShowroomMode);
+
     if (btnShowroom) btnShowroom.classList.toggle('active', isShowroomMode);
     if (btnSidebarShowroom) {
         btnSidebarShowroom.classList.toggle('active', isShowroomMode);
@@ -3256,6 +3262,8 @@ function toggleShowroomMode(enable) {
         }
         scene.background = new THREE.Color('#dce6f0'); // Crisp daylight architectural environment
         if (overlays) overlays.style.display = 'none'; // Clean presentation view
+        const sidebarPanel = document.querySelector('.cad-sidebar-panel');
+        if (sidebarPanel) sidebarPanel.scrollTop = 0;
     } else {
         scene.background = new THREE.Color('#121921'); // CAD dark viewport
         if (overlays) overlays.style.display = '';
@@ -5392,6 +5400,14 @@ function setupCADListeners() {
         btnSidebarShowroom.addEventListener('click', (e) => {
             e.preventDefault();
             toggleShowroomMode();
+        });
+    }
+
+    const btnExitShowroom = document.getElementById('btn-exit-showroom-mode');
+    if (btnExitShowroom) {
+        btnExitShowroom.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleShowroomMode(false);
         });
     }
 
