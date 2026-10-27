@@ -191,23 +191,84 @@ body {
     z-index: 10;
 }
 
+.sidebar-top-bar {
+    padding: 0.35rem 0.6rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.sidebar-top-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.sidebar-top-title svg {
+    color: var(--color-accent);
+}
+
+.btn-sidebar-mode {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.16rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.58rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.btn-sidebar-mode:hover {
+    background: rgba(126, 168, 148, 0.15);
+    border-color: rgba(126, 168, 148, 0.4);
+    color: var(--text-primary);
+}
+
+.btn-sidebar-mode.active {
+    background: rgba(126, 168, 148, 0.2);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
 .sidebar-scroll {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0.4rem;
+    padding-bottom: 5.5rem; /* Generous bottom padding buffer so bottom items are never clipped */
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    scroll-behavior: smooth;
 }
 
 .sidebar-scroll::-webkit-scrollbar,
 .right-panel-scroll::-webkit-scrollbar {
-    width: 3.5px;
+    width: 5px;
+}
+.sidebar-scroll::-webkit-scrollbar-track,
+.right-panel-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.12);
 }
 .sidebar-scroll::-webkit-scrollbar-thumb,
 .right-panel-scroll::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 3px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover,
+.right-panel-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
 }
 
 /* Card Styles */
@@ -216,7 +277,12 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 5px;
     overflow: hidden;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.config-card:not(.collapsed) {
+    border-color: rgba(126, 168, 148, 0.45);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .config-card:hover {
@@ -232,6 +298,11 @@ body {
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
+    transition: background 0.15s ease;
+}
+
+.config-card:not(.collapsed) .card-header {
+    background: rgba(126, 168, 148, 0.08);
 }
 
 .card-title-group {
