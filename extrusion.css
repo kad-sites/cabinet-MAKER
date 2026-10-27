@@ -242,28 +242,30 @@ body {
 }
 
 .sidebar-scroll {
-    flex: 1;
+    flex: 1 1 0%;
+    min-height: 0; /* CRITICAL: Enables proper overflow scrolling in flex column layout */
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0.4rem;
-    padding-bottom: 5.5rem; /* Generous bottom padding buffer so bottom items are never clipped */
+    padding: 0.45rem;
+    padding-bottom: 6rem; /* Generous bottom padding buffer so the bottom-most controls are never clipped */
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.45rem;
     scroll-behavior: smooth;
 }
 
 .sidebar-scroll::-webkit-scrollbar,
 .right-panel-scroll::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 .sidebar-scroll::-webkit-scrollbar-track,
 .right-panel-scroll::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb,
 .right-panel-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(126, 168, 148, 0.35);
     border-radius: 3px;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb:hover,
@@ -276,7 +278,10 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 5px;
-    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0; /* CRITICAL: Each card takes exact natural size required; never squish or hide behind another */
+    min-height: min-content;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -290,7 +295,7 @@ body {
 }
 
 .card-header {
-    padding: 0.3rem 0.5rem;
+    padding: 0.32rem 0.55rem;
     background: rgba(255, 255, 255, 0.02);
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -299,6 +304,7 @@ body {
     cursor: pointer;
     user-select: none;
     transition: background 0.15s ease;
+    flex-shrink: 0;
 }
 
 .config-card:not(.collapsed) .card-header {
@@ -353,6 +359,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    flex-shrink: 0;
 }
 
 /* Quick Generator Button */

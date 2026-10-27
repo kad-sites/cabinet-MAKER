@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aluminum Extrusion Studio - Cabinet Optimizer Pro</title>
-    <link rel="stylesheet" href="extrusion.css?v=5">
+    <link rel="stylesheet" href="extrusion.css?v=6">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -72,7 +72,7 @@
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
                     <span>Parameters</span>
                 </div>
-                <button type="button" class="btn-sidebar-mode" id="btn-toggle-all-cards" title="Toggle Auto-Accordion vs Expand All">Expand All</button>
+                <button type="button" class="btn-sidebar-mode active" id="btn-toggle-all-cards" title="Toggle Expand All / Collapse All">Collapse All</button>
             </div>
             <div class="sidebar-scroll">
                 
@@ -116,7 +116,7 @@
                 </div>
 
                 <!-- Card 2: Extrusion Profile & Finish -->
-                <div class="config-card collapsed" id="card-profiles">
+                <div class="config-card" id="card-profiles">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
@@ -166,7 +166,7 @@
                 </div>
 
                 <!-- Card 3: Frame Dimensions & Leg Binding Stretchers (2-Column Compact) -->
-                <div class="config-card collapsed" id="card-dimensions">
+                <div class="config-card" id="card-dimensions">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
@@ -251,7 +251,7 @@
                 </div>
 
                 <!-- Card 4: Tabletop Plywood / Mica Studio & 5mm Retaining Slot -->
-                <div class="config-card collapsed" id="card-tabletop">
+                <div class="config-card" id="card-tabletop">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
@@ -389,7 +389,7 @@
                 </div>
 
                 <!-- Card 5: Joinery & Hardware Selection -->
-                <div class="config-card collapsed" id="card-joinery">
+                <div class="config-card" id="card-joinery">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
@@ -679,6 +679,6 @@
     <!-- Three.js and Core Application Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="extrusion.js?v=5"></script>
+    <script src="extrusion.js?v=6"></script>
 </body>
 </html>

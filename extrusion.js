@@ -1386,60 +1386,44 @@
     // 11. UI EVENT LISTENERS & PRESETS
     // ==========================================
     function setupUIEventListeners() {
-        // Auto-Accordion / Auto-Hide Mode for Left Sidebar Cards
-        let autoAccordionMode = true; // Auto-accordion enabled by default
-
+        // Expand All / Collapse All Toggle for Left Sidebar
         const toggleAllBtn = document.getElementById('btn-toggle-all-cards');
         if (toggleAllBtn) {
             toggleAllBtn.addEventListener('click', () => {
                 const allSidebarCards = document.querySelectorAll('.extrusion-sidebar .config-card');
-                const hasCollapsed = Array.from(allSidebarCards).some(c => c.classList.contains('collapsed'));
-                if (hasCollapsed) {
-                    // Expand all
+                const anyCollapsed = Array.from(allSidebarCards).some(c => c.classList.contains('collapsed'));
+                if (anyCollapsed) {
                     allSidebarCards.forEach(c => c.classList.remove('collapsed'));
-                    autoAccordionMode = false;
-                    toggleAllBtn.textContent = 'Auto Collapse';
+                    toggleAllBtn.textContent = 'Collapse All';
                     toggleAllBtn.classList.add('active');
                 } else {
-                    // Return to Auto-Accordion: Collapse all except the first card
-                    allSidebarCards.forEach((c, idx) => {
-                        if (idx === 0) c.classList.remove('collapsed');
-                        else c.classList.add('collapsed');
-                    });
-                    autoAccordionMode = true;
+                    allSidebarCards.forEach(c => c.classList.add('collapsed'));
                     toggleAllBtn.textContent = 'Expand All';
                     toggleAllBtn.classList.remove('active');
                 }
             });
         }
 
-        // Accordion Card Header Clicks
+        // Card Header Click: Toggle individual card open/collapsed
         document.querySelectorAll('.card-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('.card-badge')) return;
                 const card = header.closest('.config-card');
                 if (!card) return;
 
-                const isCurrentlyCollapsed = card.classList.contains('collapsed');
+                card.classList.toggle('collapsed');
 
-                if (autoAccordionMode && card.closest('.extrusion-sidebar')) {
-                    if (isCurrentlyCollapsed) {
-                        // Collapse all sibling cards in the left sidebar
-                        document.querySelectorAll('.extrusion-sidebar .config-card').forEach(c => {
-                            if (c !== card) c.classList.add('collapsed');
-                        });
-                        card.classList.remove('collapsed');
-                        // Smoothly scroll the opened card into full view
-                        setTimeout(() => {
-                            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }, 50);
+                // Update toggle button text
+                if (toggleAllBtn) {
+                    const allSidebarCards = document.querySelectorAll('.extrusion-sidebar .config-card');
+                    const anyCollapsed = Array.from(allSidebarCards).some(c => c.classList.contains('collapsed'));
+                    if (anyCollapsed) {
+                        toggleAllBtn.textContent = 'Expand All';
+                        toggleAllBtn.classList.remove('active');
                     } else {
-                        // Clicking an open card toggles it closed
-                        card.classList.add('collapsed');
+                        toggleAllBtn.textContent = 'Collapse All';
+                        toggleAllBtn.classList.add('active');
                     }
-                } else {
-                    // Regular toggle mode
-                    card.classList.toggle('collapsed');
                 }
             });
         });
