@@ -48,7 +48,7 @@ let showroomGroup = null;
 let isShowroomMode = false;
 let currentCountertopMaterial = 'marble_white'; // 'marble_white', 'quartz_white', 'granite_black', 'wood_oak', 'concrete_gray'
 let currentBacksplashMaterial = 'subway_white'; // 'subway_white', 'marble_slab', 'solid_dark'
-let currentFloorMaterial = 'hardwood_oak';        // 'hardwood_oak', 'herringbone_oak', 'slate_dark', 'tile_white'
+let currentFloorMaterial = 'moroccan_star';       // 'moroccan_star', 'moroccan_artisan', 'calacatta_slab', 'venetian_terrazzo', 'herringbone_oak', 'basalt_slate'
 let currentLedStripMode = 'warm';               // 'warm', 'neutral', 'off'
 let cachedProceduralTextures = {};
 
@@ -2218,16 +2218,18 @@ function getOrCreateProceduralTexture(type, width, height) {
         canvas = createWoodCanvas(width, height);
     } else if (type === 'subway_white') {
         canvas = createSubwayTileCanvas(width, height);
-    } else if (type === 'tile_white') {
-        canvas = createFloorTileCanvas(width, height);
-    } else if (type === 'hardwood_oak') {
-        canvas = createHardwoodFloorCanvas(width, height);
-    } else if (type === 'hardwood_walnut') {
-        canvas = createWalnutFloorCanvas(width, height);
-    } else if (type === 'chevron_oak' || type === 'herringbone_oak') {
-        canvas = createChevronFloorCanvas(width, height);
-    } else if (type === 'slate_dark') {
-        canvas = createSlateFloorCanvas(width, height);
+    } else if (type === 'moroccan_star') {
+        canvas = createMoroccanStarFloorCanvas(width, height);
+    } else if (type === 'moroccan_artisan') {
+        canvas = createMoroccanArtisanFloorCanvas(width, height);
+    } else if (type === 'calacatta_slab' || type === 'tile_white') {
+        canvas = createCalacattaSlabCanvas(width, height);
+    } else if (type === 'venetian_terrazzo') {
+        canvas = createVenetianTerrazzoCanvas(width, height);
+    } else if (type === 'herringbone_oak' || type === 'chevron_oak' || type === 'hardwood_oak') {
+        canvas = createNordicHerringboneCanvas(width, height);
+    } else if (type === 'basalt_slate' || type === 'slate_dark' || type === 'hardwood_walnut') {
+        canvas = createBasaltSlateCanvas(width, height);
     } else if (type === 'shadow') {
         canvas = createShadowCanvas(width, height);
     }
@@ -2449,242 +2451,363 @@ function createSubwayTileCanvas(width, height) {
     return canvas;
 }
 
-// 6. Luxury Calacatta Porcelain Floor Tiles
-function createFloorTileCanvas(width, height) {
+// ========================================================
+// CONTEMPORARY KITCHEN FLOOR PROCEDURAL TEXTURE GENERATORS
+// ========================================================
+
+// 1. 🇲🇦 Moroccan Star Encaustic Porcelain Tile (2x2 ft / 600x600mm)
+function createMoroccanStarFloorCanvas(width, height) {
     const canvas = document.createElement('canvas');
     canvas.width = width || 1024;
     canvas.height = height || 1024;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
 
-    ctx.fillStyle = '#d6cec4'; // Warm neutral grout
+    // Mortar joint ground
+    ctx.fillStyle = '#b8b0a4';
     ctx.fillRect(0, 0, w, h);
 
-    const size = w / 4;
+    const tileSize = w / 2; // 2x2 grid of 24"x24" tiles
     const grout = 3.0;
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-            const x = c * size + grout / 2;
-            const y = r * size + grout / 2;
-            const tw = size - grout;
-            const th = size - grout;
 
-            const grad = ctx.createLinearGradient(x, y, x + tw, y + th);
-            grad.addColorStop(0, '#fdfcf9');
-            grad.addColorStop(0.5, '#f7f4ed');
-            grad.addColorStop(1, '#f1ede3');
-            ctx.fillStyle = grad;
-            ctx.fillRect(x, y, tw, th);
+    for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 2; col++) {
+            const ox = col * tileSize + grout / 2;
+            const oy = row * tileSize + grout / 2;
+            const S = tileSize - grout;
+            const cx = ox + S / 2;
+            const cy = oy + S / 2;
 
-            // Subtle warm gray mineral veining
-            ctx.strokeStyle = 'rgba(175, 160, 145, 0.18)';
-            ctx.lineWidth = 1.8;
+            // Handcrafted porcelain base with soft radial tone
+            const baseGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, S * 0.7);
+            baseGrad.addColorStop(0, '#f9f7f2');
+            baseGrad.addColorStop(0.7, '#f4f0e8');
+            baseGrad.addColorStop(1, '#ebe5db');
+            ctx.fillStyle = baseGrad;
+            ctx.fillRect(ox, oy, S, S);
+
+            // Subtle handcrafted cement tile texture
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.015)';
+            for (let i = 0; i < 1800; i++) {
+                const rx = ox + Math.random() * S;
+                const ry = oy + Math.random() * S;
+                ctx.fillRect(rx, ry, 1.5, 1.5);
+            }
+
+            // Inset double framing border
+            ctx.strokeStyle = '#2d3742';
+            ctx.lineWidth = 2.0;
+            ctx.strokeRect(ox + 16, oy + 16, S - 32, S - 32);
+            ctx.strokeStyle = 'rgba(45, 55, 66, 0.4)';
+            ctx.lineWidth = 1.0;
+            ctx.strokeRect(ox + 22, oy + 22, S - 44, S - 44);
+
+            function draw8Star(scx, scy, rOut, rIn, fillCol, strokeCol, strokeW) {
+                ctx.beginPath();
+                for (let k = 0; k < 16; k++) {
+                    const angle = (k * Math.PI) / 8 - Math.PI / 2;
+                    const r = (k % 2 === 0) ? rOut : rIn;
+                    const px = scx + r * Math.cos(angle);
+                    const py = scy + r * Math.sin(angle);
+                    if (k === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                if (fillCol) {
+                    ctx.fillStyle = fillCol;
+                    ctx.fill();
+                }
+                if (strokeCol) {
+                    ctx.strokeStyle = strokeCol;
+                    ctx.lineWidth = strokeW || 1.5;
+                    ctx.stroke();
+                }
+            }
+
+            // Corner Quadrants (seamless star across tile joints)
+            const corners = [
+                { x: ox, y: oy },
+                { x: ox + S, y: oy },
+                { x: ox + S, y: oy + S },
+                { x: ox, y: oy + S }
+            ];
+
+            corners.forEach(cor => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(ox, oy, S, S);
+                ctx.clip();
+
+                draw8Star(cor.x, cor.y, 90, 48, '#3d4f5e', '#222c36', 2.0);
+                draw8Star(cor.x, cor.y, 60, 30, '#f4f0e8', '#222c36', 1.5);
+                draw8Star(cor.x, cor.y, 32, 16, '#c69948', '#222c36', 1.2);
+
+                ctx.strokeStyle = 'rgba(45, 55, 66, 0.6)';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.arc(cor.x, cor.y, 115, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.restore();
+            });
+
+            // Cardinal Strapwork Diamonds
+            const cardinalR = S * 0.28;
+            const cardPts = [
+                { x: cx, y: cy - cardinalR },
+                { x: cx + cardinalR, y: cy },
+                { x: cx, y: cy + cardinalR },
+                { x: cx - cardinalR, y: cy }
+            ];
+
+            cardPts.forEach(pt => {
+                ctx.save();
+                ctx.translate(pt.x, pt.y);
+                ctx.rotate(Math.PI / 4);
+                ctx.fillStyle = '#475d6e';
+                ctx.fillRect(-18, -18, 36, 36);
+                ctx.strokeStyle = '#202830';
+                ctx.lineWidth = 1.8;
+                ctx.strokeRect(-18, -18, 36, 36);
+                ctx.fillStyle = '#f6f3eb';
+                ctx.fillRect(-10, -10, 20, 20);
+                ctx.fillStyle = '#c69948';
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Center Moroccan 8-Pointed Star Medallion
+            ctx.strokeStyle = 'rgba(45, 55, 66, 0.25)';
+            ctx.lineWidth = 3.0;
             ctx.beginPath();
-            ctx.moveTo(x + 15, y + 20);
-            ctx.bezierCurveTo(x + tw * 0.4, y + th * 0.25, x + tw * 0.55, y + th * 0.75, x + tw - 15, y + th - 20);
+            ctx.arc(cx, cy, 148, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Edge bevel sheen
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-            ctx.fillRect(x, y, tw, 1.5);
-            ctx.fillRect(x, y, 1.5, th);
+            draw8Star(cx, cy, 136, 68, '#2d3b48', '#1c242c', 2.5);
+            draw8Star(cx, cy, 96, 48, '#f7f4ed', '#25303a', 2.0);
+            draw8Star(cx, cy, 62, 32, '#415767', '#1c242c', 1.8);
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+            ctx.fillStyle = '#c89643';
+            ctx.fill();
+            ctx.strokeStyle = '#1c242c';
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            // Edge bevel shadow
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.fillRect(ox, oy, S, 1.5);
+            ctx.fillRect(ox, oy, 1.5, S);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+            ctx.fillRect(ox, oy + S - 1.5, S, 1.5);
+            ctx.fillRect(ox + S - 1.5, oy, 1.5, S);
         }
     }
     return canvas;
 }
 
-// 7. Warm Hardwood Oak Floor Planks (Scandinavian / European Honey Oak)
-function createHardwoodFloorCanvas(width, height) {
+// 2. 🇲🇦 Moroccan Mediterranean Artisan Floral Tile (1x1 ft / 300x300mm)
+function createMoroccanArtisanFloorCanvas(width, height) {
     const canvas = document.createElement('canvas');
     canvas.width = width || 1024;
     canvas.height = height || 1024;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
 
-    // Dark micro-gap underlayment (simulates shadow line between planks)
-    ctx.fillStyle = '#1e140d';
+    ctx.fillStyle = '#c2baa8';
     ctx.fillRect(0, 0, w, h);
 
-    const rows = 10;
-    const rowH = h / rows;
-    const gap = 2.0;
+    const tileSize = w / 2;
+    const grout = 3.0;
 
-    // Organic European Oak Tones (Warm Golden Amber & Honey Oak)
-    const oakTones = [
-        { r: 188, g: 138, b: 88 },  // warm honey oak
-        { r: 174, g: 124, b: 76 },  // rich amber oak
-        { r: 202, g: 154, b: 104 }, // natural golden oak
-        { r: 165, g: 116, b: 68 },  // toasted caramel oak
-        { r: 194, g: 146, b: 96 },  // soft blonde honey oak
-        { r: 156, g: 108, b: 60 }   // deep autumn oak
+    for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 2; col++) {
+            const ox = col * tileSize + grout / 2;
+            const oy = row * tileSize + grout / 2;
+            const S = tileSize - grout;
+            const cx = ox + S / 2;
+            const cy = oy + S / 2;
+
+            ctx.fillStyle = '#faf8f2';
+            ctx.fillRect(ox, oy, S, S);
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            for (let i = 0; i < 4; i++) {
+                ctx.rotate(Math.PI / 2);
+                ctx.fillStyle = '#204066';
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(40, -70, 90, -110, 0, -170);
+                ctx.bezierCurveTo(-90, -110, -40, -70, 0, 0);
+                ctx.fill();
+
+                ctx.fillStyle = '#4a749d';
+                ctx.beginPath();
+                ctx.moveTo(0, -20);
+                ctx.bezierCurveTo(24, -60, 50, -90, 0, -135);
+                ctx.bezierCurveTo(-50, -90, -24, -60, 0, -20);
+                ctx.fill();
+
+                ctx.fillStyle = '#c68a4c';
+                ctx.beginPath();
+                ctx.ellipse(55, -60, 28, 12, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(0, 0, 32, 0, Math.PI * 2);
+            ctx.fillStyle = '#1b3452';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, Math.PI * 2);
+            ctx.fillStyle = '#f8f5ee';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#c68a4c';
+            ctx.fill();
+
+            ctx.restore();
+
+            ctx.strokeStyle = '#204066';
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(ox + 20, oy + 20, S - 40, S - 40);
+        }
+    }
+    return canvas;
+}
+
+// 3. 🏛️ Italian Calacatta Gold Porcelain Slabs (2x4 ft / 600x1200mm)
+function createCalacattaSlabCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = '#ded9d0';
+    ctx.fillRect(0, 0, w, h);
+
+    const slabW = w / 2;
+    const grout = 2.5;
+
+    for (let c = 0; c < 2; c++) {
+        const ox = c * slabW + grout / 2;
+        const oy = grout / 2;
+        const sw = slabW - grout;
+        const sh = h - grout;
+
+        const base = ctx.createLinearGradient(ox, oy, ox + sw, oy + sh);
+        base.addColorStop(0, '#fefdfa');
+        base.addColorStop(0.5, '#fbf8f2');
+        base.addColorStop(1, '#f7f3ec');
+        ctx.fillStyle = base;
+        ctx.fillRect(ox, oy, sw, sh);
+
+        let seed = (c + 1) * 987;
+        function rnd() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+        }
+
+        for (let v = 0; v < 7; v++) {
+            const startY = oy + sh * (0.15 + v * 0.14);
+            const isGold = (v % 2 === 1);
+
+            ctx.strokeStyle = isGold ? 'rgba(198, 154, 88, 0.12)' : 'rgba(130, 122, 114, 0.14)';
+            ctx.lineWidth = 14 + rnd() * 12;
+            ctx.beginPath();
+            ctx.moveTo(ox, startY);
+            const cp1x = ox + sw * 0.35;
+            const cp1y = startY + (rnd() - 0.5) * 120;
+            const cp2x = ox + sw * 0.7;
+            const cp2y = startY + (rnd() - 0.5) * 120;
+            const endY = startY + (rnd() - 0.5) * 160;
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ox + sw, endY);
+            ctx.stroke();
+
+            ctx.strokeStyle = isGold ? 'rgba(180, 138, 72, 0.35)' : 'rgba(92, 85, 78, 0.4)';
+            ctx.lineWidth = 2.2 + rnd() * 2.5;
+            ctx.beginPath();
+            ctx.moveTo(ox, startY);
+            ctx.bezierCurveTo(cp1x + (rnd() - 0.5) * 15, cp1y + (rnd() - 0.5) * 15, cp2x + (rnd() - 0.5) * 15, cp2y + (rnd() - 0.5) * 15, ox + sw, endY);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillRect(ox, oy, sw, 1.5);
+        ctx.fillRect(ox, oy, 1.5, sh);
+    }
+    return canvas;
+}
+
+// 4. 🏢 Italian Venetian Terrazzo (Large Chic Stone Aggregate)
+function createVenetianTerrazzoCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+    bgGrad.addColorStop(0, '#f2eee6');
+    bgGrad.addColorStop(1, '#ebe5db');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    const colors = [
+        '#22262c', '#2d333b', '#b45a3c', '#c47352', '#c99a4c',
+        '#566d62', '#6f857a', '#ffffff', '#ffffff', '#e0d9cf'
     ];
 
-    let seed = 73;
-    function pseudoRand() {
+    let seed = 441;
+    function rnd() {
         seed = (seed * 9301 + 49297) % 233280;
         return seed / 233280;
     }
 
-    for (let r = 0; r < rows; r++) {
-        const y = r * rowH + gap / 2;
-        const rh = rowH - gap;
+    for (let i = 0; i < 650; i++) {
+        const x = rnd() * w;
+        const y = rnd() * h;
+        const col = colors[Math.floor(rnd() * colors.length)];
+        const rad = 2 + Math.pow(rnd(), 2.5) * 22;
 
-        // Staggered plank joints across rows
-        const splits = [0];
-        let curX = ((r * 280) % 320) + 100;
-        splits.push(curX);
-        while (curX < w - 180) {
-            curX += 260 + (pseudoRand() * 200);
-            if (curX < w - 60) splits.push(curX);
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        const pts = 4 + Math.floor(rnd() * 4);
+        for (let p = 0; p < pts; p++) {
+            const a = (p * Math.PI * 2) / pts;
+            const r = rad * (0.65 + rnd() * 0.7);
+            const px = x + r * Math.cos(a);
+            const py = y + r * Math.sin(a);
+            if (p === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
         }
-        splits.push(w);
-
-        for (let s = 0; s < splits.length - 1; s++) {
-            const x = splits[s] + gap / 2;
-            const pw = (splits[s + 1] - splits[s]) - gap;
-            if (pw <= 1) continue;
-
-            const toneIdx = Math.floor(pseudoRand() * oakTones.length);
-            const base = oakTones[toneIdx];
-            const jitter = (pseudoRand() - 0.5) * 14;
-
-            // Plank base gradient (subtle satin depth)
-            const pGrad = ctx.createLinearGradient(x, y, x, y + rh);
-            pGrad.addColorStop(0, `rgb(${Math.floor(base.r + jitter + 6)}, ${Math.floor(base.g + jitter + 5)}, ${Math.floor(base.b + jitter + 4)})`);
-            pGrad.addColorStop(0.5, `rgb(${Math.floor(base.r + jitter)}, ${Math.floor(base.g + jitter)}, ${Math.floor(base.b + jitter)})`);
-            pGrad.addColorStop(1, `rgb(${Math.floor(base.r + jitter - 8)}, ${Math.floor(base.g + jitter - 7)}, ${Math.floor(base.b + jitter - 6)})`);
-            ctx.fillStyle = pGrad;
-            ctx.fillRect(x, y, pw, rh);
-
-            // Longitudinal wood grain lines
-            const grainCount = 14 + Math.floor(pseudoRand() * 6);
-            for (let g = 0; g < grainCount; g++) {
-                const gy = y + (rh * (g + 0.5) / grainCount) + (pseudoRand() - 0.5) * 3;
-                const isDark = pseudoRand() > 0.35;
-                const alpha = isDark ? (0.04 + pseudoRand() * 0.08) : (0.02 + pseudoRand() * 0.04);
-                ctx.strokeStyle = isDark ? `rgba(65, 38, 16, ${alpha})` : `rgba(255, 235, 205, ${alpha})`;
-                ctx.lineWidth = 0.8 + pseudoRand() * 0.7;
-
-                ctx.beginPath();
-                ctx.moveTo(x, gy);
-                const cp1x = x + pw * 0.33;
-                const cp1y = gy + (pseudoRand() - 0.5) * 2.5;
-                const cp2x = x + pw * 0.67;
-                const cp2y = gy + (pseudoRand() - 0.5) * 2.5;
-                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x + pw, gy);
-                ctx.stroke();
-            }
-
-            // Cathedral grain loop on ~30% of planks
-            if (pseudoRand() > 0.7) {
-                const loopCx = x + pw * (0.3 + pseudoRand() * 0.4);
-                const loopCy = y + rh * (0.35 + pseudoRand() * 0.3);
-                ctx.strokeStyle = 'rgba(70, 40, 18, 0.07)';
-                ctx.lineWidth = 1.2;
-                ctx.beginPath();
-                ctx.ellipse(loopCx, loopCy, pw * 0.16, rh * 0.28, (pseudoRand() - 0.5) * 0.1, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Top micro-bevel highlight
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
-            ctx.fillRect(x, y, pw, 1.2);
-            // Left micro-bevel highlight
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-            ctx.fillRect(x, y, 1.2, rh);
-        }
+        ctx.closePath();
+        ctx.fill();
     }
     return canvas;
 }
 
-// 8. Rich American Walnut Hardwood Planks
-function createWalnutFloorCanvas(width, height) {
+// 5. 📐 Scandinavian Wire-Brushed White Oak Herringbone Parquet
+function createNordicHerringboneCanvas(width, height) {
     const canvas = document.createElement('canvas');
     canvas.width = width || 1024;
     canvas.height = height || 1024;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
 
-    ctx.fillStyle = '#100a06';
-    ctx.fillRect(0, 0, w, h);
-
-    const rows = 10;
-    const rowH = h / rows;
-    const gap = 2.0;
-
-    const walnutTones = [
-        { r: 76, g: 52, b: 38 },
-        { r: 88, g: 62, b: 46 },
-        { r: 68, g: 46, b: 34 },
-        { r: 96, g: 70, b: 52 },
-        { r: 82, g: 56, b: 40 },
-        { r: 64, g: 42, b: 30 }
-    ];
-
-    let seed = 89;
-    function pseudoRand() {
-        seed = (seed * 9301 + 49297) % 233280;
-        return seed / 233280;
-    }
-
-    for (let r = 0; r < rows; r++) {
-        const y = r * rowH + gap / 2;
-        const rh = rowH - gap;
-
-        const splits = [0];
-        let curX = ((r * 280) % 320) + 100;
-        splits.push(curX);
-        while (curX < w - 180) {
-            curX += 260 + (pseudoRand() * 200);
-            if (curX < w - 60) splits.push(curX);
-        }
-        splits.push(w);
-
-        for (let s = 0; s < splits.length - 1; s++) {
-            const x = splits[s] + gap / 2;
-            const pw = (splits[s + 1] - splits[s]) - gap;
-            if (pw <= 1) continue;
-
-            const toneIdx = Math.floor(pseudoRand() * walnutTones.length);
-            const base = walnutTones[toneIdx];
-            const jitter = (pseudoRand() - 0.5) * 10;
-
-            const pGrad = ctx.createLinearGradient(x, y, x, y + rh);
-            pGrad.addColorStop(0, `rgb(${Math.floor(base.r + jitter + 4)}, ${Math.floor(base.g + jitter + 3)}, ${Math.floor(base.b + jitter + 2)})`);
-            pGrad.addColorStop(0.5, `rgb(${Math.floor(base.r + jitter)}, ${Math.floor(base.g + jitter)}, ${Math.floor(base.b + jitter)})`);
-            pGrad.addColorStop(1, `rgb(${Math.floor(base.r + jitter - 5)}, ${Math.floor(base.g + jitter - 4)}, ${Math.floor(base.b + jitter - 3)})`);
-            ctx.fillStyle = pGrad;
-            ctx.fillRect(x, y, pw, rh);
-
-            // Fine walnut grain
-            const grainCount = 16 + Math.floor(pseudoRand() * 6);
-            for (let g = 0; g < grainCount; g++) {
-                const gy = y + (rh * (g + 0.5) / grainCount) + (pseudoRand() - 0.5) * 3;
-                const alpha = 0.05 + pseudoRand() * 0.08;
-                ctx.strokeStyle = `rgba(20, 12, 8, ${alpha})`;
-                ctx.lineWidth = 0.8 + pseudoRand() * 0.7;
-                ctx.beginPath();
-                ctx.moveTo(x, gy);
-                ctx.bezierCurveTo(x + pw * 0.33, gy + (pseudoRand() - 0.5) * 2, x + pw * 0.67, gy + (pseudoRand() - 0.5) * 2, x + pw, gy);
-                ctx.stroke();
-            }
-
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.fillRect(x, y, pw, 1.0);
-        }
-    }
-    return canvas;
-}
-
-// 8b. Seamless French Chevron Oak Parquet
-function createChevronFloorCanvas(width, height) {
-    const canvas = document.createElement('canvas');
-    canvas.width = width || 1024;
-    canvas.height = height || 1024;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width, h = canvas.height;
-
-    ctx.fillStyle = '#140c06';
+    ctx.fillStyle = '#1c1611';
     ctx.fillRect(0, 0, w, h);
 
     const bandW = 128;
@@ -2692,13 +2815,22 @@ function createChevronFloorCanvas(width, height) {
     const cols = Math.ceil(w / bandW) + 1;
     const rows = Math.ceil(h / plankH) + 4;
 
+    const nordicTones = [
+        { r: 202, g: 188, b: 168 },
+        { r: 214, g: 201, b: 181 },
+        { r: 192, g: 178, b: 158 },
+        { r: 208, g: 194, b: 174 },
+        { r: 184, g: 170, b: 150 }
+    ];
+
     for (let c = 0; c < cols; c++) {
         const colX = c * bandW;
         const isUp = (c % 2 === 0);
         for (let r = -2; r < rows; r++) {
             const y = r * plankH;
-            const tone = 175 + ((c * 17 + r * 11) % 32);
-            ctx.fillStyle = `rgb(${tone}, ${Math.floor(tone * 0.74)}, ${Math.floor(tone * 0.52)})`;
+            const toneObj = nordicTones[(c * 3 + r * 7 + 100) % nordicTones.length];
+            const jitter = ((c * 17 + r * 13) % 11) - 5;
+            ctx.fillStyle = `rgb(${toneObj.r + jitter}, ${toneObj.g + jitter}, ${toneObj.b + jitter})`;
 
             ctx.beginPath();
             if (isUp) {
@@ -2715,7 +2847,7 @@ function createChevronFloorCanvas(width, height) {
             ctx.closePath();
             ctx.fill();
 
-            ctx.strokeStyle = 'rgba(40, 22, 10, 0.15)';
+            ctx.strokeStyle = 'rgba(40, 30, 20, 0.2)';
             ctx.lineWidth = 1;
             ctx.stroke();
         }
@@ -2723,15 +2855,15 @@ function createChevronFloorCanvas(width, height) {
     return canvas;
 }
 
-// 9. Modern Architectural Charcoal Slate Tile
-function createSlateFloorCanvas(width, height) {
+// 6. ⬛ Flamed Charcoal Basalt Stone (2x2 ft / 600x600mm)
+function createBasaltSlateCanvas(width, height) {
     const canvas = document.createElement('canvas');
-    canvas.width = width || 512;
-    canvas.height = height || 512;
+    canvas.width = width || 1024;
+    canvas.height = height || 1024;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
 
-    ctx.fillStyle = '#181b20';
+    ctx.fillStyle = '#14161a';
     ctx.fillRect(0, 0, w, h);
 
     const size = w / 2;
@@ -2744,21 +2876,21 @@ function createSlateFloorCanvas(width, height) {
             const th = size - grout;
 
             const grad = ctx.createLinearGradient(x, y, x + tw, y + th);
-            grad.addColorStop(0, '#33383f');
-            grad.addColorStop(0.5, '#282c33');
-            grad.addColorStop(1, '#202328');
+            grad.addColorStop(0, '#2e333b');
+            grad.addColorStop(0.5, '#252930');
+            grad.addColorStop(1, '#1e2126');
             ctx.fillStyle = grad;
             ctx.fillRect(x, y, tw, th);
 
-            // Slate stone texture cleft lines
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(x, y + th * (0.2 * i + 0.1));
-                ctx.lineTo(x + tw, y + th * (0.2 * i + 0.15));
-                ctx.stroke();
+            // Micro-mineral texture
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
+            for (let i = 0; i < 2000; i++) {
+                ctx.fillRect(x + Math.random() * tw, y + Math.random() * th, 1.5, 1.5);
             }
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fillRect(x, y, tw, 1.5);
+            ctx.fillRect(x, y, 1.5, th);
         }
     }
     return canvas;
@@ -2871,50 +3003,68 @@ function getBacksplashEdgeMaterial() {
 }
 
 function getFloorMaterial(w, d) {
-    if (currentFloorMaterial === 'hardwood_oak') {
-        const tex = getOrCreateProceduralTexture('hardwood_oak', 1024, 1024);
-        tex.repeat.set(Math.max(2, Math.round(w / 55)), Math.max(2, Math.round(d / 55)));
+    if (currentFloorMaterial === 'moroccan_star') {
+        const tex = getOrCreateProceduralTexture('moroccan_star', 1024, 1024);
+        tex.repeat.set(Math.max(1, w / 48), Math.max(1, d / 48));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x242424,
+            shininess: 20
+        });
+    } else if (currentFloorMaterial === 'moroccan_artisan') {
+        const tex = getOrCreateProceduralTexture('moroccan_artisan', 1024, 1024);
+        tex.repeat.set(Math.max(1, w / 24), Math.max(1, d / 24));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x282828,
+            shininess: 22
+        });
+    } else if (currentFloorMaterial === 'calacatta_slab' || currentFloorMaterial === 'tile_white') {
+        const tex = getOrCreateProceduralTexture('calacatta_slab', 1024, 1024);
+        tex.repeat.set(Math.max(1, w / 48), Math.max(1, d / 48));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x484848,
+            shininess: 55
+        });
+    } else if (currentFloorMaterial === 'venetian_terrazzo') {
+        const tex = getOrCreateProceduralTexture('venetian_terrazzo', 1024, 1024);
+        tex.repeat.set(Math.max(1, w / 40), Math.max(1, d / 40));
+        return new THREE.MeshPhongMaterial({
+            map: tex,
+            color: 0xffffff,
+            specular: 0x303030,
+            shininess: 32
+        });
+    } else if (currentFloorMaterial === 'herringbone_oak' || currentFloorMaterial === 'chevron_oak' || currentFloorMaterial === 'hardwood_oak') {
+        const tex = getOrCreateProceduralTexture('herringbone_oak', 1024, 1024);
+        tex.repeat.set(Math.max(1, w / 48), Math.max(1, d / 48));
         return new THREE.MeshPhongMaterial({
             map: tex,
             color: 0xffffff,
             specular: 0x141414,
-            shininess: 12
+            shininess: 10
         });
-    } else if (currentFloorMaterial === 'hardwood_walnut') {
-        const tex = getOrCreateProceduralTexture('hardwood_walnut', 1024, 1024);
-        tex.repeat.set(Math.max(2, Math.round(w / 55)), Math.max(2, Math.round(d / 55)));
+    } else if (currentFloorMaterial === 'basalt_slate' || currentFloorMaterial === 'slate_dark' || currentFloorMaterial === 'hardwood_walnut') {
+        const tex = getOrCreateProceduralTexture('basalt_slate', 1024, 1024);
+        tex.repeat.set(Math.max(1, w / 48), Math.max(1, d / 48));
         return new THREE.MeshPhongMaterial({
             map: tex,
             color: 0xffffff,
-            specular: 0x141414,
-            shininess: 12
-        });
-    } else if (currentFloorMaterial === 'chevron_oak' || currentFloorMaterial === 'herringbone_oak') {
-        const tex = getOrCreateProceduralTexture('chevron_oak', 1024, 1024);
-        tex.repeat.set(Math.max(1, Math.round(w / 65)), Math.max(1, Math.round(d / 65)));
-        return new THREE.MeshPhongMaterial({
-            map: tex,
-            color: 0xffffff,
-            specular: 0x141414,
-            shininess: 12
-        });
-    } else if (currentFloorMaterial === 'slate_dark') {
-        const tex = getOrCreateProceduralTexture('slate_dark', 512, 512);
-        tex.repeat.set(Math.max(2, Math.round(w / 36)), Math.max(2, Math.round(d / 36)));
-        return new THREE.MeshPhongMaterial({
-            map: tex,
-            color: 0xffffff,
-            specular: 0x222222,
-            shininess: 18
+            specular: 0x1e1e1e,
+            shininess: 16
         });
     }
-    const tex = getOrCreateProceduralTexture('tile_white', 1024, 1024);
-    tex.repeat.set(Math.max(2, Math.round(w / 40)), Math.max(2, Math.round(d / 40)));
+    const tex = getOrCreateProceduralTexture('moroccan_star', 1024, 1024);
+    tex.repeat.set(Math.max(1, w / 48), Math.max(1, d / 48));
     return new THREE.MeshPhongMaterial({
         map: tex,
         color: 0xffffff,
-        specular: 0x252525,
-        shininess: 25
+        specular: 0x242424,
+        shininess: 20
     });
 }
 

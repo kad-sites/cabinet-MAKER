@@ -118,6 +118,7 @@ html, body {
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
+    text-decoration: none;
 }
 
 .nav-tab-btn:hover {
