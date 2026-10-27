@@ -1212,17 +1212,84 @@
         const topW = W + state.overhangLeft + state.overhangRight;
         const topD = D + state.overhangFront + state.overhangBack;
 
-        // Update Sidebar Stats
-        document.getElementById('stat-total-meters').textContent = `${totalMeters} m`;
-        document.getElementById('badge-total-meters').textContent = `${totalMeters} m`;
-        document.getElementById('stat-cut-pieces').textContent = `${totalPieces} pcs`;
-        document.getElementById('stat-brackets').textContent = `${bracketQty} pcs`;
-        document.getElementById('stat-tnuts').textContent = `${tnutQty} pairs`;
+        // Update Sidebar Stats (if elements exist)
+        const elStatMeters = document.getElementById('stat-total-meters');
+        if (elStatMeters) elStatMeters.textContent = `${totalMeters} m`;
+        const elBadgeMeters = document.getElementById('badge-total-meters');
+        if (elBadgeMeters) elBadgeMeters.textContent = `${totalMeters} m`;
+        const elStatPieces = document.getElementById('stat-cut-pieces');
+        if (elStatPieces) elStatPieces.textContent = `${totalPieces} pcs`;
+        const elStatBrackets = document.getElementById('stat-brackets');
+        if (elStatBrackets) elStatBrackets.textContent = `${bracketQty} pcs`;
+        const elStatTnuts = document.getElementById('stat-tnuts');
+        if (elStatTnuts) elStatTnuts.textContent = `${tnutQty} pairs`;
 
-        document.getElementById('badge-top-dims').textContent = `${topW} × ${topD} mm`;
-        document.getElementById('val-overhang-summary').textContent = `F:${state.overhangFront} B:${state.overhangBack} L:${state.overhangLeft} R:${state.overhangRight} mm`;
+        const elBadgeTop = document.getElementById('badge-top-dims');
+        if (elBadgeTop) elBadgeTop.textContent = `${topW} × ${topD}`;
+        const elOverhangSum = document.getElementById('val-overhang-summary');
+        if (elOverhangSum) elOverhangSum.textContent = `F:${state.overhangFront} B:${state.overhangBack} L:${state.overhangLeft} R:${state.overhangRight} mm`;
 
-        // Update Modal Tables
+        // Update Right Dock Panel Elements
+        const rightBadgeMeters = document.getElementById('right-total-meters-badge');
+        if (rightBadgeMeters) rightBadgeMeters.textContent = `${totalMeters} m`;
+        const rightStatMeters = document.getElementById('right-stat-total-meters');
+        if (rightStatMeters) rightStatMeters.textContent = `${totalMeters} m`;
+        const rightStatPieces = document.getElementById('right-stat-cut-pieces');
+        if (rightStatPieces) rightStatPieces.textContent = `${totalPieces} pcs`;
+        const rightStatBrackets = document.getElementById('right-stat-brackets');
+        if (rightStatBrackets) rightStatBrackets.textContent = `${bracketQty} pcs`;
+        const rightStatTnuts = document.getElementById('right-stat-tnuts');
+        if (rightStatTnuts) rightStatTnuts.textContent = `${tnutQty} pairs`;
+
+        // Update Right Panel Cut List Table
+        const rightTbodyCut = document.getElementById('right-tbody-cut-list');
+        if (rightTbodyCut) {
+            rightTbodyCut.innerHTML = '';
+            cutList.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.role}</strong></td>
+                    <td>${item.profile}</td>
+                    <td><code>${item.length}mm</code></td>
+                    <td><strong>${item.qty}</strong></td>
+                `;
+                rightTbodyCut.appendChild(tr);
+            });
+            const trTotal = document.createElement('tr');
+            trTotal.style.background = 'rgba(56, 189, 248, 0.08)';
+            trTotal.innerHTML = `
+                <td colspan="2"><strong>Grand Total</strong></td>
+                <td colspan="2"><strong style="color: var(--accent-blue);">${totalMeters} m (${totalPieces} pcs)</strong></td>
+            `;
+            rightTbodyCut.appendChild(trTotal);
+        }
+
+        // Update Right Panel Hardware Table
+        const rightTbodyHw = document.getElementById('right-tbody-hardware');
+        if (rightTbodyHw) {
+            rightTbodyHw.innerHTML = `
+                <tr><td>Corner Brackets</td><td>${state.joineryType}</td><td><strong>${bracketQty} pcs</strong></td></tr>
+                <tr><td>T-Nuts</td><td>${spec.tnut}</td><td><strong>${tnutQty} pcs</strong></td></tr>
+                <tr><td>Socket Screws</td><td>${spec.hardware}</td><td><strong>${boltQty} pcs</strong></td></tr>
+                <tr><td>Base Leveling Feet</td><td>${state.feetType}</td><td><strong>4 pcs</strong></td></tr>
+                <tr><td>Tabletop Z-Clips</td><td>Slotted Clip</td><td><strong>8 pcs</strong></td></tr>
+            `;
+        }
+
+        // Update Right Panel Tabletop Slab Table
+        const rightTbodyTop = document.getElementById('right-tbody-tabletop');
+        if (rightTbodyTop) {
+            rightTbodyTop.innerHTML = state.enableTabletop ? `
+                <tr>
+                    <td>${state.topLaminate.toUpperCase()} Mica</td>
+                    <td><strong>${topW} × ${topD} × ${state.topThickness} mm</strong></td>
+                </tr>
+            ` : `
+                <tr><td colspan="2" style="color:var(--text-muted);">None (Open Frame)</td></tr>
+            `;
+        }
+
+        // Update Modal Tables (if open)
         const tbodyCut = document.getElementById('tbody-cut-list');
         if (tbodyCut) {
             tbodyCut.innerHTML = '';
@@ -1510,36 +1577,55 @@
 
         // BOM Modal Open / Close
         const modal = document.getElementById('bom-modal-overlay');
-        document.getElementById('btn-open-bom-modal').addEventListener('click', () => {
-            calculateAndUpdateBOM();
-            modal.classList.add('open');
-        });
-        document.getElementById('btn-export-bom').addEventListener('click', () => {
-            calculateAndUpdateBOM();
-            modal.classList.add('open');
-        });
-        document.getElementById('btn-close-bom-modal').addEventListener('click', () => {
-            modal.classList.remove('open');
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('open');
-        });
+        const btnOpenModal = document.getElementById('btn-open-bom-modal');
+        if (btnOpenModal && modal) {
+            btnOpenModal.addEventListener('click', () => {
+                calculateAndUpdateBOM();
+                modal.classList.add('open');
+            });
+        }
+        const btnExportBom = document.getElementById('btn-export-bom');
+        if (btnExportBom && modal) {
+            btnExportBom.addEventListener('click', () => {
+                calculateAndUpdateBOM();
+                modal.classList.add('open');
+            });
+        }
+        const btnCloseBom = document.getElementById('btn-close-bom-modal');
+        if (btnCloseBom && modal) {
+            btnCloseBom.addEventListener('click', () => {
+                modal.classList.remove('open');
+            });
+        }
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('open');
+            });
+        }
 
-        // CSV Export & Print
-        document.getElementById('btn-download-csv').addEventListener('click', downloadCutListCSV);
-        document.getElementById('btn-print-bom').addEventListener('click', () => {
-            window.print();
-        });
+        // CSV Export & Print (Modal & Right Panel)
+        const btnDlCsv = document.getElementById('btn-download-csv');
+        if (btnDlCsv) btnDlCsv.addEventListener('click', downloadCutListCSV);
+        const btnPrintBom = document.getElementById('btn-print-bom');
+        if (btnPrintBom) btnPrintBom.addEventListener('click', () => window.print());
+
+        const rightBtnDlCsv = document.getElementById('right-btn-download-csv');
+        if (rightBtnDlCsv) rightBtnDlCsv.addEventListener('click', downloadCutListCSV);
+        const rightBtnPrintBom = document.getElementById('right-btn-print-bom');
+        if (rightBtnPrintBom) rightBtnPrintBom.addEventListener('click', () => window.print());
 
         // High-Res Viewport Screenshot Capture
-        document.getElementById('btn-screenshot-3d').addEventListener('click', () => {
-            renderer.render(scene, camera);
-            const dataUrl = canvas.toDataURL('image/png');
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = `extrusion_table_${state.profileType}_${Date.now()}.png`;
-            a.click();
-        });
+        const btnScreenshot = document.getElementById('btn-screenshot-3d');
+        if (btnScreenshot) {
+            btnScreenshot.addEventListener('click', () => {
+                renderer.render(scene, camera);
+                const dataUrl = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `extrusion_table_${state.profileType}_${Date.now()}.png`;
+                a.click();
+            });
+        }
     }
 
     function bindSliderAndInput(idPrefix, stateKey, min, max) {

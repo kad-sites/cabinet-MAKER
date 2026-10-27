@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aluminum Extrusion Studio - Cabinet Optimizer Pro</title>
-    <link rel="stylesheet" href="extrusion.css?v=2">
+    <link rel="stylesheet" href="extrusion.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -13,7 +13,7 @@
         <!-- Left Branding -->
         <div class="brand-group">
             <div class="brand-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
@@ -27,14 +27,14 @@
         <!-- Center Navigation Tabs -->
         <nav class="center-nav-tabs">
             <a href="index.html" class="nav-tab-btn" title="3D Modular Kitchen & Cabinet Designer">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <span>Kitchen Cabinet CAD</span>
             </a>
             <a href="extrusion.html" class="nav-tab-btn active" title="Aluminum Extrusion & Table Studio">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
@@ -47,25 +47,25 @@
 
         <!-- Right Header Actions -->
         <div class="header-right-action">
-            <button type="button" class="btn-header-action" id="btn-export-bom" title="View Full Cut List & BOM">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                <span>Cut List & BOM</span>
+            <button type="button" class="btn-header-action" id="btn-export-bom" title="View Full Cut List & BOM Modal">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                <span>Full BOM Modal</span>
             </button>
             <button type="button" class="btn-header-action" id="btn-screenshot-3d" title="Capture High-Res Viewport Image">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                 <span>Capture 3D</span>
             </button>
             <button type="button" class="btn-header-action btn-header-primary" id="btn-create-table-quick" title="Regenerate Default Table Frame">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>1-Click Table</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Workspace Layout -->
+    <!-- Main Workspace 3-Column Layout -->
     <div class="workspace-layout">
         
-        <!-- Left Sidebar: Compact Parametric Controls -->
+        <!-- LEFT SIDEBAR: DESIGN & GEOMETRY (300px) -->
         <aside class="extrusion-sidebar">
             <div class="sidebar-scroll">
                 
@@ -75,7 +75,7 @@
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
                             <span class="card-title">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                                 Table Presets
                             </span>
                         </div>
@@ -83,7 +83,7 @@
                     </div>
                     <div class="card-body">
                         <button type="button" class="btn-generator-hero" id="btn-generate-table-main">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
                             <span>Generate 4-Leg Work Table</span>
                         </button>
                         
@@ -114,7 +114,7 @@
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
                             <span class="card-title">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                                 Extrusion Profile
                             </span>
                         </div>
@@ -125,22 +125,22 @@
                             <button type="button" class="btn-profile-card" data-profile="2020">
                                 <div class="profile-icon">20</div>
                                 <span class="profile-name">2020</span>
-                                <span class="profile-slot">6mm Slot</span>
+                                <span class="profile-slot">6mm</span>
                             </button>
                             <button type="button" class="btn-profile-card" data-profile="2040">
                                 <div class="profile-icon">24</div>
                                 <span class="profile-name">2040</span>
-                                <span class="profile-slot">Dual 6mm</span>
+                                <span class="profile-slot">Dual 6</span>
                             </button>
                             <button type="button" class="btn-profile-card active" data-profile="3030">
                                 <div class="profile-icon">30</div>
                                 <span class="profile-name">3030</span>
-                                <span class="profile-slot">8mm Slot</span>
+                                <span class="profile-slot">8mm</span>
                             </button>
                             <button type="button" class="btn-profile-card" data-profile="4040">
                                 <div class="profile-icon">40</div>
                                 <span class="profile-name">4040</span>
-                                <span class="profile-slot">8mm Slot</span>
+                                <span class="profile-slot">8mm</span>
                             </button>
                         </div>
 
@@ -158,64 +158,64 @@
                     </div>
                 </div>
 
-                <!-- Card 3: Frame Dimensions & Leg Binding Stretchers -->
+                <!-- Card 3: Frame Dimensions & Leg Binding Stretchers (2-Column Compact) -->
                 <div class="config-card" id="card-dimensions">
                     <div class="card-header">
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
                             <span class="card-title">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                                 Frame Dimensions & Stretchers
                             </span>
                         </div>
                         <span class="card-badge">mm</span>
                     </div>
                     <div class="card-body">
-                        <!-- Width -->
-                        <div class="form-row">
-                            <div class="form-label-row">
-                                <label class="form-label">Table Width (X)</label>
-                                <span class="form-val-badge" id="val-table-width">1200 mm</span>
+                        <!-- Row 1: Width & Depth Side-by-Side -->
+                        <div class="form-2col">
+                            <div class="form-row">
+                                <div class="form-label-row">
+                                    <label class="form-label">Width (X)</label>
+                                    <span class="form-val-badge" id="val-table-width">1200</span>
+                                </div>
+                                <div class="slider-input-combo">
+                                    <input type="range" class="range-slider" id="slider-table-width" min="400" max="2400" step="10" value="1200">
+                                    <input type="number" class="number-input-sm" id="input-table-width" min="400" max="2400" value="1200">
+                                </div>
                             </div>
-                            <div class="slider-input-combo">
-                                <input type="range" class="range-slider" id="slider-table-width" min="400" max="2400" step="10" value="1200">
-                                <input type="number" class="number-input-sm" id="input-table-width" min="400" max="2400" value="1200">
-                            </div>
-                        </div>
-
-                        <!-- Depth -->
-                        <div class="form-row">
-                            <div class="form-label-row">
-                                <label class="form-label">Table Depth (Z)</label>
-                                <span class="form-val-badge" id="val-table-depth">800 mm</span>
-                            </div>
-                            <div class="slider-input-combo">
-                                <input type="range" class="range-slider" id="slider-table-depth" min="300" max="1500" step="10" value="800">
-                                <input type="number" class="number-input-sm" id="input-table-depth" min="300" max="1500" value="800">
-                            </div>
-                        </div>
-
-                        <!-- Height -->
-                        <div class="form-row">
-                            <div class="form-label-row">
-                                <label class="form-label">Leg Height (Y)</label>
-                                <span class="form-val-badge" id="val-table-height">750 mm</span>
-                            </div>
-                            <div class="slider-input-combo">
-                                <input type="range" class="range-slider" id="slider-table-height" min="300" max="1200" step="10" value="750">
-                                <input type="number" class="number-input-sm" id="input-table-height" min="300" max="1200" value="750">
+                            <div class="form-row">
+                                <div class="form-label-row">
+                                    <label class="form-label">Depth (Z)</label>
+                                    <span class="form-val-badge" id="val-table-depth">800</span>
+                                </div>
+                                <div class="slider-input-combo">
+                                    <input type="range" class="range-slider" id="slider-table-depth" min="300" max="1500" step="10" value="800">
+                                    <input type="number" class="number-input-sm" id="input-table-depth" min="300" max="1500" value="800">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Stretcher Elevation from Floor -->
-                        <div class="form-row">
-                            <div class="form-label-row">
-                                <label class="form-label">Lower Stretcher Height</label>
-                                <span class="form-val-badge" id="val-stretcher-height">150 mm (6")</span>
+                        <!-- Row 2: Height & Stretcher Height Side-by-Side -->
+                        <div class="form-2col">
+                            <div class="form-row">
+                                <div class="form-label-row">
+                                    <label class="form-label">Leg Height (Y)</label>
+                                    <span class="form-val-badge" id="val-table-height">750</span>
+                                </div>
+                                <div class="slider-input-combo">
+                                    <input type="range" class="range-slider" id="slider-table-height" min="300" max="1200" step="10" value="750">
+                                    <input type="number" class="number-input-sm" id="input-table-height" min="300" max="1200" value="750">
+                                </div>
                             </div>
-                            <div class="slider-input-combo">
-                                <input type="range" class="range-slider" id="slider-stretcher-height" min="50" max="400" step="5" value="150">
-                                <input type="number" class="number-input-sm" id="input-stretcher-height" min="50" max="400" value="150">
+                            <div class="form-row">
+                                <div class="form-label-row">
+                                    <label class="form-label">Stretcher (Elev)</label>
+                                    <span class="form-val-badge" id="val-stretcher-height">150</span>
+                                </div>
+                                <div class="slider-input-combo">
+                                    <input type="range" class="range-slider" id="slider-stretcher-height" min="50" max="400" step="5" value="150">
+                                    <input type="number" class="number-input-sm" id="input-stretcher-height" min="50" max="400" value="150">
+                                </div>
                             </div>
                         </div>
 
@@ -233,7 +233,7 @@
                         <div class="toggle-switch-row">
                             <div class="toggle-switch-label">
                                 <span>Center Support Rib</span>
-                                <span class="toggle-switch-sub">Extra rigidity under tabletop</span>
+                                <span class="toggle-switch-sub">Extra rigidity under top</span>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="check-center-rib" checked>
@@ -249,18 +249,17 @@
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
                             <span class="card-title">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                                Plywood & Mica Tabletop
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                                Tabletop Slab & Mica
                             </span>
                         </div>
-                        <span class="card-badge" id="badge-top-dims">1260 × 860 mm</span>
+                        <span class="card-badge" id="badge-top-dims">1260 × 860</span>
                     </div>
                     <div class="card-body">
                         <!-- Enable Tabletop Toggle -->
                         <div class="toggle-switch-row">
                             <div class="toggle-switch-label">
                                 <span>Include Tabletop Slab</span>
-                                <span class="toggle-switch-sub">Flush mounted onto top frame</span>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="check-enable-tabletop" checked>
@@ -281,15 +280,15 @@
                                 </button>
                                 <button type="button" class="btn-profile-card active" data-thickness="18">
                                     <span class="profile-name">18mm</span>
-                                    <span class="profile-slot">Standard</span>
+                                    <span class="profile-slot">Std</span>
                                 </button>
                                 <button type="button" class="btn-profile-card" data-thickness="25">
                                     <span class="profile-name">25mm</span>
-                                    <span class="profile-slot">Heavy 1"</span>
+                                    <span class="profile-slot">1"</span>
                                 </button>
                                 <button type="button" class="btn-profile-card" data-thickness="36">
                                     <span class="profile-name">36mm</span>
-                                    <span class="profile-slot">Double</span>
+                                    <span class="profile-slot">2x</span>
                                 </button>
                             </div>
                         </div>
@@ -300,68 +299,68 @@
                             <div class="laminate-grid">
                                 <button type="button" class="btn-laminate-card active" data-laminate="birch">
                                     <div class="laminate-preview-box" style="background: linear-gradient(135deg, #e3c498, #cfa268);"></div>
-                                    <span class="laminate-name">Birch Ply</span>
+                                    <span class="laminate-name">Birch</span>
                                 </button>
                                 <button type="button" class="btn-laminate-card" data-laminate="white">
                                     <div class="laminate-preview-box" style="background: #f8fafc;"></div>
-                                    <span class="laminate-name">White Mica</span>
+                                    <span class="laminate-name">White</span>
                                 </button>
                                 <button type="button" class="btn-laminate-card" data-laminate="charcoal">
                                     <div class="laminate-preview-box" style="background: #334155;"></div>
-                                    <span class="laminate-name">Slate Gray</span>
+                                    <span class="laminate-name">Slate</span>
                                 </button>
                                 <button type="button" class="btn-laminate-card" data-laminate="butcher">
                                     <div class="laminate-preview-box" style="background: linear-gradient(135deg, #a76b39, #78441c);"></div>
-                                    <span class="laminate-name">Butcher Oak</span>
+                                    <span class="laminate-name">Oak</span>
                                 </button>
                                 <button type="button" class="btn-laminate-card" data-laminate="esd">
                                     <div class="laminate-preview-box" style="background: #0284c7;"></div>
-                                    <span class="laminate-name">ESD Blue</span>
+                                    <span class="laminate-name">ESD</span>
                                 </button>
                                 <button type="button" class="btn-laminate-card" data-laminate="carbon">
                                     <div class="laminate-preview-box" style="background: #18181b;"></div>
-                                    <span class="laminate-name">Carbon Mica</span>
+                                    <span class="laminate-name">Carbon</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Overhangs -->
+                        <!-- Overhangs in 2 Columns -->
                         <div class="form-row" id="section-overhang">
                             <div class="form-label-row">
-                                <label class="form-label">Overhangs (3D Drag Handles)</label>
-                                <span class="form-val-badge" id="val-overhang-summary">30mm all sides</span>
+                                <label class="form-label">Overhangs (mm)</label>
+                                <span class="form-val-badge" id="val-overhang-summary">30mm</span>
                             </div>
-                            
-                            <div class="slider-input-combo">
-                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Front:</span>
-                                <input type="range" class="range-slider" id="slider-overhang-front" min="0" max="200" step="5" value="30">
-                                <input type="number" class="number-input-sm" id="input-overhang-front" min="0" max="200" value="30">
+                            <div class="form-2col">
+                                <div class="slider-input-combo">
+                                    <span style="font-size: 0.58rem; width: 32px; color: var(--text-secondary);">Front:</span>
+                                    <input type="range" class="range-slider" id="slider-overhang-front" min="0" max="200" step="5" value="30">
+                                    <input type="number" class="number-input-sm" id="input-overhang-front" min="0" max="200" value="30">
+                                </div>
+                                <div class="slider-input-combo">
+                                    <span style="font-size: 0.58rem; width: 32px; color: var(--text-secondary);">Back:</span>
+                                    <input type="range" class="range-slider" id="slider-overhang-back" min="0" max="200" step="5" value="30">
+                                    <input type="number" class="number-input-sm" id="input-overhang-back" min="0" max="200" value="30">
+                                </div>
                             </div>
-
-                            <div class="slider-input-combo">
-                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Back:</span>
-                                <input type="range" class="range-slider" id="slider-overhang-back" min="0" max="200" step="5" value="30">
-                                <input type="number" class="number-input-sm" id="input-overhang-back" min="0" max="200" value="30">
-                            </div>
-
-                            <div class="slider-input-combo">
-                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Left:</span>
-                                <input type="range" class="range-slider" id="slider-overhang-left" min="0" max="200" step="5" value="30">
-                                <input type="number" class="number-input-sm" id="input-overhang-left" min="0" max="200" value="30">
-                            </div>
-
-                            <div class="slider-input-combo">
-                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Right:</span>
-                                <input type="range" class="range-slider" id="slider-overhang-right" min="0" max="200" step="5" value="30">
-                                <input type="number" class="number-input-sm" id="input-overhang-right" min="0" max="200" value="30">
+                            <div class="form-2col">
+                                <div class="slider-input-combo">
+                                    <span style="font-size: 0.58rem; width: 32px; color: var(--text-secondary);">Left:</span>
+                                    <input type="range" class="range-slider" id="slider-overhang-left" min="0" max="200" step="5" value="30">
+                                    <input type="number" class="number-input-sm" id="input-overhang-left" min="0" max="200" value="30">
+                                </div>
+                                <div class="slider-input-combo">
+                                    <span style="font-size: 0.58rem; width: 32px; color: var(--text-secondary);">Right:</span>
+                                    <input type="range" class="range-slider" id="slider-overhang-right" min="0" max="200" step="5" value="30">
+                                    <input type="number" class="number-input-sm" id="input-overhang-right" min="0" max="200" value="30">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- 5mm Modular Retaining Slot -->
-                        <div class="toggle-switch-row" style="margin-top: 0.2rem; border-top: 1px solid var(--border-color); padding-top: 0.4rem;">
+                        <!-- 5mm Modular Retaining Slot & Upper Frame -->
+                        <div class="toggle-switch-row" style="margin-top: 0.15rem; border-top: 1px solid var(--border-color); padding-top: 0.35rem;">
                             <div class="toggle-switch-label">
                                 <span>5mm Retaining Slot</span>
-                                <span class="toggle-switch-sub">Routed channel for top extrusions</span>
+                                <span class="toggle-switch-sub">Routed channel</span>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="check-retaining-slot" checked>
@@ -369,11 +368,10 @@
                             </label>
                         </div>
 
-                        <!-- Upper Upright Extrusion in Slot -->
                         <div class="toggle-switch-row" id="row-upper-extrusion">
                             <div class="toggle-switch-label">
-                                <span>Mount Upper Uprights</span>
-                                <span class="toggle-switch-sub">Modular shelving columns</span>
+                                <span>Upper Uprights</span>
+                                <span class="toggle-switch-sub">Top shelving</span>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="check-upper-extrusions">
@@ -389,7 +387,7 @@
                         <div class="card-title-group">
                             <span class="card-chevron">▼</span>
                             <span class="card-title">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
                                 Joinery & Accessories
                             </span>
                         </div>
@@ -403,10 +401,10 @@
                                     <span>Cast 90° Gussets</span>
                                 </button>
                                 <button type="button" class="btn-joinery-chip" data-joinery="cube">
-                                    <span>3-Way Corner Cubes</span>
+                                    <span>3-Way Cubes</span>
                                 </button>
                                 <button type="button" class="btn-joinery-chip" data-joinery="concealed">
-                                    <span>Hidden Inside L-Bar</span>
+                                    <span>Inside L-Bar</span>
                                 </button>
                             </div>
                         </div>
@@ -415,10 +413,10 @@
                             <label class="form-label">Base Leveling Feet</label>
                             <div class="finish-toggle-group">
                                 <button type="button" class="btn-finish-chip active" data-feet="rubber">
-                                    <span>Rubber Leveling</span>
+                                    <span>Rubber Feet</span>
                                 </button>
                                 <button type="button" class="btn-finish-chip" data-feet="caster">
-                                    <span>Locking Casters</span>
+                                    <span>Casters</span>
                                 </button>
                                 <button type="button" class="btn-finish-chip" data-feet="cap">
                                     <span>End Caps</span>
@@ -428,75 +426,36 @@
                     </div>
                 </div>
 
-                <!-- Card 6: Live Bill of Materials (BOM) & Cut List -->
-                <div class="config-card" id="card-bom">
-                    <div class="card-header">
-                        <div class="card-title-group">
-                            <span class="card-chevron">▼</span>
-                            <span class="card-title">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                                Cut List & Hardware BOM
-                            </span>
-                        </div>
-                        <span class="card-badge" id="badge-total-meters">11.26 m</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="bom-mini-stats">
-                            <div class="bom-stat-item">
-                                <span class="bom-stat-num" id="stat-total-meters">11.26 m</span>
-                                <span class="bom-stat-label">Total Extrusion</span>
-                            </div>
-                            <div class="bom-stat-item">
-                                <span class="bom-stat-num" id="stat-cut-pieces">13 pcs</span>
-                                <span class="bom-stat-label">Cut Pieces</span>
-                            </div>
-                            <div class="bom-stat-item">
-                                <span class="bom-stat-num" id="stat-brackets">16 pcs</span>
-                                <span class="bom-stat-label">Corner Brackets</span>
-                            </div>
-                            <div class="bom-stat-item">
-                                <span class="bom-stat-num" id="stat-tnuts">32 pairs</span>
-                                <span class="bom-stat-label">T-Nuts & Bolts</span>
-                            </div>
-                        </div>
-
-                        <button type="button" class="btn-view-bom-modal" id="btn-open-bom-modal">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                            <span>Open Detailed Cut List & BOM</span>
-                        </button>
-                    </div>
-                </div>
-
             </div>
         </aside>
 
-        <!-- Right 3D Viewport Area -->
+        <!-- CENTER: 3D VIEWPORT AREA -->
         <main class="extrusion-viewport">
             <canvas id="viewport-canvas"></canvas>
 
             <!-- Floating Top HUD Controls -->
             <div class="viewport-hud-top">
                 <button type="button" class="hud-btn active" id="btn-toggle-handles" title="Toggle 3D Tabletop Overhang Drag Handles">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
-                    <span>Drag Handles</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+                    <span>Handles</span>
                 </button>
                 <button type="button" class="hud-btn active" id="btn-toggle-dims" title="Toggle Dimensions HUD">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="8 21 8 10"></polyline><polyline points="16 21 16 10"></polyline></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="8 21 8 10"></polyline><polyline points="16 21 16 10"></polyline></svg>
                     <span>Dimensions</span>
                 </button>
                 <button type="button" class="hud-btn" id="btn-toggle-wireframe" title="Toggle Wireframe Mode">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                     <span>Wireframe</span>
                 </button>
                 <button type="button" class="hud-btn" id="btn-reset-camera" title="Reset Viewport Camera">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
                     <span>Reset View</span>
                 </button>
             </div>
 
             <!-- Floating View Cube / Angles -->
             <div class="hud-view-cube">
-                <button type="button" class="view-cube-btn" data-view="iso">Isometric</button>
+                <button type="button" class="view-cube-btn" data-view="iso">Iso</button>
                 <button type="button" class="view-cube-btn" data-view="front">Front</button>
                 <button type="button" class="view-cube-btn" data-view="top">Top</button>
                 <button type="button" class="view-cube-btn" data-view="side">Side</button>
@@ -510,30 +469,140 @@
                 <div class="viewport-info-pill">
                     <span>Frame: <strong id="hud-frame-size">1200 × 800 × 750 mm</strong></span>
                     <span>•</span>
-                    <span>Profile: <strong id="hud-profile-type">3030 Anodized Silver</strong></span>
+                    <span>Profile: <strong id="hud-profile-type">3030 Silver</strong></span>
                     <span>•</span>
-                    <span>Stretcher: <strong id="hud-stretcher-elev">150 mm from floor</strong></span>
+                    <span>Stretcher: <strong id="hud-stretcher-elev">150 mm</strong></span>
                 </div>
                 <div class="viewport-info-pill">
-                    <span>💡 Tip: Click and drag 3D arrow gizmos to adjust tabletop overhangs</span>
+                    <span>💡 Drag 3D arrows to resize tabletop overhangs</span>
                 </div>
             </div>
         </main>
+
+        <!-- RIGHT PANEL: CUT LIST & HARDWARE BOM (290px SLIM DOCK) -->
+        <aside class="extrusion-right-panel">
+            <div class="right-panel-header">
+                <span class="right-panel-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    Cut List & Hardware BOM
+                </span>
+                <span class="card-badge" id="right-total-meters-badge">11.26 m</span>
+            </div>
+
+            <div class="right-panel-scroll">
+                <!-- 4 Quick Stat Mini-Cards -->
+                <div class="bom-stats-horizontal">
+                    <div class="bom-mini-card">
+                        <span class="bom-mini-num" id="right-stat-total-meters">11.26 m</span>
+                        <span class="bom-mini-lbl">Total Extrusion</span>
+                    </div>
+                    <div class="bom-mini-card">
+                        <span class="bom-mini-num" id="right-stat-cut-pieces">13 pcs</span>
+                        <span class="bom-mini-lbl">Cut Pieces</span>
+                    </div>
+                    <div class="bom-mini-card">
+                        <span class="bom-mini-num" id="right-stat-brackets">16 pcs</span>
+                        <span class="bom-mini-lbl">Brackets</span>
+                    </div>
+                    <div class="bom-mini-card">
+                        <span class="bom-mini-num" id="right-stat-tnuts">32 pairs</span>
+                        <span class="bom-mini-lbl">T-Nuts & Bolts</span>
+                    </div>
+                </div>
+
+                <!-- Section 1: Extrusion Cut List Table -->
+                <div>
+                    <div class="bom-section-title">
+                        <span>1. Extrusion Cut List</span>
+                        <span style="color: var(--text-muted); font-size: 0.58rem;">Lengths in mm</span>
+                    </div>
+                    <div class="right-table-wrap">
+                        <table class="right-table">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Profile</th>
+                                    <th>Length</th>
+                                    <th>Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="right-tbody-cut-list">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 2: Hardware & Fasteners Table -->
+                <div>
+                    <div class="bom-section-title">
+                        <span>2. Hardware & Fasteners</span>
+                    </div>
+                    <div class="right-table-wrap">
+                        <table class="right-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Spec</th>
+                                    <th>Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="right-tbody-hardware">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 3: Tabletop Sheet Cut -->
+                <div>
+                    <div class="bom-section-title">
+                        <span>3. Tabletop Slab Cut</span>
+                    </div>
+                    <div class="right-table-wrap">
+                        <table class="right-table">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Size (W×D×T mm)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="right-tbody-tabletop">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel Actions -->
+            <div class="right-panel-footer">
+                <button type="button" class="btn-bom-action btn-bom-primary" id="right-btn-download-csv" title="Download Complete Cut List in CSV Format">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Download CSV</span>
+                </button>
+                <button type="button" class="btn-bom-action" id="right-btn-print-bom" title="Print Engineering BOM Specification">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span>Print</span>
+                </button>
+            </div>
+        </aside>
+
     </div>
 
-    <!-- Modal for Detailed Cut List & BOM -->
+    <!-- Modal for Detailed Cut List & BOM (Alternative / Full Screen View) -->
     <div class="modal-overlay" id="bom-modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
                 <div class="modal-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                     <span>Extrusion Cut List & Hardware Bill of Materials (BOM)</span>
                 </div>
                 <button type="button" class="modal-close-btn" id="btn-close-bom-modal">&times;</button>
             </div>
             <div class="modal-content-scroll">
                 <div>
-                    <h3 style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--accent-blue);">1. Aluminum Extrusion Cut List</h3>
+                    <h3 style="font-size: 0.82rem; font-weight: 500; margin-bottom: 0.35rem; color: var(--accent-blue);">1. Aluminum Extrusion Cut List</h3>
                     <div class="bom-table-wrapper">
                         <table class="bom-table" id="table-cut-list">
                             <thead>
@@ -552,7 +621,7 @@
                 </div>
 
                 <div>
-                    <h3 style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--accent-blue);">2. Joinery, Connectors & Hardware</h3>
+                    <h3 style="font-size: 0.82rem; font-weight: 500; margin-bottom: 0.35rem; color: var(--accent-blue);">2. Joinery, Connectors & Hardware</h3>
                     <div class="bom-table-wrapper">
                         <table class="bom-table" id="table-hardware-bom">
                             <thead>
@@ -569,7 +638,7 @@
                 </div>
 
                 <div>
-                    <h3 style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--accent-blue);">3. Tabletop Sheet Cut Dimensions</h3>
+                    <h3 style="font-size: 0.82rem; font-weight: 500; margin-bottom: 0.35rem; color: var(--accent-blue);">3. Tabletop Sheet Cut Dimensions</h3>
                     <div class="bom-table-wrapper">
                         <table class="bom-table">
                             <thead>
@@ -589,11 +658,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-header-action" id="btn-download-csv">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     <span>Download CSV Cut List</span>
                 </button>
                 <button type="button" class="btn-header-action btn-header-primary" id="btn-print-bom">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                     <span>Print Specification</span>
                 </button>
             </div>
@@ -603,6 +672,6 @@
     <!-- Three.js and Core Application Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="extrusion.js?v=2"></script>
+    <script src="extrusion.js?v=3"></script>
 </body>
 </html>
