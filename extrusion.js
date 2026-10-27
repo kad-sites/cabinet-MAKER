@@ -95,8 +95,10 @@
         renderer.outputEncoding = THREE.sRGBEncoding;
 
         controls = new THREE.OrbitControls(camera, canvas);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
+        controls.enableDamping = false; // Normal direct CAD motion, no fluidic inertia
+        controls.rotateSpeed = 0.8;
+        controls.panSpeed = 0.8;
+        controls.zoomSpeed = 1.0;
         controls.maxDistance = 6000;
         controls.minDistance = 200;
         controls.maxPolarAngle = Math.PI / 2 + 0.05;
@@ -442,31 +444,42 @@
     // ==========================================
     // 5. HARDWARE / JOINERY GENERATORS
     // ==========================================
+    /**
+     * Precision 90-degree die-cast corner gusset mesh
+     * In local coordinates:
+     * - (0, 0, 0) is the 90-degree inside corner
+     * - Arm 1 extends along +X from 0 to L
+     * - Arm 2 extends along +Y from 0 to L
+     * - 45-degree hypotenuse connects (L, 0) and (0, L)
+     * - Centered along Z (thickness) from -thick/2 to +thick/2
+     */
     function createCornerGusset(profileType) {
         const spec = state.profileSpecs[profileType] || state.profileSpecs['3030'];
         const sz = spec.sizeX;
-        const gussetGeom = new THREE.BufferGeometry();
+        const L = sz * 0.88;       // length along each extrusion arm
+        const thick = sz * 0.82;   // bracket width across the extrusion slot
+        const tWall = sz * 0.20;   // web wall thickness
         
-        // 90-degree triangular wedge with thickness
-        const thickness = sz * 0.95;
-        const w = sz * 0.9;
-        
+        // 2D Profile in local X-Y plane: 90° corner is at (0, 0)!
         const shape = new THREE.Shape();
         shape.moveTo(0, 0);
-        shape.lineTo(w, 0);
-        shape.lineTo(0, w);
+        shape.lineTo(L, 0);
+        shape.lineTo(L, tWall);
+        shape.lineTo(tWall, L);
+        shape.lineTo(0, L);
         shape.closePath();
 
         const geom = new THREE.ExtrudeGeometry(shape, {
-            depth: thickness,
+            depth: thick,
             bevelEnabled: true,
-            bevelSegments: 2,
+            bevelSegments: 1,
             steps: 1,
-            bevelSize: 0.8,
-            bevelThickness: 0.8
+            bevelSize: 0.5,
+            bevelThickness: 0.5
         });
 
-        geom.center();
+        // Center along Z (depth) so Z=0 is the centerline of the bracket
+        geom.translate(0, 0, -thick / 2);
 
         const mesh = new THREE.Mesh(geom, getActiveGussetMaterial());
         mesh.castShadow = true;
@@ -484,18 +497,46 @@
 
     function createConcealedLBracket(profileType) {
         const spec = state.profileSpecs[profileType] || state.profileSpecs['3030'];
-        const sw = spec.slot * 0.9;
-        const lLen = spec.sizeX * 1.2;
+        const sw = spec.slot * 0.95;
+        const L = spec.sizeX * 1.0;
         const group = new THREE.Group();
 
-        const arm1 = new THREE.Mesh(new THREE.BoxGeometry(sw, lLen, sw), materials.steelHardware);
-        arm1.position.set(0, lLen / 2, 0);
-        const arm2 = new THREE.Mesh(new THREE.BoxGeometry(lLen, sw, sw), materials.steelHardware);
-        arm2.position.set(lLen / 2, 0, 0);
+        // Arm 1 along +X
+        const arm1 = new THREE.Mesh(new THREE.BoxGeometry(L, sw, sw), materials.steelHardware);
+        arm1.position.set(L / 2, 0, 0);
+
+        // Arm 2 along +Y
+        const arm2 = new THREE.Mesh(new THREE.BoxGeometry(sw, L, sw), materials.steelHardware);
+        arm2.position.set(0, L / 2, 0);
 
         group.add(arm1);
         group.add(arm2);
         return group;
+    }
+
+    /**
+     * Places a 90° corner gusset at a corner intersection using an exact 3D orientation matrix
+     * @param {THREE.Vector3} cornerPos - 3D position where the two extrusion outer faces meet
+     * @param {THREE.Vector3} armDir1 - Direction along the first extrusion (local +X)
+     * @param {THREE.Vector3} armDir2 - Direction along the second extrusion (local +Y)
+     */
+    function placeCornerGusset(cornerPos, armDir1, armDir2) {
+        const gusset = state.joineryType === 'concealed'
+            ? createConcealedLBracket(state.profileType)
+            : createCornerGusset(state.profileType);
+
+        // Normalize arm directions
+        const uX = armDir1.clone().normalize();
+        const uY = armDir2.clone().normalize();
+        const uZ = new THREE.Vector3().crossVectors(uX, uY).normalize();
+
+        // Build 4x4 orientation matrix
+        const m = new THREE.Matrix4();
+        m.makeBasis(uX, uY, uZ);
+        m.setPosition(cornerPos);
+
+        gusset.applyMatrix4(m);
+        tableAssemblyGroup.add(gusset);
     }
 
     function createLevelingFoot(profileType) {
@@ -674,7 +715,6 @@
      */
     function addCornerJoinery(W, D, H, ps, hW, hD, topRailY, stretcherY) {
         if (state.joineryType === 'cube') {
-            // Add 3-Way Corner Cubes at top corners
             const topCorners = [
                 { x: -hW, z: -hD }, { x: hW, z: -hD },
                 { x: -hW, z:  hD }, { x: hW, z:  hD }
@@ -687,54 +727,60 @@
             return;
         }
 
-        // Helper to place 90-degree cast gussets at top and bottom joints
-        const gussetOffset = ps * 0.95;
-
-        // Top Frame Gussets (8 inside corners)
-        const topJoints = [
-            // Back-Left
-            { x: -hW + gussetOffset, y: topRailY - gussetOffset, z: -hD, rotZ: 0, rotY: 0 },
-            { x: -hW, y: topRailY - gussetOffset, z: -hD + gussetOffset, rotZ: 0, rotY: Math.PI / 2 },
-            // Back-Right
-            { x:  hW - gussetOffset, y: topRailY - gussetOffset, z: -hD, rotZ: Math.PI / 2, rotY: 0 },
-            { x:  hW, y: topRailY - gussetOffset, z: -hD + gussetOffset, rotZ: 0, rotY: Math.PI / 2 },
-            // Front-Left
-            { x: -hW + gussetOffset, y: topRailY - gussetOffset, z:  hD, rotZ: 0, rotY: 0 },
-            { x: -hW, y: topRailY - gussetOffset, z:  hD - gussetOffset, rotZ: 0, rotY: -Math.PI / 2 },
-            // Front-Right
-            { x:  hW - gussetOffset, y: topRailY - gussetOffset, z:  hD, rotZ: Math.PI / 2, rotY: 0 },
-            { x:  hW, y: topRailY - gussetOffset, z:  hD - gussetOffset, rotZ: 0, rotY: -Math.PI / 2 }
+        const corners = [
+            { legX: -hW, legZ: -hD, inX:  1, inZ:  1 }, // Back-Left
+            { legX:  hW, legZ: -hD, inX: -1, inZ:  1 }, // Back-Right
+            { legX: -hW, legZ:  hD, inX:  1, inZ: -1 }, // Front-Left
+            { legX:  hW, legZ:  hD, inX: -1, inZ: -1 }  // Front-Right
         ];
 
-        topJoints.forEach(j => {
-            const gusset = state.joineryType === 'concealed' 
-                ? createConcealedLBracket(state.profileType)
-                : createCornerGusset(state.profileType);
-            gusset.position.set(j.x, j.y, j.z);
-            gusset.rotation.set(0, j.rotY, j.rotZ);
-            tableAssemblyGroup.add(gusset);
+        corners.forEach(c => {
+            // --- TOP FRAME GUSSETS (Underneath top rails) ---
+            // 1. Top Rail along X:
+            placeCornerGusset(
+                new THREE.Vector3(c.legX + c.inX * (ps / 2), H - ps, c.legZ),
+                new THREE.Vector3(c.inX, 0, 0),
+                new THREE.Vector3(0, -1, 0)
+            );
+
+            // 2. Top Rail along Z:
+            placeCornerGusset(
+                new THREE.Vector3(c.legX, H - ps, c.legZ + c.inZ * (ps / 2)),
+                new THREE.Vector3(0, 0, c.inZ),
+                new THREE.Vector3(0, -1, 0)
+            );
+
+            // --- LOWER STRETCHER GUSSETS (On top of lower stretchers) ---
+            // 3. Lower Stretcher along X:
+            if (state.stretcherStyle === 'box' || c.inZ === 1) {
+                placeCornerGusset(
+                    new THREE.Vector3(c.legX + c.inX * (ps / 2), stretcherY + (ps / 2), c.legZ),
+                    new THREE.Vector3(c.inX, 0, 0),
+                    new THREE.Vector3(0, 1, 0)
+                );
+            }
+
+            // 4. Lower Stretcher along Z:
+            placeCornerGusset(
+                new THREE.Vector3(c.legX, stretcherY + (ps / 2), c.legZ + c.inZ * (ps / 2)),
+                new THREE.Vector3(0, 0, c.inZ),
+                new THREE.Vector3(0, 1, 0)
+            );
         });
 
-        // Lower Stretcher Gussets (8 inside corners)
-        const lowerJoints = [
-            { x: -hW + gussetOffset, y: stretcherY + gussetOffset, z: -hD, rotZ: -Math.PI / 2, rotY: 0 },
-            { x: -hW, y: stretcherY + gussetOffset, z: -hD + gussetOffset, rotZ: 0, rotY: Math.PI / 2 },
-            { x:  hW - gussetOffset, y: stretcherY + gussetOffset, z: -hD, rotZ: Math.PI, rotY: 0 },
-            { x:  hW, y: stretcherY + gussetOffset, z: -hD + gussetOffset, rotZ: 0, rotY: Math.PI / 2 },
-            { x: -hW + gussetOffset, y: stretcherY + gussetOffset, z:  hD, rotZ: -Math.PI / 2, rotY: 0 },
-            { x: -hW, y: stretcherY + gussetOffset, z:  hD - gussetOffset, rotZ: 0, rotY: -Math.PI / 2 },
-            { x:  hW - gussetOffset, y: stretcherY + gussetOffset, z:  hD, rotZ: Math.PI, rotY: 0 },
-            { x:  hW, y: stretcherY + gussetOffset, z:  hD - gussetOffset, rotZ: 0, rotY: -Math.PI / 2 }
-        ];
-
-        lowerJoints.forEach(j => {
-            const gusset = state.joineryType === 'concealed'
-                ? createConcealedLBracket(state.profileType)
-                : createCornerGusset(state.profileType);
-            gusset.position.set(j.x, j.y, j.z);
-            gusset.rotation.set(0, j.rotY, j.rotZ);
-            tableAssemblyGroup.add(gusset);
-        });
+        // If H-frame, add 2 brackets at the center cross tie
+        if (state.stretcherStyle === 'hframe') {
+            placeCornerGusset(
+                new THREE.Vector3(-hW + (ps / 2), stretcherY + (ps / 2), 0),
+                new THREE.Vector3(1, 0, 0),
+                new THREE.Vector3(0, 0, 1)
+            );
+            placeCornerGusset(
+                new THREE.Vector3(hW - (ps / 2), stretcherY + (ps / 2), 0),
+                new THREE.Vector3(-1, 0, 0),
+                new THREE.Vector3(0, 0, 1)
+            );
+        }
     }
 
     /**
@@ -1273,6 +1319,17 @@
     // 11. UI EVENT LISTENERS & PRESETS
     // ==========================================
     function setupUIEventListeners() {
+        // Collapsible Accordion Cards on Header Click
+        document.querySelectorAll('.card-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('.card-badge')) return;
+                const card = header.closest('.config-card');
+                if (card) {
+                    card.classList.toggle('collapsed');
+                }
+            });
+        });
+
         // Quick Presets
         document.querySelectorAll('.btn-preset').forEach(btn => {
             btn.addEventListener('click', () => {

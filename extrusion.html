@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aluminum Extrusion Studio - Cabinet Optimizer Pro</title>
-    <link rel="stylesheet" href="extrusion.css?v=1">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="extrusion.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Top Navigation Header -->
@@ -13,7 +13,7 @@
         <!-- Left Branding -->
         <div class="brand-group">
             <div class="brand-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
@@ -27,14 +27,14 @@
         <!-- Center Navigation Tabs -->
         <nav class="center-nav-tabs">
             <a href="index.html" class="nav-tab-btn" title="3D Modular Kitchen & Cabinet Designer">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <span>Kitchen Cabinet CAD</span>
             </a>
             <a href="extrusion.html" class="nav-tab-btn active" title="Aluminum Extrusion & Table Studio">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
@@ -48,15 +48,15 @@
         <!-- Right Header Actions -->
         <div class="header-right-action">
             <button type="button" class="btn-header-action" id="btn-export-bom" title="View Full Cut List & BOM">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                 <span>Cut List & BOM</span>
             </button>
             <button type="button" class="btn-header-action" id="btn-screenshot-3d" title="Capture High-Res Viewport Image">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                 <span>Capture 3D</span>
             </button>
             <button type="button" class="btn-header-action btn-header-primary" id="btn-create-table-quick" title="Regenerate Default Table Frame">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>1-Click Table</span>
             </button>
         </div>
@@ -65,53 +65,59 @@
     <!-- Main Workspace Layout -->
     <div class="workspace-layout">
         
-        <!-- Left Sidebar: Parametric Controls -->
+        <!-- Left Sidebar: Compact Parametric Controls -->
         <aside class="extrusion-sidebar">
             <div class="sidebar-scroll">
                 
                 <!-- Card 1: 1-Click Parametric Table Generator -->
-                <div class="config-card">
+                <div class="config-card" id="card-presets">
                     <div class="card-header">
-                        <span class="card-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                            Table Generator & Presets
-                        </span>
+                        <div class="card-title-group">
+                            <span class="card-chevron">▼</span>
+                            <span class="card-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                                Table Presets
+                            </span>
+                        </div>
                         <span class="card-badge">Instant</span>
                     </div>
                     <div class="card-body">
                         <button type="button" class="btn-generator-hero" id="btn-generate-table-main">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
                             <span>Generate 4-Leg Work Table</span>
                         </button>
                         
                         <div class="preset-grid">
                             <button type="button" class="btn-preset active" data-preset="workbench">
-                                <span class="preset-title">Standard Workbench</span>
-                                <span class="preset-sub">1200 × 800 × 750 mm</span>
+                                <span class="preset-title">Workbench</span>
+                                <span class="preset-sub">1200×800×750</span>
                             </button>
                             <button type="button" class="btn-preset" data-preset="rig">
-                                <span class="preset-title">3D Printer Rig</span>
-                                <span class="preset-sub">600 × 600 × 700 mm</span>
+                                <span class="preset-title">Printer Rig</span>
+                                <span class="preset-sub">600×600×700</span>
                             </button>
                             <button type="button" class="btn-preset" data-preset="heavy">
-                                <span class="preset-title">Heavy Fab Bench</span>
-                                <span class="preset-sub">1500 × 900 × 850 mm</span>
+                                <span class="preset-title">Fab Bench</span>
+                                <span class="preset-sub">1500×900×850</span>
                             </button>
                             <button type="button" class="btn-preset" data-preset="compact">
-                                <span class="preset-title">Mobile Utility Cart</span>
-                                <span class="preset-sub">800 × 500 × 800 mm</span>
+                                <span class="preset-title">Utility Cart</span>
+                                <span class="preset-sub">800×500×800</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Card 2: Extrusion Profile & Finish -->
-                <div class="config-card">
+                <div class="config-card" id="card-profiles">
                     <div class="card-header">
-                        <span class="card-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                            Extrusion Profile
-                        </span>
+                        <div class="card-title-group">
+                            <span class="card-chevron">▼</span>
+                            <span class="card-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                Extrusion Profile
+                            </span>
+                        </div>
                         <span class="card-badge" id="badge-active-profile">3030 T-Slot</span>
                     </div>
                     <div class="card-body">
@@ -153,13 +159,16 @@
                 </div>
 
                 <!-- Card 3: Frame Dimensions & Leg Binding Stretchers -->
-                <div class="config-card">
+                <div class="config-card" id="card-dimensions">
                     <div class="card-header">
-                        <span class="card-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                            Frame Geometry & Stretchers
-                        </span>
-                        <span class="card-badge">Millimeters</span>
+                        <div class="card-title-group">
+                            <span class="card-chevron">▼</span>
+                            <span class="card-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                                Frame Dimensions & Stretchers
+                            </span>
+                        </div>
+                        <span class="card-badge">mm</span>
                     </div>
                     <div class="card-body">
                         <!-- Width -->
@@ -201,7 +210,7 @@
                         <!-- Stretcher Elevation from Floor -->
                         <div class="form-row">
                             <div class="form-label-row">
-                                <label class="form-label">Lower Stretcher Height (From Floor)</label>
+                                <label class="form-label">Lower Stretcher Height</label>
                                 <span class="form-val-badge" id="val-stretcher-height">150 mm (6")</span>
                             </div>
                             <div class="slider-input-combo">
@@ -213,10 +222,10 @@
                         <!-- Stretcher Layout Type -->
                         <div class="finish-toggle-group">
                             <button type="button" class="btn-finish-chip active" id="btn-stretcher-box" data-stretcher="box">
-                                <span>4-Side Perimeter Box</span>
+                                <span>Perimeter Box</span>
                             </button>
                             <button type="button" class="btn-finish-chip" id="btn-stretcher-hframe" data-stretcher="hframe">
-                                <span>H-Frame (Footrest)</span>
+                                <span>H-Frame Footrest</span>
                             </button>
                         </div>
 
@@ -235,12 +244,15 @@
                 </div>
 
                 <!-- Card 4: Tabletop Plywood / Mica Studio & 5mm Retaining Slot -->
-                <div class="config-card">
+                <div class="config-card" id="card-tabletop">
                     <div class="card-header">
-                        <span class="card-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                            Plywood & Mica Tabletop
-                        </span>
+                        <div class="card-title-group">
+                            <span class="card-chevron">▼</span>
+                            <span class="card-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                                Plywood & Mica Tabletop
+                            </span>
+                        </div>
                         <span class="card-badge" id="badge-top-dims">1260 × 860 mm</span>
                     </div>
                     <div class="card-body">
@@ -259,13 +271,13 @@
                         <!-- Tabletop Thickness -->
                         <div class="form-row" id="section-thickness">
                             <div class="form-label-row">
-                                <label class="form-label">Tabletop Thickness</label>
+                                <label class="form-label">Thickness</label>
                                 <span class="form-val-badge" id="val-top-thickness">18 mm</span>
                             </div>
                             <div class="profile-grid">
                                 <button type="button" class="btn-profile-card" data-thickness="12">
                                     <span class="profile-name">12mm</span>
-                                    <span class="profile-slot">Light Ply</span>
+                                    <span class="profile-slot">Light</span>
                                 </button>
                                 <button type="button" class="btn-profile-card active" data-thickness="18">
                                     <span class="profile-name">18mm</span>
@@ -313,46 +325,42 @@
                             </div>
                         </div>
 
-                        <!-- 4-Side Overhang Controls with Live mm Readout -->
+                        <!-- Overhangs -->
                         <div class="form-row" id="section-overhang">
                             <div class="form-label-row">
-                                <label class="form-label">Overhangs (Live Drag Handles Available in 3D)</label>
+                                <label class="form-label">Overhangs (3D Drag Handles)</label>
                                 <span class="form-val-badge" id="val-overhang-summary">30mm all sides</span>
                             </div>
                             
-                            <!-- Front Overhang -->
-                            <div class="slider-input-combo" style="margin-top: 0.3rem;">
-                                <span style="font-size: 0.72rem; width: 45px; color: var(--text-secondary);">Front:</span>
+                            <div class="slider-input-combo">
+                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Front:</span>
                                 <input type="range" class="range-slider" id="slider-overhang-front" min="0" max="200" step="5" value="30">
                                 <input type="number" class="number-input-sm" id="input-overhang-front" min="0" max="200" value="30">
                             </div>
 
-                            <!-- Back Overhang -->
                             <div class="slider-input-combo">
-                                <span style="font-size: 0.72rem; width: 45px; color: var(--text-secondary);">Back:</span>
+                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Back:</span>
                                 <input type="range" class="range-slider" id="slider-overhang-back" min="0" max="200" step="5" value="30">
                                 <input type="number" class="number-input-sm" id="input-overhang-back" min="0" max="200" value="30">
                             </div>
 
-                            <!-- Left Overhang -->
                             <div class="slider-input-combo">
-                                <span style="font-size: 0.72rem; width: 45px; color: var(--text-secondary);">Left:</span>
+                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Left:</span>
                                 <input type="range" class="range-slider" id="slider-overhang-left" min="0" max="200" step="5" value="30">
                                 <input type="number" class="number-input-sm" id="input-overhang-left" min="0" max="200" value="30">
                             </div>
 
-                            <!-- Right Overhang -->
                             <div class="slider-input-combo">
-                                <span style="font-size: 0.72rem; width: 45px; color: var(--text-secondary);">Right:</span>
+                                <span style="font-size: 0.62rem; width: 40px; color: var(--text-secondary);">Right:</span>
                                 <input type="range" class="range-slider" id="slider-overhang-right" min="0" max="200" step="5" value="30">
                                 <input type="number" class="number-input-sm" id="input-overhang-right" min="0" max="200" value="30">
                             </div>
                         </div>
 
-                        <!-- 5mm Modular Retaining Slot for Upper Extrusions -->
-                        <div class="toggle-switch-row" style="margin-top: 0.4rem; border-top: 1px solid var(--border-color); padding-top: 0.6rem;">
+                        <!-- 5mm Modular Retaining Slot -->
+                        <div class="toggle-switch-row" style="margin-top: 0.2rem; border-top: 1px solid var(--border-color); padding-top: 0.4rem;">
                             <div class="toggle-switch-label">
-                                <span>5mm Extrusion Retaining Slot</span>
+                                <span>5mm Retaining Slot</span>
                                 <span class="toggle-switch-sub">Routed channel for top extrusions</span>
                             </div>
                             <label class="switch">
@@ -364,8 +372,8 @@
                         <!-- Upper Upright Extrusion in Slot -->
                         <div class="toggle-switch-row" id="row-upper-extrusion">
                             <div class="toggle-switch-label">
-                                <span>Mount Upper Uprights in Slot</span>
-                                <span class="toggle-switch-sub">Modular top shelving frame</span>
+                                <span>Mount Upper Uprights</span>
+                                <span class="toggle-switch-sub">Modular shelving columns</span>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="check-upper-extrusions">
@@ -376,16 +384,18 @@
                 </div>
 
                 <!-- Card 5: Joinery & Hardware Selection -->
-                <div class="config-card">
+                <div class="config-card" id="card-joinery">
                     <div class="card-header">
-                        <span class="card-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                            Joinery & Connectors
-                        </span>
+                        <div class="card-title-group">
+                            <span class="card-chevron">▼</span>
+                            <span class="card-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                                Joinery & Accessories
+                            </span>
+                        </div>
                         <span class="card-badge">Smart Snap</span>
                     </div>
                     <div class="card-body">
-                        <!-- Joinery Type -->
                         <div class="form-row">
                             <label class="form-label">Corner Connection Style</label>
                             <div class="joinery-options-grid">
@@ -398,24 +408,20 @@
                                 <button type="button" class="btn-joinery-chip" data-joinery="concealed">
                                     <span>Hidden Inside L-Bar</span>
                                 </button>
-                                <button type="button" class="btn-joinery-chip" data-joinery="plate">
-                                    <span>Flat Joining Plates</span>
-                                </button>
                             </div>
                         </div>
 
-                        <!-- Feet Type -->
                         <div class="form-row">
                             <label class="form-label">Base Leveling Feet</label>
                             <div class="finish-toggle-group">
                                 <button type="button" class="btn-finish-chip active" data-feet="rubber">
-                                    <span>Rubber Leveling Feet</span>
+                                    <span>Rubber Leveling</span>
                                 </button>
                                 <button type="button" class="btn-finish-chip" data-feet="caster">
                                     <span>Locking Casters</span>
                                 </button>
                                 <button type="button" class="btn-finish-chip" data-feet="cap">
-                                    <span>Plastic End Caps</span>
+                                    <span>End Caps</span>
                                 </button>
                             </div>
                         </div>
@@ -423,22 +429,25 @@
                 </div>
 
                 <!-- Card 6: Live Bill of Materials (BOM) & Cut List -->
-                <div class="config-card">
+                <div class="config-card" id="card-bom">
                     <div class="card-header">
-                        <span class="card-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                            Live Bill of Materials (BOM)
-                        </span>
-                        <span class="card-badge" id="badge-total-meters">8.90 m</span>
+                        <div class="card-title-group">
+                            <span class="card-chevron">▼</span>
+                            <span class="card-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                Cut List & Hardware BOM
+                            </span>
+                        </div>
+                        <span class="card-badge" id="badge-total-meters">11.26 m</span>
                     </div>
                     <div class="card-body">
                         <div class="bom-mini-stats">
                             <div class="bom-stat-item">
-                                <span class="bom-stat-num" id="stat-total-meters">8.90 m</span>
+                                <span class="bom-stat-num" id="stat-total-meters">11.26 m</span>
                                 <span class="bom-stat-label">Total Extrusion</span>
                             </div>
                             <div class="bom-stat-item">
-                                <span class="bom-stat-num" id="stat-cut-pieces">12 pcs</span>
+                                <span class="bom-stat-num" id="stat-cut-pieces">13 pcs</span>
                                 <span class="bom-stat-label">Cut Pieces</span>
                             </div>
                             <div class="bom-stat-item">
@@ -452,7 +461,7 @@
                         </div>
 
                         <button type="button" class="btn-view-bom-modal" id="btn-open-bom-modal">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                             <span>Open Detailed Cut List & BOM</span>
                         </button>
                     </div>
@@ -468,19 +477,19 @@
             <!-- Floating Top HUD Controls -->
             <div class="viewport-hud-top">
                 <button type="button" class="hud-btn active" id="btn-toggle-handles" title="Toggle 3D Tabletop Overhang Drag Handles">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
                     <span>Drag Handles</span>
                 </button>
                 <button type="button" class="hud-btn active" id="btn-toggle-dims" title="Toggle Dimensions HUD">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="8 21 8 10"></polyline><polyline points="16 21 16 10"></polyline></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="8 21 8 10"></polyline><polyline points="16 21 16 10"></polyline></svg>
                     <span>Dimensions</span>
                 </button>
                 <button type="button" class="hud-btn" id="btn-toggle-wireframe" title="Toggle Wireframe Mode">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                     <span>Wireframe</span>
                 </button>
                 <button type="button" class="hud-btn" id="btn-reset-camera" title="Reset Viewport Camera">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
                     <span>Reset View</span>
                 </button>
             </div>
@@ -506,7 +515,7 @@
                     <span>Stretcher: <strong id="hud-stretcher-elev">150 mm from floor</strong></span>
                 </div>
                 <div class="viewport-info-pill">
-                    <span>💡 Tip: Click and drag the red/green/blue 3D arrows to resize tabletop overhangs in real time!</span>
+                    <span>💡 Tip: Click and drag 3D arrow gizmos to adjust tabletop overhangs</span>
                 </div>
             </div>
         </main>
@@ -517,15 +526,14 @@
         <div class="modal-container">
             <div class="modal-header">
                 <div class="modal-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                     <span>Extrusion Cut List & Hardware Bill of Materials (BOM)</span>
                 </div>
                 <button type="button" class="modal-close-btn" id="btn-close-bom-modal">&times;</button>
             </div>
             <div class="modal-content-scroll">
-                <!-- Extrusion Cut List Table -->
                 <div>
-                    <h3 style="font-size: 0.92rem; margin-bottom: 0.5rem; color: var(--accent-blue);">1. Aluminum Extrusion Cut List</h3>
+                    <h3 style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--accent-blue);">1. Aluminum Extrusion Cut List</h3>
                     <div class="bom-table-wrapper">
                         <table class="bom-table" id="table-cut-list">
                             <thead>
@@ -538,16 +546,13 @@
                                     <th>Total (mm)</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-cut-list">
-                                <!-- Populated dynamically -->
-                            </tbody>
+                            <tbody id="tbody-cut-list"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Hardware & Fasteners Table -->
                 <div>
-                    <h3 style="font-size: 0.92rem; margin-bottom: 0.5rem; color: var(--accent-blue);">2. Joinery, Connectors & Hardware</h3>
+                    <h3 style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--accent-blue);">2. Joinery, Connectors & Hardware</h3>
                     <div class="bom-table-wrapper">
                         <table class="bom-table" id="table-hardware-bom">
                             <thead>
@@ -558,16 +563,13 @@
                                     <th>Notes</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-hardware-bom">
-                                <!-- Populated dynamically -->
-                            </tbody>
+                            <tbody id="tbody-hardware-bom"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Tabletop Plywood / Sheet Cut -->
                 <div>
-                    <h3 style="font-size: 0.92rem; margin-bottom: 0.5rem; color: var(--accent-blue);">3. Tabletop Sheet Cut Dimensions</h3>
+                    <h3 style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--accent-blue);">3. Tabletop Sheet Cut Dimensions</h3>
                     <div class="bom-table-wrapper">
                         <table class="bom-table">
                             <thead>
@@ -580,20 +582,18 @@
                                     <th>Retaining Slot</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-tabletop-bom">
-                                <!-- Populated dynamically -->
-                            </tbody>
+                            <tbody id="tbody-tabletop-bom"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-header-action" id="btn-download-csv">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     <span>Download CSV Cut List</span>
                 </button>
                 <button type="button" class="btn-header-action btn-header-primary" id="btn-print-bom">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                     <span>Print Specification</span>
                 </button>
             </div>
@@ -603,6 +603,6 @@
     <!-- Three.js and Core Application Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="extrusion.js?v=1"></script>
+    <script src="extrusion.js?v=2"></script>
 </body>
 </html>
