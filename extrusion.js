@@ -74,7 +74,7 @@
         viewportContainer = canvas.parentElement;
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0e131b);
+        scene.background = new THREE.Color(0x242831);
 
         const width = viewportContainer.clientWidth;
         const height = viewportContainer.clientHeight;
@@ -106,10 +106,10 @@
         controls.update();
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.60);
         scene.add(ambientLight);
 
-        const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x111622, 0.45);
+        const hemiLight = new THREE.HemisphereLight(0xf4f6f8, 0x272b33, 0.60);
         scene.add(hemiLight);
 
         const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
@@ -127,7 +127,7 @@
         dirLight1.shadow.bias = -0.0005;
         scene.add(dirLight1);
 
-        const dirLight2 = new THREE.DirectionalLight(0x90caff, 0.35);
+        const dirLight2 = new THREE.DirectionalLight(0xc9d3de, 0.40);
         dirLight2.position.set(-1500, 1000, -1500);
         scene.add(dirLight2);
 
@@ -155,7 +155,7 @@
 
     function createGroundGrid() {
         // High-contrast industrial workbench floor grid
-        const gridHelper = new THREE.GridHelper(4000, 80, 0x38bdf8, 0x1e293b);
+        const gridHelper = new THREE.GridHelper(4000, 80, 0x546173, 0x333945);
         gridHelper.position.y = -0.5;
         scene.add(gridHelper);
 
@@ -296,9 +296,9 @@
         });
 
         materials.micaEsd = new THREE.MeshStandardMaterial({
-            color: 0x0284c7,
-            roughness: 0.30,
-            metalness: 0.15
+            color: 0x5a798c,
+            roughness: 0.35,
+            metalness: 0.10
         });
 
         materials.micaCarbon = new THREE.MeshStandardMaterial({
@@ -309,17 +309,17 @@
 
         // Interactive Drag Handles
         materials.handleActive = new THREE.MeshStandardMaterial({
-            color: 0x0284c7,
-            emissive: 0x38bdf8,
-            emissiveIntensity: 0.5,
-            roughness: 0.2
+            color: 0x5d8270,
+            emissive: 0x7ea894,
+            emissiveIntensity: 0.4,
+            roughness: 0.3
         });
 
         materials.handleHover = new THREE.MeshStandardMaterial({
-            color: 0xf59e0b,
-            emissive: 0xfbbf24,
-            emissiveIntensity: 0.6,
-            roughness: 0.2
+            color: 0xc9a982,
+            emissive: 0xd4a373,
+            emissiveIntensity: 0.4,
+            roughness: 0.3
         });
     }
 
@@ -916,22 +916,22 @@
         const posY = H + thick / 2;
 
         // Front Handle (+Z)
-        const frontHandle = createArrowGizmo(new THREE.Vector3(0, 0, 1), 0x38bdf8, 'front');
+        const frontHandle = createArrowGizmo(new THREE.Vector3(0, 0, 1), 0x7ea894, 'front');
         frontHandle.position.set(posX, posY, posZ + topD / 2 + 10);
         handlesGroup.add(frontHandle);
 
         // Back Handle (-Z)
-        const backHandle = createArrowGizmo(new THREE.Vector3(0, 0, -1), 0x38bdf8, 'back');
+        const backHandle = createArrowGizmo(new THREE.Vector3(0, 0, -1), 0x7ea894, 'back');
         backHandle.position.set(posX, posY, posZ - topD / 2 - 10);
         handlesGroup.add(backHandle);
 
         // Right Handle (+X)
-        const rightHandle = createArrowGizmo(new THREE.Vector3(1, 0, 0), 0xf59e0b, 'right');
+        const rightHandle = createArrowGizmo(new THREE.Vector3(1, 0, 0), 0xd4a373, 'right');
         rightHandle.position.set(posX + topW / 2 + 10, posY, posZ);
         handlesGroup.add(rightHandle);
 
         // Left Handle (-X)
-        const leftHandle = createArrowGizmo(new THREE.Vector3(-1, 0, 0), 0xf59e0b, 'left');
+        const leftHandle = createArrowGizmo(new THREE.Vector3(-1, 0, 0), 0xd4a373, 'left');
         leftHandle.position.set(posX - topW / 2 - 10, posY, posZ);
         handlesGroup.add(leftHandle);
     }
@@ -1056,7 +1056,7 @@
 
         if (!state.showDimensions) return;
 
-        const dimMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, opacity: 0.65, transparent: true });
+        const dimMat = new THREE.LineBasicMaterial({ color: 0x899bb0, opacity: 0.75, transparent: true });
 
         // Width Dimension Line (Front bottom)
         const wPoints = [
@@ -1256,10 +1256,10 @@
                 rightTbodyCut.appendChild(tr);
             });
             const trTotal = document.createElement('tr');
-            trTotal.style.background = 'rgba(56, 189, 248, 0.08)';
+            trTotal.style.background = 'rgba(126, 168, 148, 0.12)';
             trTotal.innerHTML = `
                 <td colspan="2"><strong>Grand Total</strong></td>
-                <td colspan="2"><strong style="color: var(--accent-blue);">${totalMeters} m (${totalPieces} pcs)</strong></td>
+                <td colspan="2"><strong style="color: #9ec4b0;">${totalMeters} m (${totalPieces} pcs)</strong></td>
             `;
             rightTbodyCut.appendChild(trTotal);
         }
@@ -1308,11 +1308,11 @@
             });
             // Total row
             const trTotal = document.createElement('tr');
-            trTotal.style.background = 'rgba(56, 189, 248, 0.08)';
+            trTotal.style.background = 'rgba(126, 168, 148, 0.12)';
             trTotal.innerHTML = `
                 <td colspan="4"><strong>Grand Total Extrusion Length</strong></td>
                 <td><strong>${totalPieces} pcs</strong></td>
-                <td><strong style="color: var(--accent-blue);">${totalMeters} meters (${totalLinearMm} mm)</strong></td>
+                <td><strong style="color: #9ec4b0;">${totalMeters} meters (${totalLinearMm} mm)</strong></td>
             `;
             tbodyCut.appendChild(trTotal);
         }

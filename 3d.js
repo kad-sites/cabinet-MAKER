@@ -105,7 +105,7 @@ function init3D() {
 
     // Scene setup
     scene = new THREE.Scene();
-    scene.background = new THREE.Color('#121921');
+    scene.background = new THREE.Color('#242831');
 
     // Camera setup
     const aspect = container.clientWidth / container.clientHeight;
@@ -3406,7 +3406,7 @@ function toggleShowroomMode(enable) {
         const sidebarPanel = document.querySelector('.cad-sidebar-panel');
         if (sidebarPanel) sidebarPanel.scrollTop = 0;
     } else {
-        scene.background = new THREE.Color('#121921'); // CAD dark viewport
+        scene.background = new THREE.Color('#242831'); // CAD soothing studio charcoal viewport
         if (overlays) overlays.style.display = '';
     }
 
